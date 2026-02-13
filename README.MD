@@ -1,5 +1,10 @@
 # 🛰️ WhereCode: The Intertemporal AI Orchestrator
 
+> **⚡ Fuel the Machine**: This project is 100% AI-authored. To help us maintain high-quality model outputs and explore the boundaries of MCP, consider sponsoring **Tokens** or **API Credits**. 
+> **Sponsorship / Contact**: [andy1770@proton.me](mailto:andy1770@proton.me)
+
+---
+
 **WhereCode** is a pioneering cross-device development framework. It liberates developers from their desks, using mobile devices as intent terminals, PC as the execution engine, and collaborating with a diverse team of AI partners.
 
 [English] | [简体中文](./README.zh-CN.md)

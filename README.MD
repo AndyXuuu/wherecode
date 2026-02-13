@@ -1,115 +1,70 @@
-🛰️ WhereCode: Cross-Spacetime AI Collaboration Command Center
+# 🛰️ WhereCode: The Intertemporal AI Orchestrator
 
-[简体中文](./README.zh-CN.md)
+**WhereCode** is a pioneering cross-device development framework. It liberates developers from their desks, using mobile devices as intent terminals, PC as the execution engine, and collaborating with a diverse team of AI partners.
 
-WhereCode is an innovative personal development workflow architecture. It frees developers from being tied to their desk monitors, using a phone as the intent terminal, a PC as the execution hub, and deeply collaborating with multiple AI partners (e.g., Claude, Gemini).
+[English] | [简体中文](./README.zh-CN.md)
 
-Core Philosophy: Humans handle intuition and strategic decisions; AI handles logic and concrete execution. They are equal partners, working together to accomplish complex engineering goals.
+---
 
-🏗️ The Trinity Architecture
-1. Command Center (Mobile)
-Role: Chief Executive Officer (CEO).
+### 🤖 AI Declaration
 
-Interaction: Minimalist conversational flow, supporting voice/text intent input.
+**Every line of code in this repository is authored by AI, including but not limited to: Claude (Anthropic), Gemini (Google), ChatGPT (OpenAI), GLM (Zhipu), DeepSeek, and MiniMax.**
 
-Functions: Issue strategic directives, approve AI execution plans, receive async briefings, manage resource allocation.
+AI's roles in this project include:
+* **Architecture Design**: Deconstructing and designing multi-layer logic based on human intent.
+* **Implementation**: Generating full backend logic, protocol encapsulation, and functional modules.
+* **QA & Debugging**: Writing automated test scripts and self-healing based on error logs.
+* **Documentation**: Authoring this README, PLAN.md, and technical specifications.
+* **Compliance Guidance**: Selecting open-source licenses (AGPL-3.0) and organizing declarations.
 
-Vision: Stay in control of the project lifecycle while walking in the park or relaxing on the couch.
+> **Note**: The human developer acts as the **"Architect" and "Decision Maker"**, defining the vision, auditing logic nodes, and authorizing key execution steps via mobile.
 
-2. Control Center (Local PC Backend)
-Role: Chief Operating Officer (COO) / Intelligent Hub.
+---
 
-Functions:
+## 🏗️ The Trinity Architecture
 
-Intent Alignment: Decompose vague intents into standardized task packages (Task Manifesto).
 
-Slot Routing: Invoke the most suitable AI Agent based on task characteristics and user permissions (MCP Protocol).
 
-Strict QA (Gatekeeper): Enforce automated testing (Unit/Integration Tests), intercept hallucination errors.
+1.  **Command Center (Mobile)**
+    * **Role**: CEO. 
+    * **Function**: Strategic instructions, task approval, and resource allocation via a minimalist dialogue UI.
+2.  **Control Center (Local PC)**
+    * **Role**: COO / Orchestrator.
+    * **Function**: Intent alignment (Task Manifesto), MCP-based tool routing, and automated Gatekeeper (testing).
+3.  **Action Layer (AI Agents)**
+    * **Role**: Senior Engineers.
+    * **Function**: Executing file operations, refactoring, and providing technical feedback via MCP Skills.
 
-Async Notification: Automatically push refined reports via Webhook upon task completion.
+## 🛠️ Workflow
 
-3. Action Layer (AI Agent Partners)
-Role: Senior Engineers.
+1.  **Intent**: User sends a command via mobile (e.g., "Refactor login module").
+2.  **Consensus**: PC returns a "Task Manifesto"; user approves.
+3.  **Autonomy**: Orchestrator assigns tasks to specific Agents (e.g., Claude-3.5).
+4.  **QA**: PC runs `pytest` automatically; AI fixes issues autonomously if tests fail.
+5.  **Briefing**: User receives a push notification with a summary of changes.
+6.  **Final Review**: User performs a physical merge review at the PC.
 
-Functions:
+## 🧩 Protocols & Skills
+- **MCP (Model Context Protocol)**: The core protocol for standardized tool access.
+- **Communication Tunnel**: Pluggable support for secure remote access (CF Tunnel, frp, Direct IP).
 
-Task Execution: Use MCP Skills to read/write files, refactor code, analyze logs.
+## 📅 Roadmap
+- [ ] **Phase 1**: Establish secure communication via pluggable tunnels.
+- [ ] **Phase 2**: Implement MCP-based Agent management system.
+- [ ] **Phase 3**: Develop mobile UI and MiniMax-powered ASR module.
+- [ ] **Phase 4**: Build AI-driven async notification engine.
 
-Technical Feedback: Proactively seek help when encountering disagreements, submit change details and follow-up suggestions after task completion.
-
-🛠️ Workflow
-Intent Dispatch: User sends via phone: "Help me refactor the login module to support international phone number verification."
-
-Plan Consensus: The Control Center returns a "task draft", user taps "Approve" on mobile.
-
-Autonomous Development: The hub distributes tasks to the selected Agent (e.g., Claude-3.5). AI starts working; user doesn't need to be online.
-
-Strict QA: After changes are complete, the system automatically runs pytest. If tests fail, AI self-repairs; if successful, generates a briefing.
-
-Async Briefing: User receives a push notification containing: completed steps, change statistics, test status, next-step suggestions.
-
-Physical Review: User returns to the computer, reviews the final Diff on the big screen, and completes the physical merge.
-
-🧩 Skills & Protocols
-MCP (Model Context Protocol): The core system communication protocol, ensuring AI can access local files, terminals, and testing tools in a standardized way.
-
-Dynamic Agent Slots:
-
-Logic_Expert (Claude): Handles complex business logic.
-
-Context_Master (Gemini): Handles long document analysis and full-repo scanning.
-
-Local_Sentinel (Llama/DeepSeek): Handles local private tasks.
-
-Skill Sets:
-
-File_Operator: Restricted file read/write.
-
-Test_Runner: Automated test execution.
-
-Report_Generator: Noise-reduced task summary extraction.
-
-🛡️ Security & Management Principles
-Partnership: AI is not a tool — it is a partner with technical expertise. System design should reflect bidirectional transparency.
-
-Authority Boundaries: Mobile holds the "ultimate veto power"; Control Center holds "environment isolation rights"; AI holds "execution autonomy".
-
-Physical Security: All high-risk operations (e.g., production deployment) require in-person secondary confirmation at the physical computer.
-
-📅 Roadmap
-[ ] Phase 1: Establish a secure communication link based on Cloudflare Tunnel.
-
-[ ] Phase 2: Implement an MCP-based Agent plugin management system.
-
-[ ] Phase 3: Develop a minimalist mobile conversational UI and voice recognition module.
-
-[ ] Phase 4: Build an AI-powered test report summarization and push notification engine.
-
-WhereCode — Let code flow where the magic happens.
-
-## 🤖 AI Declaration
-
-All code in this project is entirely written by AI, including but not limited to: Claude (Anthropic), Gemini (Google), ChatGPT (OpenAI), GLM (Zhipu AI), DeepSeek, MiniMax, and other AI tools and platforms.
-
-The roles AI plays in this project include but are not limited to:
-
-- **Architecture Design**: Decomposing and designing multi-layer logical architectures based on human intent.
-- **Code Implementation**: Generating backend logic, communication protocol encapsulation, and functional code for all modules.
-- **Testing & Debugging**: Writing automated test scripts and performing autonomous fixes based on error reports.
-- **Documentation**: Writing this README, the development plan (PLAN.md), and technical specifications.
-- **Open Source Compliance**: Assisting with open source license selection (AGPL-3.0) and compliance declarations.
-
-> Note: The human developer's role in this process is that of "Architect" and "Decision Officer", responsible for defining the vision, reviewing logical nodes, and authorizing key execution steps via mobile devices.
+---
 
 ## 📜 License
 
-This project is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html).
+Licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+Copyright (C) 2026 AndyXuuu [andy1770@proton.me](mailto:andy1770@proton.me)
 
-Copyright (C) 2026 AndyXuuu <andy1770@proton.me>
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+**Co-Authored-By:**
+- Claude Opus 4.6 <noreply@anthropic.com>
+- ChatGPT <noreply@openai.com>
+- Gemini <noreply@google.com>
+- GLM <noreply@zhipuai.cn>
+- DeepSeek <noreply@deepseek.com>
+- MiniMax <noreply@minimaxi.com>

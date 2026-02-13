@@ -1,98 +1,115 @@
-🛰️ WhereCode: 跨时空 AI 协作指挥中心
-WhereCode 是一套创新的个人开发工作流架构。它将开发者从书房的显示器前解放出来，利用手机作为意图终端，让 PC 成为执行中枢，并与多位 AI 合作伙伴（如 Claude, Gemini）深度协同。
+🛰️ WhereCode: Cross-Spacetime AI Collaboration Command Center
 
-核心哲学：人类负责直觉与战略决策，AI 负责逻辑与具体执行。彼此是平等的合作伙伴，共同完成复杂的工程目标。
+[简体中文](./README.zh-CN.md)
 
-🏗️ 三层协同架构 (The Trinity Architecture)
-1. 指挥中心 (Command Center | 手机/移动端)
-角色：首席执行官 (CEO)。
+WhereCode is an innovative personal development workflow architecture. It frees developers from being tied to their desk monitors, using a phone as the intent terminal, a PC as the execution hub, and deeply collaborating with multiple AI partners (e.g., Claude, Gemini).
 
-交互：极简对话流，支持语音/文字意图输入。
+Core Philosophy: Humans handle intuition and strategic decisions; AI handles logic and concrete execution. They are equal partners, working together to accomplish complex engineering goals.
 
-职能：下达战略指令、审批 AI 执行计划、接收异步简报、进行资源配置。
+🏗️ The Trinity Architecture
+1. Command Center (Mobile)
+Role: Chief Executive Officer (CEO).
 
-愿景：让你在公园散步、在电视前休息时，依然能掌控项目的生命周期。
+Interaction: Minimalist conversational flow, supporting voice/text intent input.
 
-2. 执行中心 (Control Center | 本地 PC 后端)
-角色：首席运营官 (COO) / 智能中控。
+Functions: Issue strategic directives, approve AI execution plans, receive async briefings, manage resource allocation.
 
-职能：
+Vision: Stay in control of the project lifecycle while walking in the park or relaxing on the couch.
 
-意图对齐：将模糊意图拆解为标准任务包（Task Manifesto）。
+2. Control Center (Local PC Backend)
+Role: Chief Operating Officer (COO) / Intelligent Hub.
 
-插槽路由：根据任务特性及用户会员权益（MCP 协议），调用最适合的 AI Agent。
+Functions:
 
-严格质检 (Gatekeeper)：强制执行自动化测试（Unit/Integration Tests），拦截幻觉错误。
+Intent Alignment: Decompose vague intents into standardized task packages (Task Manifesto).
 
-异步通知：任务完成后，自动通过 Webhook 推送精炼报告。
+Slot Routing: Invoke the most suitable AI Agent based on task characteristics and user permissions (MCP Protocol).
 
-3. 执行层 (Action Layer | AI Agent 合作伙伴)
-角色：资深工程师 (Senior Engineers)。
+Strict QA (Gatekeeper): Enforce automated testing (Unit/Integration Tests), intercept hallucination errors.
 
-职能：
+Async Notification: Automatically push refined reports via Webhook upon task completion.
 
-具体作业：利用 MCP Skills 读写文件、重构代码、分析日志。
+3. Action Layer (AI Agent Partners)
+Role: Senior Engineers.
 
-技术反馈：遇到分歧时主动求助，完成任务后提交变更明细与待办建议。
+Functions:
 
-🛠️ 核心工作流 (Workflow)
-意图下达：用户通过手机发送：“帮我重构登录模块，支持海外手机号验证。”
+Task Execution: Use MCP Skills to read/write files, refactor code, analyze logs.
 
-计划共识：执行中心返回一份“任务草案”，用户在手机端点击“批准”。
+Technical Feedback: Proactively seek help when encountering disagreements, submit change details and follow-up suggestions after task completion.
 
-自主开发：中控分发任务给选定的 Agent（如 Claude-3.5）。AI 开始搬砖，期间用户无需在线。
+🛠️ Workflow
+Intent Dispatch: User sends via phone: "Help me refactor the login module to support international phone number verification."
 
-严格质检：改动完成后，系统自动运行 pytest。若测试失败，AI 自主修复；若成功，生成简报。
+Plan Consensus: The Control Center returns a "task draft", user taps "Approve" on mobile.
 
-异步简报：用户收到消息推送，包含：完成步骤、变更统计、测试状态、下一步建议。
+Autonomous Development: The hub distributes tasks to the selected Agent (e.g., Claude-3.5). AI starts working; user doesn't need to be online.
 
-物理终审：用户回到电脑前，在大屏幕上审查最终 Diff，完成物理合并（Merge）。
+Strict QA: After changes are complete, the system automatically runs pytest. If tests fail, AI self-repairs; if successful, generates a briefing.
 
-🧩 技能与协议 (Skills & Protocols)
-MCP (Model Context Protocol)：系统核心通信协议，确保 AI 能标准化地访问本地文件、终端和测试工具。
+Async Briefing: User receives a push notification containing: completed steps, change statistics, test status, next-step suggestions.
 
-动态 Agent 插槽：
+Physical Review: User returns to the computer, reviews the final Diff on the big screen, and completes the physical merge.
 
-Logic_Expert (Claude): 负责复杂业务逻辑。
+🧩 Skills & Protocols
+MCP (Model Context Protocol): The core system communication protocol, ensuring AI can access local files, terminals, and testing tools in a standardized way.
 
-Context_Master (Gemini): 负责分析长文档与全库扫描。
+Dynamic Agent Slots:
 
-Local_Sentinel (Llama/DeepSeek): 负责本地私密任务。
+Logic_Expert (Claude): Handles complex business logic.
 
-Skill Sets：
+Context_Master (Gemini): Handles long document analysis and full-repo scanning.
 
-File_Operator: 受限的文件读写。
+Local_Sentinel (Llama/DeepSeek): Handles local private tasks.
 
-Test_Runner: 自动化测试执行。
+Skill Sets:
 
-Report_Generator: 降噪后的任务总结提取。
+File_Operator: Restricted file read/write.
 
-🛡️ 安全与管理原则
-伙伴关系：AI 不是工具，是具备技术专长的合作伙伴。系统设计应体现双向透明。
+Test_Runner: Automated test execution.
 
-权力边界：手机端拥有“终极否决权”；执行中心拥有“环境隔离权”；AI 拥有“执行自主权”。
+Report_Generator: Noise-reduced task summary extraction.
 
-物理安全：所有高危操作（如生产部署）必须在物理电脑前进行人工二次确认。
+🛡️ Security & Management Principles
+Partnership: AI is not a tool — it is a partner with technical expertise. System design should reflect bidirectional transparency.
 
-📅 路线图 (Roadmap)
-[ ] Phase 1: 建立基于 Cloudflare Tunnel 的安全通信链路。
+Authority Boundaries: Mobile holds the "ultimate veto power"; Control Center holds "environment isolation rights"; AI holds "execution autonomy".
 
-[ ] Phase 2: 实现基于 MCP 的 Agent 插件化管理系统。
+Physical Security: All high-risk operations (e.g., production deployment) require in-person secondary confirmation at the physical computer.
 
-[ ] Phase 3: 开发手机端极简对话 UI 与语音识别模块。
+📅 Roadmap
+[ ] Phase 1: Establish a secure communication link based on Cloudflare Tunnel.
 
-[ ] Phase 4: 构建基于 AI 的测试报告总结与推送引擎。
+[ ] Phase 2: Implement an MCP-based Agent plugin management system.
 
-WhereCode —— 让代码在魔法发生的地方流淌。
+[ ] Phase 3: Develop a minimalist mobile conversational UI and voice recognition module.
 
-## 📜 开源协议
+[ ] Phase 4: Build an AI-powered test report summarization and push notification engine.
 
-本项目基于 [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html) 开源。
+WhereCode — Let code flow where the magic happens.
+
+## 🤖 AI Declaration
+
+All code in this project is entirely written by AI, including but not limited to: Claude (Anthropic), Gemini (Google), ChatGPT (OpenAI), GLM (Zhipu AI), DeepSeek, MiniMax, and other AI tools and platforms.
+
+The roles AI plays in this project include but are not limited to:
+
+- **Architecture Design**: Decomposing and designing multi-layer logical architectures based on human intent.
+- **Code Implementation**: Generating backend logic, communication protocol encapsulation, and functional code for all modules.
+- **Testing & Debugging**: Writing automated test scripts and performing autonomous fixes based on error reports.
+- **Documentation**: Writing this README, the development plan (PLAN.md), and technical specifications.
+- **Open Source Compliance**: Assisting with open source license selection (AGPL-3.0) and compliance declarations.
+
+> Note: The human developer's role in this process is that of "Architect" and "Decision Officer", responsible for defining the vision, reviewing logical nodes, and authorizing key execution steps via mobile devices.
+
+## 📜 License
+
+This project is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html).
 
 Copyright (C) 2026 AndyXuuu <andy1770@proton.me>
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.

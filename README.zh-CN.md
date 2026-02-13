@@ -2,7 +2,7 @@
 
 **WhereCode** 是一套创新的个人开发工作流架构。它将开发者从书房的显示器前解放出来，利用手机作为意图终端，让 PC 成为执行中枢，并与多位 AI 合作伙伴（如 Claude, Gemini）深度协同。
 
-[English](./README.md) | [简体中文]
+[English](./README.MD) | [简体中文]
 
 ---
 

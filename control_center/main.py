@@ -1,4 +1,7 @@
 import os
+import time
+from uuid import uuid4
+import logging
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -26,6 +29,12 @@ from control_center.services import (
 )
 
 app = FastAPI(title="WhereCode Control Center")
+logger = logging.getLogger("wherecode.control_center")
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=os.getenv("WHERECODE_LOG_LEVEL", "INFO"),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
 action_layer = ActionLayerClient(
     base_url=os.getenv("ACTION_LAYER_BASE_URL", "http://127.0.0.1:8100")
 )
@@ -81,6 +90,25 @@ def _extract_request_token(request: Request) -> str | None:
     if header_token:
         return header_token.strip()
     return None
+
+
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    request_id = f"req_{uuid4().hex[:12]}"
+    request.state.request_id = request_id
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = int((time.perf_counter() - start) * 1000)
+    response.headers["X-Request-Id"] = request_id
+    logger.info(
+        "request_id=%s method=%s path=%s status=%s duration_ms=%s",
+        request_id,
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
 
 
 @app.middleware("http")

@@ -28,6 +28,11 @@
 - 可选：`sqlite`（通过 `WHERECODE_STATE_BACKEND=sqlite` 启用）
 - SQLite 路径由 `WHERECODE_SQLITE_PATH` 配置
 
+## 观测（基础版）
+
+- Control Center 中间件会生成 `X-Request-Id`
+- 访问日志包含 `request_id/method/path/status/duration_ms`
+
 Action Layer 当前提供本地 HTTP stub 能力端口（默认 `8100`）：
 
 - `GET /healthz`

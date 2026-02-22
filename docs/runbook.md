@@ -63,6 +63,7 @@ control_center/.venv/bin/pytest -q
 预期：
 - `/healthz` 返回 `{"status":"ok","transport":"http-async"}`
 - Action Layer `/healthz` 返回 `{"status":"ok","layer":"action","transport":"http"}`
+- Control Center 响应头包含 `X-Request-Id`
 - 测试通过
 
 若修改了接口契约（路径/字段/响应模型），同步更新 OpenAPI 快照：

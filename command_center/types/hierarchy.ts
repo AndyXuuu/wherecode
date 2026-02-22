@@ -32,6 +32,8 @@ export interface Command {
   requested_by?: string;
   requires_approval: boolean;
   approved_by?: string;
+  executor_agent?: string;
+  trace_id?: string;
   created_at: string;
   updated_at: string;
   started_at?: string;

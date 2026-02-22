@@ -3,9 +3,16 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from datetime import timedelta
+from typing import Awaitable, Callable
 
 from fastapi import HTTPException
 
+from control_center.models.api import (
+    ActionExecuteResponse,
+    CreateCommandRequest,
+    CreateProjectRequest,
+    CreateTaskRequest,
+)
 from control_center.models.hierarchy import (
     Command,
     CommandStatus,
@@ -16,21 +23,19 @@ from control_center.models.hierarchy import (
     TaskStatus,
     now_utc,
 )
-from control_center.models.api import (
-    CreateCommandRequest,
-    CreateProjectRequest,
-    CreateTaskRequest,
-)
+
+ActionExecutor = Callable[[Command], Awaitable[ActionExecuteResponse]]
 
 
 class InMemoryOrchestrator:
-    def __init__(self) -> None:
+    def __init__(self, action_executor: ActionExecutor | None = None) -> None:
         self._projects: dict[str, Project] = {}
         self._tasks: dict[str, Task] = {}
         self._commands: dict[str, Command] = {}
         self._project_tasks: dict[str, list[str]] = defaultdict(list)
         self._task_commands: dict[str, list[str]] = defaultdict(list)
         self._task_sequence: dict[str, int] = defaultdict(int)
+        self._action_executor = action_executor
         self._lock = asyncio.Lock()
 
     def reset(self) -> None:
@@ -90,15 +95,15 @@ class InMemoryOrchestrator:
         task.updated_at = now_utc()
         self._recompute_project_active_count_locked(task.project_id)
 
-    def _advance_task_commands_locked(self, task_id: str) -> None:
+    async def _advance_task_commands_locked(self, task_id: str) -> None:
         for command_id in self._task_commands.get(task_id, []):
-            self._advance_command_locked(command_id)
+            await self._advance_command_locked(command_id)
 
-    def _advance_all_commands_locked(self) -> None:
+    async def _advance_all_commands_locked(self) -> None:
         for command_id in list(self._commands.keys()):
-            self._advance_command_locked(command_id)
+            await self._advance_command_locked(command_id)
 
-    def _advance_command_locked(self, command_id: str) -> None:
+    async def _advance_command_locked(self, command_id: str) -> None:
         command = self._commands.get(command_id)
         if command is None:
             return
@@ -128,23 +133,55 @@ class InMemoryOrchestrator:
         if task is None:
             return
 
-        lowered = command.text.lower()
-        if "fail" in lowered or "error" in lowered:
-            command.status = CommandStatus.FAILED
-            command.error_message = "mock execution failed by command content"
-            task.failed_count += 1
-        else:
-            command.status = CommandStatus.SUCCESS
-            command.output_summary = "mock execution completed"
-            task.success_count += 1
+        await self._complete_command_execution_locked(command, task)
 
         command.finished_at = now_utc()
         command.updated_at = now_utc()
         self._refresh_task_and_project_state_locked(task.id)
 
+    async def _complete_command_execution_locked(self, command: Command, task: Task) -> None:
+        if self._action_executor is None:
+            self._apply_mock_execution_locked(command, task)
+            return
+
+        try:
+            result = await self._action_executor(command)
+        except Exception as exc:  # noqa: BLE001
+            command.status = CommandStatus.FAILED
+            command.error_message = f"execution failed: {exc}"
+            task.failed_count += 1
+            return
+
+        command.executor_agent = result.agent
+        command.trace_id = result.trace_id
+        command.output_summary = None
+        command.error_message = None
+
+        if result.status == CommandStatus.SUCCESS.value:
+            command.status = CommandStatus.SUCCESS
+            command.output_summary = result.summary
+            task.success_count += 1
+            return
+
+        command.status = CommandStatus.FAILED
+        command.error_message = result.summary
+        task.failed_count += 1
+
+    def _apply_mock_execution_locked(self, command: Command, task: Task) -> None:
+        lowered = command.text.lower()
+        if "fail" in lowered or "error" in lowered:
+            command.status = CommandStatus.FAILED
+            command.error_message = "mock execution failed by command content"
+            task.failed_count += 1
+            return
+
+        command.status = CommandStatus.SUCCESS
+        command.output_summary = "mock execution completed"
+        task.success_count += 1
+
     async def list_projects(self) -> list[Project]:
         async with self._lock:
-            self._advance_all_commands_locked()
+            await self._advance_all_commands_locked()
             return list(self._projects.values())
 
     async def create_task(self, project_id: str, payload: CreateTaskRequest) -> Task:
@@ -172,7 +209,7 @@ class InMemoryOrchestrator:
             if project_id not in self._projects:
                 raise HTTPException(status_code=404, detail="project not found")
             for task_id in self._project_tasks[project_id]:
-                self._advance_task_commands_locked(task_id)
+                await self._advance_task_commands_locked(task_id)
             return [self._tasks[task_id] for task_id in self._project_tasks[project_id]]
 
     async def get_task(self, task_id: str) -> Task:
@@ -180,7 +217,7 @@ class InMemoryOrchestrator:
             task = self._tasks.get(task_id)
             if task is None:
                 raise HTTPException(status_code=404, detail="task not found")
-            self._advance_task_commands_locked(task_id)
+            await self._advance_task_commands_locked(task_id)
             return task
 
     async def create_command(self, task_id: str, payload: CreateCommandRequest) -> Command:
@@ -218,7 +255,7 @@ class InMemoryOrchestrator:
         async with self._lock:
             if task_id not in self._tasks:
                 raise HTTPException(status_code=404, detail="task not found")
-            self._advance_task_commands_locked(task_id)
+            await self._advance_task_commands_locked(task_id)
             return [self._commands[command_id] for command_id in self._task_commands[task_id]]
 
     async def get_command(self, command_id: str) -> Command:
@@ -226,7 +263,7 @@ class InMemoryOrchestrator:
             command = self._commands.get(command_id)
             if command is None:
                 raise HTTPException(status_code=404, detail="command not found")
-            self._advance_command_locked(command_id)
+            await self._advance_command_locked(command_id)
             return command
 
     async def approve_command(self, command_id: str, approved_by: str) -> Command:
@@ -253,7 +290,7 @@ class InMemoryOrchestrator:
             if project is None:
                 raise HTTPException(status_code=404, detail="project not found")
             for task_id in self._project_tasks[project_id]:
-                self._advance_task_commands_locked(task_id)
+                await self._advance_task_commands_locked(task_id)
 
             task_details: list[TaskDetail] = []
             for task_id in self._project_tasks[project_id]:

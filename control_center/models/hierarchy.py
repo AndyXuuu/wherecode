@@ -67,6 +67,8 @@ class Command(BaseEntity):
     requested_by: str | None = None
     requires_approval: bool = False
     approved_by: str | None = None
+    executor_agent: str | None = None
+    trace_id: str | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None
 

@@ -62,14 +62,14 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
         if "fail" in lowered or "error" in lowered:
             result = {
                 "status": "failed",
-                "summary": "action-layer mock execution failed by command content",
+                "summary": "mock execution failed by command content",
                 "agent": "coding",
                 "trace_id": f"act_{uuid4().hex[:12]}",
             }
         else:
             result = {
                 "status": "success",
-                "summary": "action-layer mock execution completed",
+                "summary": "mock execution completed",
                 "agent": "coding",
                 "trace_id": f"act_{uuid4().hex[:12]}",
             }

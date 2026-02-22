@@ -25,10 +25,23 @@ from control_center.services import (
 )
 
 app = FastAPI(title="WhereCode Control Center")
-store = InMemoryOrchestrator()
 action_layer = ActionLayerClient(
     base_url=os.getenv("ACTION_LAYER_BASE_URL", "http://127.0.0.1:8100")
 )
+
+
+async def execute_with_action_layer(command: Command) -> ActionExecuteResponse:
+    return await action_layer.execute(
+        ActionExecuteRequest(
+            text=command.text,
+            requested_by=command.requested_by,
+            task_id=command.task_id,
+            project_id=command.project_id,
+        )
+    )
+
+
+store = InMemoryOrchestrator(action_executor=execute_with_action_layer)
 
 allowed_origins = [
     origin.strip()

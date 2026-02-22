@@ -82,6 +82,8 @@ def test_task_command_snapshot_contract() -> None:
     assert terminal["id"] == accepted["command_id"]
     assert terminal["project_id"] == project_id
     assert terminal["task_id"] == task_id
+    assert terminal["executor_agent"] == "coding"
+    assert terminal["trace_id"].startswith("act_")
 
     listed_tasks = client.get(f"/projects/{project_id}/tasks")
     assert listed_tasks.status_code == 200
@@ -116,6 +118,8 @@ def test_failed_command_contract_and_task_status() -> None:
 
     assert terminal["status"] == "failed"
     assert terminal["error_message"] == "mock execution failed by command content"
+    assert terminal["executor_agent"] == "coding"
+    assert terminal["trace_id"].startswith("act_")
 
     task_detail = client.get(f"/tasks/{task_id}")
     assert task_detail.status_code == 200

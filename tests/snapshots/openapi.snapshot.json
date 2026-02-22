@@ -142,6 +142,17 @@
             ],
             "title": "Error Message"
           },
+          "executor_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executor Agent"
+          },
           "finished_at": {
             "anyOf": [
               {
@@ -227,6 +238,17 @@
             "minLength": 1,
             "title": "Text",
             "type": "string"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
           },
           "updated_at": {
             "format": "date-time",

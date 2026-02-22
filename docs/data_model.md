@@ -29,3 +29,7 @@
 - TaskStatus: `todo | in_progress | waiting_approval | blocked | done | failed | canceled`
 - CommandStatus: `queued | running | success | failed | waiting_approval | canceled`
 
+## 命令执行追踪字段
+
+- `Command.executor_agent`：执行该命令的 Agent 标识（来自 Action Layer）
+- `Command.trace_id`：执行链路追踪 ID，用于日志与问题排查

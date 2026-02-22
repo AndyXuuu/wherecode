@@ -420,6 +420,16 @@ export function FeedWorkspace() {
                 <p className="rounded-xl border border-border bg-card px-2 py-1">任务: {currentCommand.task_id}</p>
                 <p className="rounded-xl border border-border bg-card px-2 py-1">序号: #{currentCommand.sequence}</p>
               </div>
+              {currentCommand.executor_agent || currentCommand.trace_id ? (
+                <div className="grid gap-2 text-sm text-text md:grid-cols-2">
+                  <p className="rounded-xl border border-border bg-card px-2 py-1">
+                    执行 Agent: {currentCommand.executor_agent ?? "n/a"}
+                  </p>
+                  <p className="rounded-xl border border-border bg-card px-2 py-1">
+                    Trace: {currentCommand.trace_id ?? "n/a"}
+                  </p>
+                </div>
+              ) : null}
               <p className="rounded-xl border border-border bg-bg p-2 text-sm text-text">{currentCommand.text}</p>
               {currentCommand.output_summary ? (
                 <p className="rounded-xl border border-success/40 bg-success/20 p-2 text-sm text-success">

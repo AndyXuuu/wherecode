@@ -55,6 +55,7 @@ export WHERECODE_SQLITE_PATH=.wherecode/state.db
 ```bash
 curl http://127.0.0.1:8000/healthz
 curl http://127.0.0.1:8000/action-layer/health -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
+curl http://127.0.0.1:8000/metrics/summary -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
 curl http://127.0.0.1:8100/healthz
 control_center/.venv/bin/pytest tests/unit/test_http_async_flow.py
 control_center/.venv/bin/pytest -q

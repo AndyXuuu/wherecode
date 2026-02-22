@@ -11,6 +11,7 @@ from control_center.models import (
     ActionExecuteRequest,
     ActionExecuteResponse,
     ActionLayerHealthResponse,
+    MetricsSummaryResponse,
     ApproveCommandRequest,
     Command,
     CommandAcceptedResponse,
@@ -210,3 +211,8 @@ async def approve_command(command_id: str, payload: ApproveCommandRequest) -> Co
 @app.get("/projects/{project_id}/snapshot", response_model=ProjectDetail)
 async def get_project_snapshot(project_id: str) -> ProjectDetail:
     return await store.get_project_detail(project_id)
+
+
+@app.get("/metrics/summary", response_model=MetricsSummaryResponse)
+async def get_metrics_summary() -> MetricsSummaryResponse:
+    return await store.get_metrics_summary()

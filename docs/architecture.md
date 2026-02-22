@@ -32,6 +32,7 @@
 
 - Control Center 中间件会生成 `X-Request-Id`
 - 访问日志包含 `request_id/method/path/status/duration_ms`
+- `GET /metrics/summary` 提供运行指标聚合（成功率、平均耗时、运行中命令）
 
 Action Layer 当前提供本地 HTTP stub 能力端口（默认 `8100`）：
 

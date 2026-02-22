@@ -184,6 +184,7 @@ X-WhereCode-Token: change-me
 - `GET /projects/{project_id}/snapshot`：项目下任务+命令快照
 - `GET /action-layer/health`：Action Layer 健康状态（由 Control Center 代理）
 - `POST /action-layer/execute`：Action Layer 执行入口（由 Control Center 代理）
+- `GET /metrics/summary`：运行指标汇总（成功率、平均耗时、运行中命令等）
 
 ---
 
@@ -211,6 +212,15 @@ X-WhereCode-Token: change-me
 
 - `active_task_count` = 任务状态属于 `{todo, in_progress, waiting_approval}` 的数量
 - 命令状态变化后必须同步刷新 `active_task_count`
+
+### 8.4 运行指标（Metrics）
+
+`GET /metrics/summary` 返回如下核心字段：
+
+- `in_flight_command_count`：处于 `queued|running` 的命令数量
+- `waiting_approval_count`：等待审批命令数量
+- `success_rate`：`success / (success + failed)`，无终态命令时为 `0`
+- `average_duration_ms`：终态命令平均执行耗时（毫秒）
 
 ---
 

@@ -56,3 +56,15 @@ class ActionExecuteResponse(BaseModel):
     summary: str
     agent: str
     trace_id: str
+
+
+class MetricsSummaryResponse(BaseModel):
+    total_projects: int
+    total_tasks: int
+    total_commands: int
+    in_flight_command_count: int
+    waiting_approval_count: int
+    success_count: int
+    failed_count: int
+    success_rate: float
+    average_duration_ms: float

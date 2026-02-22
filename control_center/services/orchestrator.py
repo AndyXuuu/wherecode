@@ -12,6 +12,7 @@ from control_center.models.api import (
     CreateCommandRequest,
     CreateProjectRequest,
     CreateTaskRequest,
+    MetricsSummaryResponse,
 )
 from control_center.models.hierarchy import (
     Command,
@@ -366,3 +367,55 @@ class InMemoryOrchestrator:
                 task_details.append(TaskDetail(**task.model_dump(), commands=commands))
 
             return ProjectDetail(**project.model_dump(), tasks=task_details)
+
+    async def get_metrics_summary(self) -> MetricsSummaryResponse:
+        async with self._lock:
+            await self._advance_all_commands_locked()
+            commands = list(self._commands.values())
+            total_commands = len(commands)
+            in_flight_command_count = sum(
+                1
+                for command in commands
+                if command.status in {CommandStatus.QUEUED, CommandStatus.RUNNING}
+            )
+            waiting_approval_count = sum(
+                1
+                for command in commands
+                if command.status == CommandStatus.WAITING_APPROVAL
+            )
+            success_count = sum(
+                1 for command in commands if command.status == CommandStatus.SUCCESS
+            )
+            failed_count = sum(
+                1 for command in commands if command.status == CommandStatus.FAILED
+            )
+            resolved_count = success_count + failed_count
+            success_rate = (
+                round(success_count / resolved_count, 4) if resolved_count > 0 else 0.0
+            )
+
+            durations_ms: list[float] = []
+            for command in commands:
+                if (
+                    command.status in {CommandStatus.SUCCESS, CommandStatus.FAILED}
+                    and command.started_at is not None
+                    and command.finished_at is not None
+                ):
+                    durations_ms.append(
+                        (command.finished_at - command.started_at).total_seconds() * 1000
+                    )
+            average_duration_ms = (
+                round(sum(durations_ms) / len(durations_ms), 2) if durations_ms else 0.0
+            )
+
+            return MetricsSummaryResponse(
+                total_projects=len(self._projects),
+                total_tasks=len(self._tasks),
+                total_commands=total_commands,
+                in_flight_command_count=in_flight_command_count,
+                waiting_approval_count=waiting_approval_count,
+                success_count=success_count,
+                failed_count=failed_count,
+                success_rate=success_rate,
+                average_duration_ms=average_duration_ms,
+            )

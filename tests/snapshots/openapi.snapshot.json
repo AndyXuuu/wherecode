@@ -452,6 +452,59 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "MetricsSummaryResponse": {
+        "properties": {
+          "average_duration_ms": {
+            "title": "Average Duration Ms",
+            "type": "number"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "in_flight_command_count": {
+            "title": "In Flight Command Count",
+            "type": "integer"
+          },
+          "success_count": {
+            "title": "Success Count",
+            "type": "integer"
+          },
+          "success_rate": {
+            "title": "Success Rate",
+            "type": "number"
+          },
+          "total_commands": {
+            "title": "Total Commands",
+            "type": "integer"
+          },
+          "total_projects": {
+            "title": "Total Projects",
+            "type": "integer"
+          },
+          "total_tasks": {
+            "title": "Total Tasks",
+            "type": "integer"
+          },
+          "waiting_approval_count": {
+            "title": "Waiting Approval Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_projects",
+          "total_tasks",
+          "total_commands",
+          "in_flight_command_count",
+          "waiting_approval_count",
+          "success_count",
+          "failed_count",
+          "success_rate",
+          "average_duration_ms"
+        ],
+        "title": "MetricsSummaryResponse",
+        "type": "object"
+      },
       "Project": {
         "properties": {
           "active_task_count": {
@@ -1056,6 +1109,24 @@
           }
         },
         "summary": "Healthz"
+      }
+    },
+    "/metrics/summary": {
+      "get": {
+        "operationId": "get_metrics_summary_metrics_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsSummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Metrics Summary"
       }
     },
     "/projects": {

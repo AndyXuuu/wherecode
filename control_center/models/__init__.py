@@ -16,6 +16,7 @@ from control_center.models.api import (
     ActionExecuteRequest,
     ActionExecuteResponse,
     ActionLayerHealthResponse,
+    MetricsSummaryResponse,
     ApproveCommandRequest,
     CommandAcceptedResponse,
     CreateCommandRequest,
@@ -42,4 +43,5 @@ __all__ = [
     "ActionExecuteRequest",
     "ActionExecuteResponse",
     "ActionLayerHealthResponse",
+    "MetricsSummaryResponse",
 ]

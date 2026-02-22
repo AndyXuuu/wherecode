@@ -18,6 +18,7 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/healthz": {"get"},
         "/action-layer/health": {"get"},
         "/action-layer/execute": {"post"},
+        "/metrics/summary": {"get"},
         "/projects": {"get", "post"},
         "/projects/{project_id}/tasks": {"get", "post"},
         "/tasks/{task_id}": {"get"},

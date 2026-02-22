@@ -6,6 +6,7 @@
 
 - `GET /action-layer/health`
 - `POST /action-layer/execute`
+- `GET /metrics/summary`（运行指标聚合）
 
 ## 目录结构
 

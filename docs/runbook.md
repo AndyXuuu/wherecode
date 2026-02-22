@@ -37,11 +37,24 @@ bash control_center/run.sh
 
 默认地址：`http://127.0.0.1:8000`
 
+鉴权默认开启，建议先导出 token：
+
+```bash
+export WHERECODE_TOKEN=change-me
+```
+
+如需启用 SQLite 持久化：
+
+```bash
+export WHERECODE_STATE_BACKEND=sqlite
+export WHERECODE_SQLITE_PATH=.wherecode/state.db
+```
+
 ## 3. 快速检查
 
 ```bash
 curl http://127.0.0.1:8000/healthz
-curl http://127.0.0.1:8000/action-layer/health
+curl http://127.0.0.1:8000/action-layer/health -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
 curl http://127.0.0.1:8100/healthz
 control_center/.venv/bin/pytest tests/unit/test_http_async_flow.py
 control_center/.venv/bin/pytest -q
@@ -104,20 +117,24 @@ bash scripts/action_layer_smoke.sh
 # 1) 创建项目
 curl -sX POST http://127.0.0.1:8000/projects \
   -H "Content-Type: application/json" \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
   -d '{"name":"wherecode-mobile"}'
 
 # 2) 创建任务
 curl -sX POST http://127.0.0.1:8000/projects/<project_id>/tasks \
   -H "Content-Type: application/json" \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
   -d '{"title":"login-refactor"}'
 
 # 3) 提交命令（返回 202 + command_id）
 curl -sX POST http://127.0.0.1:8000/tasks/<task_id>/commands \
   -H "Content-Type: application/json" \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
   -d '{"text":"run unit tests"}'
 
 # 4) 轮询命令状态
-curl -s http://127.0.0.1:8000/commands/<command_id>
+curl -s http://127.0.0.1:8000/commands/<command_id> \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
 ```
 
 预期：
@@ -131,4 +148,5 @@ curl -s http://127.0.0.1:8000/commands/<command_id>
 - 依赖缺失：
   - Control Center：`bash scripts/stationctl.sh install control-center`
   - Command Center：`bash scripts/stationctl.sh install command-center`
+- 401 unauthorized：确认 `WHERECODE_TOKEN` 与请求头 `X-WhereCode-Token` 一致
 - 环境变量未生效：确认是否已加载 `control_center/.env` 或手动导出变量

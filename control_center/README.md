@@ -21,8 +21,12 @@
 
 ## 环境变量
 
+- `WHERECODE_AUTH_ENABLED`：是否开启鉴权，默认 `true`
+- `WHERECODE_TOKEN`：Control Center API token，默认 `change-me`
 - `WHERECODE_ALLOWED_ORIGINS`：CORS 白名单，默认 `http://localhost:3000`
 - `ACTION_LAYER_BASE_URL`：Action Layer 代理地址，默认 `http://127.0.0.1:8100`
+- `WHERECODE_STATE_BACKEND`：状态存储后端，`memory` 或 `sqlite`（默认 `memory`）
+- `WHERECODE_SQLITE_PATH`：SQLite 文件路径（默认 `.wherecode/state.db`）
 
 ## 开发约定
 

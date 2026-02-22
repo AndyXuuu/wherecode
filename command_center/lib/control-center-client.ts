@@ -33,13 +33,19 @@ export function getControlCenterBaseUrl(): string {
   return process.env.NEXT_PUBLIC_CONTROL_CENTER_URL ?? DEFAULT_BASE_URL;
 }
 
+function getControlCenterToken(): string {
+  return process.env.NEXT_PUBLIC_WHERECODE_TOKEN ?? "change-me";
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = getControlCenterBaseUrl();
+  const token = getControlCenterToken();
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
+      "X-WhereCode-Token": token,
       ...(init?.headers ?? {})
     }
   });

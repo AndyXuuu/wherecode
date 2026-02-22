@@ -17,18 +17,18 @@
 
 ## 本周（P0，必须完成）
 
-- [ ] 命令执行生命周期绑定 Action Layer `/execute` 结果
-- [ ] 命令模型补充 `trace_id` / `agent` 等执行追踪字段
-- [ ] 前端 command-lab 展示 Action Layer 回执信息
-- [ ] 新增执行链路契约测试（成功、失败、异常映射）
-- [ ] 更新协议文档与 OpenAPI 快照
+- [x] 命令执行生命周期绑定 Action Layer `/execute` 结果
+- [x] 命令模型补充 `trace_id` / `agent` 等执行追踪字段
+- [x] 前端 command-lab 展示 Action Layer 回执信息
+- [x] 新增执行链路契约测试（成功、失败、异常映射）
+- [x] 更新协议文档与 OpenAPI 快照
 
 ## 下周（P1，高优先）
 
-- [ ] 启用 Token 鉴权（保留 healthz 白名单）
-- [ ] 新增请求头接入说明（Command Center -> Control Center）
-- [ ] 设计并接入 SQLite 持久化（可与 in-memory 切换）
-- [ ] 增加“重启后数据保持”测试
+- [x] 启用 Token 鉴权（保留 healthz 白名单）
+- [x] 新增请求头接入说明（Command Center -> Control Center）
+- [x] 设计并接入 SQLite 持久化（可与 in-memory 切换）
+- [x] 增加“重启后数据保持”测试
 
 ## 双周后（P2，增强项）
 

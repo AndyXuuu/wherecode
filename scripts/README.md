@@ -13,3 +13,4 @@
 约定：
 - 脚本默认可重复执行（幂等）。
 - 关键脚本需在文件头说明用途和输入参数。
+- `http_async_smoke.sh` 默认读取 `WHERECODE_TOKEN`（未设置时使用 `change-me`）。

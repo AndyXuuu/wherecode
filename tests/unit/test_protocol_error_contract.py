@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+import control_center.main as main_module
 from control_center.main import app
 
 
@@ -108,3 +109,11 @@ def test_approve_validation_contract_422() -> None:
     response = client.post("/commands/cmd_any/approve", json={"approved_by": ""})
     assert response.status_code == 422
     _assert_validation_field(response.json(), "approved_by")
+
+
+def test_auth_unauthorized_contract_401(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AUTH_ENABLED", True)
+    monkeypatch.setattr(main_module, "AUTH_TOKEN", "secure-token")
+    response = client.post("/projects", json={"name": "auth-check"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "unauthorized"

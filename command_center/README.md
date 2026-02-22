@@ -49,6 +49,7 @@ pnpm build
 可选环境变量：
 
 - `NEXT_PUBLIC_CONTROL_CENTER_URL`（默认 `http://localhost:8000`）
+- `NEXT_PUBLIC_WHERECODE_TOKEN`（默认 `change-me`）
 - 用于 HTTP 异步探活与后续命令轮询
 
 ## 主题策略

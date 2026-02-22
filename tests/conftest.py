@@ -36,6 +36,7 @@ class TestActionLayerClient:
 
 @pytest.fixture(autouse=True)
 def reset_inmemory_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main_module, "AUTH_ENABLED", False)
     monkeypatch.setattr(main_module, "action_layer", TestActionLayerClient())
     store.reset()
     yield

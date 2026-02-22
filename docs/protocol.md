@@ -8,6 +8,7 @@
 - Control Center 立即返回 `202 Accepted` 与 `command_id`
 - 客户端通过 `GET /commands/{id}` 轮询状态
 - 审批命令通过单独的 `POST /commands/{id}/approve` 触发继续执行
+- 除 `/healthz` 外，接口默认要求请求头 `X-WhereCode-Token`（或 `Authorization: Bearer <token>`）
 
 ---
 
@@ -33,6 +34,12 @@
   "owner": "andy",
   "tags": ["ios", "command-center"]
 }
+```
+
+请求头示例：
+
+```text
+X-WhereCode-Token: change-me
 ```
 
 ### 响应
@@ -220,7 +227,15 @@
 - `command does not require approval`
 - `command is not waiting approval`
 
-### 9.3 422 Validation Error
+### 9.3 401 Unauthorized
+
+- `unauthorized`
+
+说明：
+- 缺少 token
+- token 不匹配
+
+### 9.4 422 Validation Error
 
 当请求体字段不合法（如 `name/title/text/approved_by` 为空）时返回 FastAPI 默认 422 结构：
 

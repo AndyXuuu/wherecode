@@ -11,12 +11,17 @@ function getBaseUrl() {
   return process.env.NEXT_PUBLIC_CONTROL_CENTER_URL ?? "http://localhost:8000";
 }
 
+function getControlCenterToken() {
+  return process.env.NEXT_PUBLIC_WHERECODE_TOKEN ?? "change-me";
+}
+
 export function ControlCenterHealthCard() {
   const [probe, setProbe] = useState<ProbeState>({
     status: "idle",
     message: "Checking Control/Action layers..."
   });
   const baseUrl = useMemo(getBaseUrl, []);
+  const token = useMemo(getControlCenterToken, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +30,10 @@ export function ControlCenterHealthCard() {
       try {
         const [controlResponse, actionResponse] = await Promise.all([
           fetch(`${baseUrl}/healthz`, { cache: "no-store" }),
-          fetch(`${baseUrl}/action-layer/health`, { cache: "no-store" })
+          fetch(`${baseUrl}/action-layer/health`, {
+            cache: "no-store",
+            headers: { "X-WhereCode-Token": token }
+          })
         ]);
         if (!controlResponse.ok) {
           throw new Error(`Control Center HTTP ${controlResponse.status}`);
@@ -68,7 +76,7 @@ export function ControlCenterHealthCard() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [baseUrl]);
+  }, [baseUrl, token]);
 
   const style =
     probe.status === "ok"

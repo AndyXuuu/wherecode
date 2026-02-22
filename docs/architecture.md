@@ -22,6 +22,12 @@
 - Command Center 通过 HTTP `GET` 轮询命令状态
 - 无需保持常驻连接，符合异步指挥模型
 
+## 状态存储（新增）
+
+- 默认：`memory`（进程内存，适合本地开发）
+- 可选：`sqlite`（通过 `WHERECODE_STATE_BACKEND=sqlite` 启用）
+- SQLite 路径由 `WHERECODE_SQLITE_PATH` 配置
+
 Action Layer 当前提供本地 HTTP stub 能力端口（默认 `8100`）：
 
 - `GET /healthz`

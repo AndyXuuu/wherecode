@@ -1,7 +1,7 @@
 import os
 
-from fastapi import FastAPI, status
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from control_center.models import (
@@ -22,11 +22,20 @@ from control_center.services import (
     ActionLayerClient,
     ActionLayerClientError,
     InMemoryOrchestrator,
+    SQLiteStateStore,
 )
 
 app = FastAPI(title="WhereCode Control Center")
 action_layer = ActionLayerClient(
     base_url=os.getenv("ACTION_LAYER_BASE_URL", "http://127.0.0.1:8100")
+)
+AUTH_ENABLED = os.getenv("WHERECODE_AUTH_ENABLED", "true").lower() == "true"
+AUTH_TOKEN = os.getenv("WHERECODE_TOKEN", "change-me")
+AUTH_WHITELIST_PREFIXES = (
+    "/healthz",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
 )
 
 
@@ -41,7 +50,13 @@ async def execute_with_action_layer(command: Command) -> ActionExecuteResponse:
     )
 
 
-store = InMemoryOrchestrator(action_executor=execute_with_action_layer)
+state_backend = os.getenv("WHERECODE_STATE_BACKEND", "memory").lower()
+sqlite_path = os.getenv("WHERECODE_SQLITE_PATH", ".wherecode/state.db")
+state_store = SQLiteStateStore(sqlite_path) if state_backend == "sqlite" else None
+store = InMemoryOrchestrator(
+    action_executor=execute_with_action_layer,
+    state_store=state_store,
+)
 
 allowed_origins = [
     origin.strip()
@@ -56,6 +71,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _extract_request_token(request: Request) -> str | None:
+    bearer = request.headers.get("Authorization", "")
+    if bearer.startswith("Bearer "):
+        return bearer[7:].strip()
+    header_token = request.headers.get("X-WhereCode-Token")
+    if header_token:
+        return header_token.strip()
+    return None
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    if not AUTH_ENABLED:
+        return await call_next(request)
+
+    if request.url.path.startswith(AUTH_WHITELIST_PREFIXES):
+        return await call_next(request)
+
+    token = _extract_request_token(request)
+    if not token or token != AUTH_TOKEN:
+        return JSONResponse(status_code=401, content={"detail": "unauthorized"})
+
+    return await call_next(request)
 
 
 @app.get("/healthz")

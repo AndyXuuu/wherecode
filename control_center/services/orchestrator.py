@@ -23,12 +23,17 @@ from control_center.models.hierarchy import (
     TaskStatus,
     now_utc,
 )
+from control_center.services.sqlite_state_store import SQLiteStateStore
 
 ActionExecutor = Callable[[Command], Awaitable[ActionExecuteResponse]]
 
 
 class InMemoryOrchestrator:
-    def __init__(self, action_executor: ActionExecutor | None = None) -> None:
+    def __init__(
+        self,
+        action_executor: ActionExecutor | None = None,
+        state_store: SQLiteStateStore | None = None,
+    ) -> None:
         self._projects: dict[str, Project] = {}
         self._tasks: dict[str, Task] = {}
         self._commands: dict[str, Command] = {}
@@ -36,7 +41,9 @@ class InMemoryOrchestrator:
         self._task_commands: dict[str, list[str]] = defaultdict(list)
         self._task_sequence: dict[str, int] = defaultdict(int)
         self._action_executor = action_executor
+        self._state_store = state_store
         self._lock = asyncio.Lock()
+        self._load_state()
 
     def reset(self) -> None:
         self._projects.clear()
@@ -45,6 +52,52 @@ class InMemoryOrchestrator:
         self._project_tasks.clear()
         self._task_commands.clear()
         self._task_sequence.clear()
+        if self._state_store is not None:
+            self._state_store.clear()
+
+    def _load_state(self) -> None:
+        if self._state_store is None:
+            return
+
+        projects = [Project(**payload) for payload in self._state_store.list("project")]
+        tasks = [Task(**payload) for payload in self._state_store.list("task")]
+        commands = [Command(**payload) for payload in self._state_store.list("command")]
+
+        self._projects = {project.id: project for project in projects}
+        self._tasks = {task.id: task for task in tasks}
+        self._commands = {command.id: command for command in commands}
+        self._rebuild_indexes()
+
+    def _rebuild_indexes(self) -> None:
+        self._project_tasks = defaultdict(list)
+        self._task_commands = defaultdict(list)
+        self._task_sequence = defaultdict(int)
+
+        for task in sorted(self._tasks.values(), key=lambda item: item.created_at):
+            self._project_tasks[task.project_id].append(task.id)
+
+        for command in sorted(
+            self._commands.values(),
+            key=lambda item: (item.task_id, item.sequence, item.created_at),
+        ):
+            self._task_commands[command.task_id].append(command.id)
+            if command.sequence > self._task_sequence[command.task_id]:
+                self._task_sequence[command.task_id] = command.sequence
+
+    def _persist_project_locked(self, project: Project) -> None:
+        if self._state_store is None:
+            return
+        self._state_store.upsert("project", project.id, project.model_dump(mode="json"))
+
+    def _persist_task_locked(self, task: Task) -> None:
+        if self._state_store is None:
+            return
+        self._state_store.upsert("task", task.id, task.model_dump(mode="json"))
+
+    def _persist_command_locked(self, command: Command) -> None:
+        if self._state_store is None:
+            return
+        self._state_store.upsert("command", command.id, command.model_dump(mode="json"))
 
     async def create_project(self, payload: CreateProjectRequest) -> Project:
         async with self._lock:
@@ -55,6 +108,7 @@ class InMemoryOrchestrator:
                 tags=payload.tags,
             )
             self._projects[project.id] = project
+            self._persist_project_locked(project)
             return project
 
     def _derive_task_status_locked(self, task_id: str) -> TaskStatus:
@@ -86,6 +140,7 @@ class InMemoryOrchestrator:
             in {TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.WAITING_APPROVAL}
         )
         project.updated_at = now_utc()
+        self._persist_project_locked(project)
 
     def _refresh_task_and_project_state_locked(self, task_id: str) -> None:
         task = self._tasks.get(task_id)
@@ -93,6 +148,7 @@ class InMemoryOrchestrator:
             return
         task.status = self._derive_task_status_locked(task_id)
         task.updated_at = now_utc()
+        self._persist_task_locked(task)
         self._recompute_project_active_count_locked(task.project_id)
 
     async def _advance_task_commands_locked(self, task_id: str) -> None:
@@ -119,6 +175,7 @@ class InMemoryOrchestrator:
             command.status = CommandStatus.RUNNING
             command.started_at = now_utc()
             command.updated_at = now_utc()
+            self._persist_command_locked(command)
             self._refresh_task_and_project_state_locked(command.task_id)
             return
 
@@ -137,11 +194,13 @@ class InMemoryOrchestrator:
 
         command.finished_at = now_utc()
         command.updated_at = now_utc()
+        self._persist_command_locked(command)
         self._refresh_task_and_project_state_locked(task.id)
 
     async def _complete_command_execution_locked(self, command: Command, task: Task) -> None:
         if self._action_executor is None:
             self._apply_mock_execution_locked(command, task)
+            self._persist_command_locked(command)
             return
 
         try:
@@ -150,6 +209,7 @@ class InMemoryOrchestrator:
             command.status = CommandStatus.FAILED
             command.error_message = f"execution failed: {exc}"
             task.failed_count += 1
+            self._persist_command_locked(command)
             return
 
         command.executor_agent = result.agent
@@ -161,11 +221,13 @@ class InMemoryOrchestrator:
             command.status = CommandStatus.SUCCESS
             command.output_summary = result.summary
             task.success_count += 1
+            self._persist_command_locked(command)
             return
 
         command.status = CommandStatus.FAILED
         command.error_message = result.summary
         task.failed_count += 1
+        self._persist_command_locked(command)
 
     def _apply_mock_execution_locked(self, command: Command, task: Task) -> None:
         lowered = command.text.lower()
@@ -201,6 +263,8 @@ class InMemoryOrchestrator:
             self._project_tasks[project_id].append(task.id)
 
             project.task_count += 1
+            self._persist_task_locked(task)
+            self._persist_project_locked(project)
             self._refresh_task_and_project_state_locked(task.id)
             return task
 
@@ -247,6 +311,8 @@ class InMemoryOrchestrator:
 
             task.command_count += 1
             task.last_command_id = command.id
+            self._persist_command_locked(command)
+            self._persist_task_locked(task)
             self._refresh_task_and_project_state_locked(task_id)
 
         return command
@@ -279,6 +345,7 @@ class InMemoryOrchestrator:
             command.approved_by = approved_by
             command.status = CommandStatus.QUEUED
             command.updated_at = now_utc()
+            self._persist_command_locked(command)
 
             self._refresh_task_and_project_state_locked(command.task_id)
 

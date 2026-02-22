@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 228 236 231;
+  --panel: 238 243 239;
+  --card: 246 248 247;
+  --border: 194 206 199;
+  --text: 27 31 29;
+  --muted: 93 107 99;
+  --primary: 220 233 226;
+  --primary-foreground: 27 31 29;
+  --success: 95 193 168;
+  --warning: 245 158 11;
+  --danger: 239 68 68;
+}
+
+.dark {
+  --bg: 17 23 20;
+  --panel: 27 35 32;
+  --card: 27 35 32;
+  --border: 58 74 66;
+  --text: 229 242 234;
+  --muted: 182 200 188;
+  --primary: 47 111 94;
+  --primary-foreground: 255 255 255;
+  --success: 95 193 168;
+  --warning: 245 158 11;
+  --danger: 239 68 68;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  font-family:
+    "Manrope",
+    "Noto Sans SC",
+    "PingFang SC",
+    "Segoe UI",
+    sans-serif;
+  background-image:
+    radial-gradient(circle at 8% 10%, rgb(var(--primary) / 0.12), transparent 40%),
+    radial-gradient(circle at 88% 18%, rgb(var(--primary) / 0.09), transparent 36%);
+}

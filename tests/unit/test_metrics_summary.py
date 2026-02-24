@@ -59,6 +59,8 @@ def test_metrics_summary_includes_rate_and_duration() -> None:
     assert payload["routing_reason_counts"]["default_agent"] == 2
     assert payload["routing_keyword_counts"] == {}
     assert payload["routing_rule_counts"] == {}
+    assert [item["window_minutes"] for item in payload["recent_windows"]] == [5, 15, 60]
+    assert payload["recent_windows"][0]["total_commands"] >= 2
 
 
 def test_metrics_summary_counts_in_flight_and_waiting_approval() -> None:
@@ -110,3 +112,4 @@ def test_metrics_summary_counts_keyword_and_rule_hits() -> None:
     assert payload["routing_reason_counts"]["keyword_rule"] >= 1
     assert payload["routing_keyword_counts"]["pytest"] >= 1
     assert payload["routing_rule_counts"]["rule_test_keywords"] >= 1
+    assert payload["recent_windows"][0]["window_minutes"] == 5

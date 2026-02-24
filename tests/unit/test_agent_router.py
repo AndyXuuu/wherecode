@@ -79,3 +79,27 @@ def test_agent_router_respects_rule_priority_and_enabled(tmp_path: Path) -> None
     assert decision.reason == "keyword_rule"
     assert decision.matched_keyword == "test"
     assert decision.rule_id == "test_rule"
+
+
+def test_agent_router_can_update_and_read_config(tmp_path: Path) -> None:
+    config_path = tmp_path / "agents.routing.json"
+    router = AgentRouter(str(config_path))
+    router.update_config(
+        default_agent="coding-agent",
+        rules=[
+            {
+                "id": "rule_review_only",
+                "agent": "review-agent",
+                "priority": 2,
+                "enabled": True,
+                "keywords": ["review"],
+            }
+        ],
+    )
+    decision = router.route("auto-agent", "please review this patch")
+    assert decision.agent == "review-agent"
+    assert decision.rule_id == "rule_review_only"
+
+    config = router.get_config()
+    assert config["default_agent"] == "coding-agent"
+    assert config["rules"][0]["id"] == "rule_review_only"

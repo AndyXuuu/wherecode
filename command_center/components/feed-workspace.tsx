@@ -110,6 +110,19 @@ function topCounterLabel(
   return `${name} (${value})`;
 }
 
+function topCounterItems(
+  counts: Record<string, number> | undefined,
+  limit = 3
+): Array<{ name: string; value: number }> {
+  if (!counts) {
+    return [];
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name, value]) => ({ name, value }));
+}
+
 export function FeedWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -135,6 +148,14 @@ export function FeedWorkspace() {
     [projects, selectedProjectId]
   );
   const selectedTask = useMemo(() => tasks.find((task) => task.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
+  const topKeywords = useMemo(
+    () => topCounterItems(metrics?.routing_keyword_counts, 3),
+    [metrics]
+  );
+  const topRules = useMemo(
+    () => topCounterItems(metrics?.routing_rule_counts, 3),
+    [metrics]
+  );
 
   const pushEvent = (title: string, body: string, tone: FeedEventTone) => {
     setEvents((previous) => [
@@ -686,6 +707,43 @@ export function FeedWorkspace() {
           <p className="mt-1 text-xs text-muted">
             热点规则: {topCounterLabel(metrics?.routing_rule_counts, "n/a")}
           </p>
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-muted">关键词 Top3</p>
+            {topKeywords.length === 0 ? (
+              <p className="text-xs text-muted">暂无数据</p>
+            ) : (
+              topKeywords.map((item) => (
+                <p key={`keyword_${item.name}`} className="truncate text-xs text-text">
+                  {item.name}: {item.value}
+                </p>
+              ))
+            )}
+          </div>
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-muted">规则 Top3</p>
+            {topRules.length === 0 ? (
+              <p className="text-xs text-muted">暂无数据</p>
+            ) : (
+              topRules.map((item) => (
+                <p key={`rule_${item.name}`} className="truncate text-xs text-text">
+                  {item.name}: {item.value}
+                </p>
+              ))
+            )}
+          </div>
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-muted">近 5/15/60 分钟</p>
+            {metrics?.recent_windows?.length ? (
+              metrics.recent_windows.map((window) => (
+                <p key={`window_${window.window_minutes}`} className="truncate text-xs text-text">
+                  {window.window_minutes}m: {window.total_commands} 条, 成功率{" "}
+                  {(window.success_rate * 100).toFixed(1)}%
+                </p>
+              ))
+            ) : (
+              <p className="text-xs text-muted">暂无窗口数据</p>
+            )}
+          </div>
         </div>
       </div>
     </WorkspaceShell>

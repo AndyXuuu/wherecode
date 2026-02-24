@@ -12,6 +12,7 @@ from control_center.models import (
     ActionExecuteResponse,
     ActionLayerHealthResponse,
     AgentRoutingConfigResponse,
+    AgentRoutingConfigUpdateRequest,
     MetricsSummaryResponse,
     ApproveCommandRequest,
     Command,
@@ -108,6 +109,24 @@ def _extract_request_token(request: Request) -> str | None:
     if header_token:
         return header_token.strip()
     return None
+
+
+def _build_routing_config_response() -> AgentRoutingConfigResponse:
+    config = agent_router.get_config()
+    return AgentRoutingConfigResponse(
+        default_agent=str(config["default_agent"]),
+        rules=[
+            {
+                "id": str(item["id"]),
+                "agent": str(item["agent"]),
+                "priority": int(item["priority"]),
+                "enabled": bool(item["enabled"]),
+                "keywords": list(item["keywords"]),
+            }
+            for item in config["rules"]
+            if isinstance(item, dict)
+        ],
+    )
 
 
 @app.middleware("http")
@@ -235,19 +254,32 @@ async def get_metrics_summary() -> MetricsSummaryResponse:
     return await store.get_metrics_summary()
 
 
-@app.post("/agent-routing/reload", response_model=AgentRoutingConfigResponse)
-async def reload_agent_routing() -> AgentRoutingConfigResponse:
-    agent_router.reload()
-    return AgentRoutingConfigResponse(
-        default_agent=agent_router.default_agent,
+@app.get("/agent-routing", response_model=AgentRoutingConfigResponse)
+async def get_agent_routing() -> AgentRoutingConfigResponse:
+    return _build_routing_config_response()
+
+
+@app.put("/agent-routing", response_model=AgentRoutingConfigResponse)
+async def update_agent_routing(
+    payload: AgentRoutingConfigUpdateRequest,
+) -> AgentRoutingConfigResponse:
+    agent_router.update_config(
+        default_agent=payload.default_agent,
         rules=[
             {
-                "id": rule.rule_id,
+                "id": rule.id,
                 "agent": rule.agent,
                 "priority": rule.priority,
                 "enabled": rule.enabled,
                 "keywords": list(rule.keywords),
             }
-            for rule in agent_router.rules
+            for rule in payload.rules
         ],
     )
+    return _build_routing_config_response()
+
+
+@app.post("/agent-routing/reload", response_model=AgentRoutingConfigResponse)
+async def reload_agent_routing() -> AgentRoutingConfigResponse:
+    agent_router.reload()
+    return _build_routing_config_response()

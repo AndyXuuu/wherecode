@@ -19,6 +19,7 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/action-layer/health": {"get"},
         "/action-layer/execute": {"post"},
         "/metrics/summary": {"get"},
+        "/agent-routing": {"get", "put"},
         "/agent-routing/reload": {"post"},
         "/projects": {"get", "post"},
         "/projects/{project_id}/tasks": {"get", "post"},
@@ -78,3 +79,4 @@ def test_openapi_validation_schema_contract() -> None:
     assert "routing_reason_counts" in metrics_props
     assert "routing_keyword_counts" in metrics_props
     assert "routing_rule_counts" in metrics_props
+    assert "recent_windows" in metrics_props

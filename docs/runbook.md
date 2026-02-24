@@ -68,6 +68,29 @@ curl -sX POST http://127.0.0.1:8000/agent-routing/reload \
   -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
 ```
 
+在线查看/更新规则（推荐）：
+
+```bash
+curl -s http://127.0.0.1:8000/agent-routing \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
+
+curl -sX PUT http://127.0.0.1:8000/agent-routing \
+  -H "Content-Type: application/json" \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
+  -d '{
+    "default_agent": "coding-agent",
+    "rules": [
+      {
+        "id": "rule_test_keywords",
+        "agent": "test-agent",
+        "priority": 10,
+        "enabled": true,
+        "keywords": ["pytest", "test", "coverage"]
+      }
+    ]
+  }'
+```
+
 ## 3. 快速检查
 
 ```bash

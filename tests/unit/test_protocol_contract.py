@@ -200,3 +200,43 @@ def test_reload_agent_routing_contract() -> None:
     assert len(payload["rules"]) >= 1
     first_rule = payload["rules"][0]
     assert {"id", "agent", "priority", "enabled", "keywords"}.issubset(first_rule.keys())
+
+
+def test_get_and_update_agent_routing_contract() -> None:
+    original = client.get("/agent-routing")
+    assert original.status_code == 200
+    original_payload = original.json()
+
+    update_payload = {
+        "default_agent": "coding-agent",
+        "rules": [
+            {
+                "id": "rule_review_only",
+                "agent": "review-agent",
+                "priority": 1,
+                "enabled": True,
+                "keywords": ["review"],
+            }
+        ],
+    }
+
+    try:
+        updated = client.put("/agent-routing", json=update_payload)
+        assert updated.status_code == 200
+        assert updated.json()["rules"][0]["id"] == "rule_review_only"
+
+        project = client.post("/projects", json={"name": "routing-update-project"}).json()
+        task = client.post(
+            f"/projects/{project['id']}/tasks",
+            json={"title": "routing-update-task"},
+        ).json()
+        accepted = client.post(
+            f"/tasks/{task['id']}/commands",
+            json={"text": "please review this module"},
+        ).json()
+        terminal = wait_for_terminal(accepted["command_id"])
+        assert terminal["executor_agent"] == "review-agent"
+        assert terminal["metadata"]["routing_rule_id"] == "rule_review_only"
+    finally:
+        restore = client.put("/agent-routing", json=original_payload)
+        assert restore.status_code == 200

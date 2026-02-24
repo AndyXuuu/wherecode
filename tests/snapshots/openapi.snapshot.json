@@ -131,6 +131,27 @@
         "title": "AgentRoutingConfigResponse",
         "type": "object"
       },
+      "AgentRoutingConfigUpdateRequest": {
+        "properties": {
+          "default_agent": {
+            "minLength": 1,
+            "title": "Default Agent",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RoutingRuleInfo"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "default_agent"
+        ],
+        "title": "AgentRoutingConfigUpdateRequest",
+        "type": "object"
+      },
       "ApproveCommandRequest": {
         "properties": {
           "approved_by": {
@@ -500,6 +521,13 @@
             "title": "In Flight Command Count",
             "type": "integer"
           },
+          "recent_windows": {
+            "items": {
+              "$ref": "#/components/schemas/MetricsWindowSummary"
+            },
+            "title": "Recent Windows",
+            "type": "array"
+          },
           "routing_keyword_counts": {
             "additionalProperties": {
               "type": "integer"
@@ -558,6 +586,44 @@
           "average_duration_ms"
         ],
         "title": "MetricsSummaryResponse",
+        "type": "object"
+      },
+      "MetricsWindowSummary": {
+        "properties": {
+          "average_duration_ms": {
+            "title": "Average Duration Ms",
+            "type": "number"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "success_count": {
+            "title": "Success Count",
+            "type": "integer"
+          },
+          "success_rate": {
+            "title": "Success Rate",
+            "type": "number"
+          },
+          "total_commands": {
+            "title": "Total Commands",
+            "type": "integer"
+          },
+          "window_minutes": {
+            "title": "Window Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "window_minutes",
+          "total_commands",
+          "success_count",
+          "failed_count",
+          "success_rate",
+          "average_duration_ms"
+        ],
+        "title": "MetricsWindowSummary",
         "type": "object"
       },
       "Project": {
@@ -1077,6 +1143,60 @@
           }
         },
         "summary": "Action Layer Health"
+      }
+    },
+    "/agent-routing": {
+      "get": {
+        "operationId": "get_agent_routing_agent_routing_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRoutingConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Agent Routing"
+      },
+      "put": {
+        "operationId": "update_agent_routing_agent_routing_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRoutingConfigUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRoutingConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Agent Routing"
       }
     },
     "/agent-routing/reload": {

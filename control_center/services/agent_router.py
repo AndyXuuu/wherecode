@@ -40,6 +40,33 @@ class AgentRouter:
     def reload(self) -> None:
         self._load_config()
 
+    def get_config(self) -> dict:
+        return {
+            "default_agent": self._default_agent,
+            "rules": [
+                {
+                    "id": rule.rule_id,
+                    "agent": rule.agent,
+                    "priority": rule.priority,
+                    "enabled": rule.enabled,
+                    "keywords": list(rule.keywords),
+                }
+                for rule in self._rules
+            ],
+        }
+
+    def update_config(self, default_agent: str, rules: list[dict]) -> None:
+        payload = {
+            "default_agent": default_agent,
+            "rules": rules,
+        }
+        self._config_path.parent.mkdir(parents=True, exist_ok=True)
+        self._config_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        self._load_config()
+
     def _load_config(self) -> None:
         if not self._config_path.exists():
             self._set_default_rules()

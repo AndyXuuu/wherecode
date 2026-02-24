@@ -17,6 +17,8 @@ from control_center.models.api import (
     ActionExecuteResponse,
     ActionLayerHealthResponse,
     AgentRoutingConfigResponse,
+    AgentRoutingConfigUpdateRequest,
+    MetricsWindowSummary,
     MetricsSummaryResponse,
     ApproveCommandRequest,
     CommandAcceptedResponse,
@@ -46,6 +48,8 @@ __all__ = [
     "ActionExecuteResponse",
     "ActionLayerHealthResponse",
     "AgentRoutingConfigResponse",
+    "AgentRoutingConfigUpdateRequest",
+    "MetricsWindowSummary",
     "MetricsSummaryResponse",
     "RoutingRuleInfo",
 ]

@@ -59,12 +59,26 @@ class ActionExecuteResponse(BaseModel):
     trace_id: str
 
 
+class MetricsWindowSummary(BaseModel):
+    window_minutes: int
+    total_commands: int
+    success_count: int
+    failed_count: int
+    success_rate: float
+    average_duration_ms: float
+
+
 class RoutingRuleInfo(BaseModel):
     id: str
     agent: str
     priority: int
     enabled: bool
     keywords: list[str] = Field(default_factory=list)
+
+
+class AgentRoutingConfigUpdateRequest(BaseModel):
+    default_agent: str = Field(min_length=1)
+    rules: list[RoutingRuleInfo] = Field(default_factory=list)
 
 
 class AgentRoutingConfigResponse(BaseModel):
@@ -86,3 +100,4 @@ class MetricsSummaryResponse(BaseModel):
     routing_reason_counts: dict[str, int] = Field(default_factory=dict)
     routing_keyword_counts: dict[str, int] = Field(default_factory=dict)
     routing_rule_counts: dict[str, int] = Field(default_factory=dict)
+    recent_windows: list[MetricsWindowSummary] = Field(default_factory=list)

@@ -67,4 +67,12 @@ export interface MetricsSummaryResponse {
   routing_reason_counts: Record<string, number>;
   routing_keyword_counts: Record<string, number>;
   routing_rule_counts: Record<string, number>;
+  recent_windows: Array<{
+    window_minutes: number;
+    total_commands: number;
+    success_count: number;
+    failed_count: number;
+    success_rate: number;
+    average_duration_ms: number;
+  }>;
 }

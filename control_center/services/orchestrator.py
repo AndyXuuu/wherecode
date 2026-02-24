@@ -372,6 +372,7 @@ class InMemoryOrchestrator:
         async with self._lock:
             await self._advance_all_commands_locked()
             commands = list(self._commands.values())
+            now = now_utc()
             total_commands = len(commands)
             in_flight_command_count = sum(
                 1
@@ -428,6 +429,53 @@ class InMemoryOrchestrator:
                 if isinstance(rule_id, str) and rule_id:
                     routing_rule_counts[rule_id] = routing_rule_counts.get(rule_id, 0) + 1
 
+            recent_windows = []
+            for minutes in (5, 15, 60):
+                window_start = now - timedelta(minutes=minutes)
+                window_commands = [
+                    command for command in commands if command.created_at >= window_start
+                ]
+                window_success = [
+                    command
+                    for command in commands
+                    if command.status == CommandStatus.SUCCESS
+                    and command.finished_at is not None
+                    and command.finished_at >= window_start
+                ]
+                window_failed = [
+                    command
+                    for command in commands
+                    if command.status == CommandStatus.FAILED
+                    and command.finished_at is not None
+                    and command.finished_at >= window_start
+                ]
+                completed_count = len(window_success) + len(window_failed)
+                window_success_rate = (
+                    round(len(window_success) / completed_count, 4)
+                    if completed_count > 0
+                    else 0.0
+                )
+                window_durations = [
+                    (command.finished_at - command.started_at).total_seconds() * 1000
+                    for command in [*window_success, *window_failed]
+                    if command.started_at is not None and command.finished_at is not None
+                ]
+                window_avg_duration = (
+                    round(sum(window_durations) / len(window_durations), 2)
+                    if window_durations
+                    else 0.0
+                )
+                recent_windows.append(
+                    {
+                        "window_minutes": minutes,
+                        "total_commands": len(window_commands),
+                        "success_count": len(window_success),
+                        "failed_count": len(window_failed),
+                        "success_rate": window_success_rate,
+                        "average_duration_ms": window_avg_duration,
+                    }
+                )
+
             return MetricsSummaryResponse(
                 total_projects=len(self._projects),
                 total_tasks=len(self._tasks),
@@ -442,4 +490,5 @@ class InMemoryOrchestrator:
                 routing_reason_counts=routing_reason_counts,
                 routing_keyword_counts=routing_keyword_counts,
                 routing_rule_counts=routing_rule_counts,
+                recent_windows=recent_windows,
             )

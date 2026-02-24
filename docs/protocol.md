@@ -190,6 +190,8 @@ X-WhereCode-Token: change-me
 - `GET /action-layer/health`：Action Layer 健康状态（由 Control Center 代理）
 - `POST /action-layer/execute`：Action Layer 执行入口（由 Control Center 代理）
 - `GET /metrics/summary`：运行指标汇总（成功率、平均耗时、运行中命令等）
+- `GET /agent-routing`：查看当前生效路由规则
+- `PUT /agent-routing`：更新路由规则（写回配置文件）
 - `POST /agent-routing/reload`：重载智能体路由规则并返回当前生效配置
 
 ---
@@ -235,6 +237,7 @@ X-WhereCode-Token: change-me
 - `routing_reason_counts`：按路由原因聚合的命令数量
 - `routing_keyword_counts`：按命中关键词聚合的次数
 - `routing_rule_counts`：按命中路由规则 ID 聚合的次数
+- `recent_windows`：固定窗口（5/15/60 分钟）命令量、成功率、平均耗时
 
 ---
 

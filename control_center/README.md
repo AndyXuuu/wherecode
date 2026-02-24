@@ -7,6 +7,8 @@
 - `GET /action-layer/health`
 - `POST /action-layer/execute`
 - `GET /metrics/summary`（运行指标聚合）
+- `GET /agent-routing`（查看当前路由规则）
+- `PUT /agent-routing`（更新路由规则）
 - `POST /agent-routing/reload`（热重载路由规则）
 
 ## 目录结构

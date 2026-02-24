@@ -410,6 +410,8 @@ class InMemoryOrchestrator:
 
             executor_agent_counts: dict[str, int] = {}
             routing_reason_counts: dict[str, int] = {}
+            routing_keyword_counts: dict[str, int] = {}
+            routing_rule_counts: dict[str, int] = {}
             for command in commands:
                 agent = command.executor_agent
                 if agent:
@@ -417,6 +419,14 @@ class InMemoryOrchestrator:
                 reason = command.metadata.get("routing_reason")
                 if isinstance(reason, str) and reason:
                     routing_reason_counts[reason] = routing_reason_counts.get(reason, 0) + 1
+                keyword = command.metadata.get("routing_keyword")
+                if isinstance(keyword, str) and keyword:
+                    routing_keyword_counts[keyword] = (
+                        routing_keyword_counts.get(keyword, 0) + 1
+                    )
+                rule_id = command.metadata.get("routing_rule_id")
+                if isinstance(rule_id, str) and rule_id:
+                    routing_rule_counts[rule_id] = routing_rule_counts.get(rule_id, 0) + 1
 
             return MetricsSummaryResponse(
                 total_projects=len(self._projects),
@@ -430,4 +440,6 @@ class InMemoryOrchestrator:
                 average_duration_ms=average_duration_ms,
                 executor_agent_counts=executor_agent_counts,
                 routing_reason_counts=routing_reason_counts,
+                routing_keyword_counts=routing_keyword_counts,
+                routing_rule_counts=routing_rule_counts,
             )

@@ -65,4 +65,6 @@ export interface MetricsSummaryResponse {
   average_duration_ms: number;
   executor_agent_counts: Record<string, number>;
   routing_reason_counts: Record<string, number>;
+  routing_keyword_counts: Record<string, number>;
+  routing_rule_counts: Record<string, number>;
 }

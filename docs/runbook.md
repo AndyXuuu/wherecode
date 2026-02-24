@@ -57,8 +57,16 @@ export WHERECODE_AGENT_ROUTING_FILE=control_center/agents.routing.json
 ```
 
 路由规则字段说明（JSON）：
+- `id`: 规则唯一标识（建议设置，便于指标追踪）
 - `priority`: 数字越小优先
 - `enabled`: `true/false` 控制是否生效
+
+更新规则文件后可热重载：
+
+```bash
+curl -sX POST http://127.0.0.1:8000/agent-routing/reload \
+  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
+```
 
 ## 3. 快速检查
 

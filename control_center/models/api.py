@@ -59,6 +59,19 @@ class ActionExecuteResponse(BaseModel):
     trace_id: str
 
 
+class RoutingRuleInfo(BaseModel):
+    id: str
+    agent: str
+    priority: int
+    enabled: bool
+    keywords: list[str] = Field(default_factory=list)
+
+
+class AgentRoutingConfigResponse(BaseModel):
+    default_agent: str
+    rules: list[RoutingRuleInfo] = Field(default_factory=list)
+
+
 class MetricsSummaryResponse(BaseModel):
     total_projects: int
     total_tasks: int
@@ -71,3 +84,5 @@ class MetricsSummaryResponse(BaseModel):
     average_duration_ms: float
     executor_agent_counts: dict[str, int] = Field(default_factory=dict)
     routing_reason_counts: dict[str, int] = Field(default_factory=dict)
+    routing_keyword_counts: dict[str, int] = Field(default_factory=dict)
+    routing_rule_counts: dict[str, int] = Field(default_factory=dict)

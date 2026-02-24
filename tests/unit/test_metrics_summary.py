@@ -57,6 +57,8 @@ def test_metrics_summary_includes_rate_and_duration() -> None:
     assert payload["in_flight_command_count"] == 0
     assert payload["executor_agent_counts"]["coding-agent"] == 2
     assert payload["routing_reason_counts"]["default_agent"] == 2
+    assert payload["routing_keyword_counts"] == {}
+    assert payload["routing_rule_counts"] == {}
 
 
 def test_metrics_summary_counts_in_flight_and_waiting_approval() -> None:
@@ -85,3 +87,26 @@ def test_metrics_summary_counts_in_flight_and_waiting_approval() -> None:
     assert payload["total_commands"] == 2
     assert payload["waiting_approval_count"] == 1
     assert payload["in_flight_command_count"] in {0, 1}
+
+
+def test_metrics_summary_counts_keyword_and_rule_hits() -> None:
+    project = client.post("/projects", json={"name": "metrics-routing"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "metrics-routing-task"},
+    ).json()
+
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={"text": "please run pytest and coverage"},
+    )
+    assert accepted.status_code == 202
+    wait_terminal(accepted.json()["command_id"])
+
+    metrics = client.get("/metrics/summary")
+    assert metrics.status_code == 200
+    payload = metrics.json()
+
+    assert payload["routing_reason_counts"]["keyword_rule"] >= 1
+    assert payload["routing_keyword_counts"]["pytest"] >= 1
+    assert payload["routing_rule_counts"]["rule_test_keywords"] >= 1

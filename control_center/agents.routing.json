@@ -2,6 +2,7 @@
   "default_agent": "coding-agent",
   "rules": [
     {
+      "id": "rule_test_keywords",
       "agent": "test-agent",
       "priority": 10,
       "enabled": true,
@@ -15,6 +16,7 @@
       ]
     },
     {
+      "id": "rule_review_keywords",
       "agent": "review-agent",
       "priority": 20,
       "enabled": true,

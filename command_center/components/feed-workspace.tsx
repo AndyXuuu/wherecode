@@ -34,6 +34,7 @@ interface RoutingHistoryItem {
   agent: string;
   reason: string;
   keyword?: string;
+  ruleId?: string;
   status: CommandStatus;
   updatedAt: string;
 }
@@ -237,6 +238,7 @@ export function FeedWorkspace() {
           if (detail.executor_agent) {
             const reason = readMetadataString(detail, "routing_reason") ?? "n/a";
             const keyword = readMetadataString(detail, "routing_keyword");
+            const ruleId = readMetadataString(detail, "routing_rule_id");
             setRoutingHistory((previous) => {
               const next: RoutingHistoryItem[] = [
                 {
@@ -244,6 +246,7 @@ export function FeedWorkspace() {
                   agent: detail.executor_agent ?? "n/a",
                   reason,
                   keyword,
+                  ruleId,
                   status: detail.status,
                   updatedAt: detail.updated_at
                 },
@@ -631,6 +634,7 @@ export function FeedWorkspace() {
                   <p className="mt-1 text-xs text-muted">
                     路由原因: {routingReasonLabel(item.reason)}
                     {item.keyword ? ` | 命中关键词: ${item.keyword}` : ""}
+                    {item.ruleId ? ` | 规则ID: ${item.ruleId}` : ""}
                   </p>
                   <p className="mt-1 text-xs text-muted">更新时间: {timeLabel(item.updatedAt)}</p>
                 </article>
@@ -675,6 +679,12 @@ export function FeedWorkspace() {
           <p className="mt-1 text-xs text-muted">
             主路由原因:{" "}
             {topCounterLabel(metrics?.routing_reason_counts, "n/a")}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            高频关键词: {topCounterLabel(metrics?.routing_keyword_counts, "n/a")}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            热点规则: {topCounterLabel(metrics?.routing_rule_counts, "n/a")}
           </p>
         </div>
       </div>

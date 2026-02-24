@@ -11,6 +11,7 @@ from control_center.models import (
     ActionExecuteRequest,
     ActionExecuteResponse,
     ActionLayerHealthResponse,
+    AgentRoutingConfigResponse,
     MetricsSummaryResponse,
     ApproveCommandRequest,
     Command,
@@ -61,6 +62,10 @@ async def execute_with_action_layer(command: Command, task: Task) -> ActionExecu
         command.metadata["routing_keyword"] = routing.matched_keyword
     else:
         command.metadata.pop("routing_keyword", None)
+    if routing.rule_id is not None:
+        command.metadata["routing_rule_id"] = routing.rule_id
+    else:
+        command.metadata.pop("routing_rule_id", None)
     return await action_layer.execute(
         ActionExecuteRequest(
             text=command.text,
@@ -228,3 +233,21 @@ async def get_project_snapshot(project_id: str) -> ProjectDetail:
 @app.get("/metrics/summary", response_model=MetricsSummaryResponse)
 async def get_metrics_summary() -> MetricsSummaryResponse:
     return await store.get_metrics_summary()
+
+
+@app.post("/agent-routing/reload", response_model=AgentRoutingConfigResponse)
+async def reload_agent_routing() -> AgentRoutingConfigResponse:
+    agent_router.reload()
+    return AgentRoutingConfigResponse(
+        default_agent=agent_router.default_agent,
+        rules=[
+            {
+                "id": rule.rule_id,
+                "agent": rule.agent,
+                "priority": rule.priority,
+                "enabled": rule.enabled,
+                "keywords": list(rule.keywords),
+            }
+            for rule in agent_router.rules
+        ],
+    )

@@ -190,6 +190,7 @@ X-WhereCode-Token: change-me
 - `GET /action-layer/health`：Action Layer 健康状态（由 Control Center 代理）
 - `POST /action-layer/execute`：Action Layer 执行入口（由 Control Center 代理）
 - `GET /metrics/summary`：运行指标汇总（成功率、平均耗时、运行中命令等）
+- `POST /agent-routing/reload`：重载智能体路由规则并返回当前生效配置
 
 ---
 
@@ -204,6 +205,7 @@ X-WhereCode-Token: change-me
 - 路由元信息：
   - `metadata.routing_reason`：`explicit_assignee|keyword_rule|default_agent`
   - `metadata.routing_keyword`：仅在 `keyword_rule` 时出现
+  - `metadata.routing_rule_id`：命中的路由规则 ID，仅在 `keyword_rule` 时出现
 
 ### 8.2 任务状态（按命令聚合）
 
@@ -231,6 +233,8 @@ X-WhereCode-Token: change-me
 - `average_duration_ms`：终态命令平均执行耗时（毫秒）
 - `executor_agent_counts`：按执行智能体聚合的命令数量
 - `routing_reason_counts`：按路由原因聚合的命令数量
+- `routing_keyword_counts`：按命中关键词聚合的次数
+- `routing_rule_counts`：按命中路由规则 ID 聚合的次数
 
 ---
 

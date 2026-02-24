@@ -10,10 +10,12 @@ class AgentRoutingDecision:
     agent: str
     reason: str
     matched_keyword: str | None = None
+    rule_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class AgentRule:
+    rule_id: str
     agent: str
     keywords: tuple[str, ...]
     priority: int
@@ -25,6 +27,17 @@ class AgentRouter:
         self._config_path = Path(config_path)
         self._default_agent = "coding-agent"
         self._rules: list[AgentRule] = []
+        self._load_config()
+
+    @property
+    def default_agent(self) -> str:
+        return self._default_agent
+
+    @property
+    def rules(self) -> list[AgentRule]:
+        return list(self._rules)
+
+    def reload(self) -> None:
         self._load_config()
 
     def _load_config(self) -> None:
@@ -48,12 +61,15 @@ class AgentRouter:
             for index, item in enumerate(rules):
                 if not isinstance(item, dict):
                     continue
+                rule_id = item.get("id")
                 agent = item.get("agent")
                 keywords = item.get("keywords")
                 if not isinstance(agent, str) or not agent.strip():
                     continue
                 if not isinstance(keywords, list):
                     continue
+                if not isinstance(rule_id, str) or not rule_id.strip():
+                    rule_id = f"rule_{index + 1}_{agent.strip().replace(' ', '_')}"
                 enabled = item.get("enabled", True)
                 priority_raw = item.get("priority", 100)
                 if not isinstance(enabled, bool):
@@ -71,6 +87,7 @@ class AgentRouter:
                     (
                         index,
                         AgentRule(
+                            rule_id=rule_id.strip(),
                             agent=agent.strip(),
                             keywords=tuple(normalized_keywords),
                             priority=priority_raw,
@@ -93,12 +110,14 @@ class AgentRouter:
         self._default_agent = "coding-agent"
         self._rules = [
             AgentRule(
+                rule_id="rule_test_keywords",
                 agent="test-agent",
                 keywords=("pytest", "unit test", "run tests", "integration test", "coverage", "test"),
                 priority=10,
                 enabled=True,
             ),
             AgentRule(
+                rule_id="rule_review_keywords",
                 agent="review-agent",
                 keywords=("review", "security", "audit", "risk"),
                 priority=20,
@@ -127,6 +146,7 @@ class AgentRouter:
                         agent=rule.agent,
                         reason="keyword_rule",
                         matched_keyword=str(keyword),
+                        rule_id=rule.rule_id,
                     )
         return AgentRoutingDecision(
             agent=self._default_agent,

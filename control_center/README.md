@@ -7,6 +7,7 @@
 - `GET /action-layer/health`
 - `POST /action-layer/execute`
 - `GET /metrics/summary`（运行指标聚合）
+- `POST /agent-routing/reload`（热重载路由规则）
 
 ## 目录结构
 
@@ -34,6 +35,7 @@
 
 - 规则文件默认位于 `control_center/agents.routing.json`
 - 每条规则支持：
+  - `id`：规则唯一标识（建议显式设置，便于观测）
   - `agent`：目标智能体
   - `keywords`：关键词数组（命中即路由）
   - `priority`：优先级（数字越小优先）

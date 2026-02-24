@@ -158,6 +158,7 @@ def test_auto_agent_routes_test_commands_to_test_agent() -> None:
     assert terminal["executor_agent"] == "test-agent"
     assert terminal["metadata"]["routing_reason"] == "keyword_rule"
     assert terminal["metadata"]["routing_keyword"] == "pytest"
+    assert terminal["metadata"]["routing_rule_id"] == "rule_test_keywords"
 
 
 def test_approval_contract_status_transition() -> None:
@@ -188,3 +189,14 @@ def test_approval_contract_status_transition() -> None:
 
     terminal = wait_for_terminal(command_id)
     assert terminal["status"] in {"success", "failed"}
+
+
+def test_reload_agent_routing_contract() -> None:
+    response = client.post("/agent-routing/reload")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["default_agent"] == "coding-agent"
+    assert isinstance(payload["rules"], list)
+    assert len(payload["rules"]) >= 1
+    first_rule = payload["rules"][0]
+    assert {"id", "agent", "priority", "enabled", "keywords"}.issubset(first_rule.keys())

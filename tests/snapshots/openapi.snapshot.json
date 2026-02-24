@@ -111,6 +111,26 @@
         "title": "ActionLayerHealthResponse",
         "type": "object"
       },
+      "AgentRoutingConfigResponse": {
+        "properties": {
+          "default_agent": {
+            "title": "Default Agent",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RoutingRuleInfo"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "default_agent"
+        ],
+        "title": "AgentRoutingConfigResponse",
+        "type": "object"
+      },
       "ApproveCommandRequest": {
         "properties": {
           "approved_by": {
@@ -480,11 +500,25 @@
             "title": "In Flight Command Count",
             "type": "integer"
           },
+          "routing_keyword_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Routing Keyword Counts",
+            "type": "object"
+          },
           "routing_reason_counts": {
             "additionalProperties": {
               "type": "integer"
             },
             "title": "Routing Reason Counts",
+            "type": "object"
+          },
+          "routing_rule_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Routing Rule Counts",
             "type": "object"
           },
           "success_count": {
@@ -697,6 +731,41 @@
         ],
         "title": "ProjectStatus",
         "type": "string"
+      },
+      "RoutingRuleInfo": {
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "agent",
+          "priority",
+          "enabled"
+        ],
+        "title": "RoutingRuleInfo",
+        "type": "object"
       },
       "Task": {
         "properties": {
@@ -1008,6 +1077,24 @@
           }
         },
         "summary": "Action Layer Health"
+      }
+    },
+    "/agent-routing/reload": {
+      "post": {
+        "operationId": "reload_agent_routing_agent_routing_reload_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRoutingConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Reload Agent Routing"
       }
     },
     "/commands/{command_id}": {

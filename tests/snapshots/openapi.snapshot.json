@@ -465,6 +465,13 @@
             "title": "Average Duration Ms",
             "type": "number"
           },
+          "executor_agent_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Executor Agent Counts",
+            "type": "object"
+          },
           "failed_count": {
             "title": "Failed Count",
             "type": "integer"
@@ -472,6 +479,13 @@
           "in_flight_command_count": {
             "title": "In Flight Command Count",
             "type": "integer"
+          },
+          "routing_reason_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Routing Reason Counts",
+            "type": "object"
           },
           "success_count": {
             "title": "Success Count",

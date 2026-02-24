@@ -67,6 +67,21 @@ const TASK_ASSIGNEE_OPTIONS = [
   { value: "review-agent", label: "review-agent（审查风控）" }
 ];
 
+function topCounterLabel(
+  counts: Record<string, number> | undefined,
+  fallback: string
+): string {
+  if (!counts) {
+    return fallback;
+  }
+  const entries = Object.entries(counts);
+  if (entries.length === 0) {
+    return fallback;
+  }
+  const [name, value] = entries.sort((a, b) => b[1] - a[1])[0];
+  return `${name} (${value})`;
+}
+
 export function FeedWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -491,6 +506,22 @@ export function FeedWorkspace() {
                   </p>
                 </div>
               ) : null}
+              {currentCommand.metadata ? (
+                <div className="grid gap-2 text-xs text-muted md:grid-cols-2">
+                  <p className="rounded-xl border border-border bg-card px-2 py-1">
+                    路由原因:{" "}
+                    {typeof currentCommand.metadata.routing_reason === "string"
+                      ? currentCommand.metadata.routing_reason
+                      : "n/a"}
+                  </p>
+                  <p className="rounded-xl border border-border bg-card px-2 py-1">
+                    命中关键词:{" "}
+                    {typeof currentCommand.metadata.routing_keyword === "string"
+                      ? currentCommand.metadata.routing_keyword
+                      : "n/a"}
+                  </p>
+                </div>
+              ) : null}
               <p className="rounded-xl border border-border bg-bg p-2 text-sm text-text">{currentCommand.text}</p>
               {currentCommand.output_summary ? (
                 <p className="rounded-xl border border-success/40 bg-success/20 p-2 text-sm text-success">
@@ -564,6 +595,14 @@ export function FeedWorkspace() {
           </p>
           <p className="mt-1 text-xs text-muted">
             平均耗时: {metrics ? `${metrics.average_duration_ms.toFixed(1)} ms` : "n/a"}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            热门Agent:{" "}
+            {topCounterLabel(metrics?.executor_agent_counts, "n/a")}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            主路由原因:{" "}
+            {topCounterLabel(metrics?.routing_reason_counts, "n/a")}
           </p>
         </div>
       </div>

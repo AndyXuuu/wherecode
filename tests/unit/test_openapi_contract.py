@@ -66,3 +66,8 @@ def test_openapi_validation_schema_contract() -> None:
     create_task_props = create_task["properties"]
     assert "assignee_agent" in create_task_props
     assert create_task_props["assignee_agent"].get("default") == "auto-agent"
+
+    metrics_summary = schemas["MetricsSummaryResponse"]
+    metrics_props = metrics_summary["properties"]
+    assert "executor_agent_counts" in metrics_props
+    assert "routing_reason_counts" in metrics_props

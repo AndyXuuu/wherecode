@@ -55,6 +55,8 @@ def test_metrics_summary_includes_rate_and_duration() -> None:
     assert payload["success_rate"] == 0.5
     assert payload["average_duration_ms"] >= 0
     assert payload["in_flight_command_count"] == 0
+    assert payload["executor_agent_counts"]["coding-agent"] == 2
+    assert payload["routing_reason_counts"]["default_agent"] == 2
 
 
 def test_metrics_summary_counts_in_flight_and_waiting_approval() -> None:

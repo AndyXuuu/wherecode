@@ -408,6 +408,16 @@ class InMemoryOrchestrator:
                 round(sum(durations_ms) / len(durations_ms), 2) if durations_ms else 0.0
             )
 
+            executor_agent_counts: dict[str, int] = {}
+            routing_reason_counts: dict[str, int] = {}
+            for command in commands:
+                agent = command.executor_agent
+                if agent:
+                    executor_agent_counts[agent] = executor_agent_counts.get(agent, 0) + 1
+                reason = command.metadata.get("routing_reason")
+                if isinstance(reason, str) and reason:
+                    routing_reason_counts[reason] = routing_reason_counts.get(reason, 0) + 1
+
             return MetricsSummaryResponse(
                 total_projects=len(self._projects),
                 total_tasks=len(self._tasks),
@@ -418,4 +428,6 @@ class InMemoryOrchestrator:
                 failed_count=failed_count,
                 success_rate=success_rate,
                 average_duration_ms=average_duration_ms,
+                executor_agent_counts=executor_agent_counts,
+                routing_reason_counts=routing_reason_counts,
             )

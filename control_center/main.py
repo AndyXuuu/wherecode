@@ -54,11 +54,17 @@ AUTH_WHITELIST_PREFIXES = (
 
 
 async def execute_with_action_layer(command: Command, task: Task) -> ActionExecuteResponse:
-    selected_agent = agent_router.select_agent(task.assignee_agent, command.text)
+    routing = agent_router.route(task.assignee_agent, command.text)
+    command.metadata["routed_agent"] = routing.agent
+    command.metadata["routing_reason"] = routing.reason
+    if routing.matched_keyword is not None:
+        command.metadata["routing_keyword"] = routing.matched_keyword
+    else:
+        command.metadata.pop("routing_keyword", None)
     return await action_layer.execute(
         ActionExecuteRequest(
             text=command.text,
-            agent=selected_agent,
+            agent=routing.agent,
             requested_by=command.requested_by,
             task_id=command.task_id,
             project_id=command.project_id,

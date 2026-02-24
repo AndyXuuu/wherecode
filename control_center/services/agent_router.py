@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True, slots=True)
+class AgentRoutingDecision:
+    agent: str
+    reason: str
+    matched_keyword: str | None = None
 
 
 class AgentRouter:
@@ -70,13 +78,27 @@ class AgentRouter:
         ]
 
     def select_agent(self, task_assignee_agent: str, command_text: str) -> str:
+        return self.route(task_assignee_agent, command_text).agent
+
+    def route(self, task_assignee_agent: str, command_text: str) -> AgentRoutingDecision:
         assignee = task_assignee_agent.strip().lower()
         if assignee and assignee not in {"auto", "auto-agent"}:
-            return task_assignee_agent
+            return AgentRoutingDecision(
+                agent=task_assignee_agent,
+                reason="explicit_assignee",
+            )
 
         lowered = command_text.lower()
         for rule in self._rules:
             keywords = rule["keywords"]
-            if any(keyword in lowered for keyword in keywords):  # type: ignore[arg-type]
-                return str(rule["agent"])
-        return self._default_agent
+            for keyword in keywords:  # type: ignore[assignment]
+                if keyword in lowered:
+                    return AgentRoutingDecision(
+                        agent=str(rule["agent"]),
+                        reason="keyword_rule",
+                        matched_keyword=str(keyword),
+                    )
+        return AgentRoutingDecision(
+            agent=self._default_agent,
+            reason="default_agent",
+        )

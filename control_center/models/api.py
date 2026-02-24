@@ -69,3 +69,5 @@ class MetricsSummaryResponse(BaseModel):
     failed_count: int
     success_rate: float
     average_duration_ms: float
+    executor_agent_counts: dict[str, int] = Field(default_factory=dict)
+    routing_reason_counts: dict[str, int] = Field(default_factory=dict)

@@ -43,3 +43,11 @@ def test_agent_router_routes_auto_agent_by_keyword(tmp_path: Path) -> None:
     assert router.select_agent("auto-agent", "please run pytest for auth") == "test-agent"
     assert router.select_agent("auto-agent", "security review this patch") == "review-agent"
     assert router.select_agent("auto-agent", "implement login ui") == "coding-agent"
+
+    route_test = router.route("auto-agent", "please run pytest for auth")
+    assert route_test.reason == "keyword_rule"
+    assert route_test.matched_keyword == "pytest"
+
+    route_default = router.route("auto-agent", "implement login ui")
+    assert route_default.reason == "default_agent"
+    assert route_default.matched_keyword is None

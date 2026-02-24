@@ -226,6 +226,8 @@ X-WhereCode-Token: change-me
 - `waiting_approval_count`：等待审批命令数量
 - `success_rate`：`success / (success + failed)`，无终态命令时为 `0`
 - `average_duration_ms`：终态命令平均执行耗时（毫秒）
+- `executor_agent_counts`：按执行智能体聚合的命令数量
+- `routing_reason_counts`：按路由原因聚合的命令数量
 
 ---
 

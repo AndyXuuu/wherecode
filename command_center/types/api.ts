@@ -63,4 +63,6 @@ export interface MetricsSummaryResponse {
   failed_count: number;
   success_rate: number;
   average_duration_ms: number;
+  executor_agent_counts: Record<string, number>;
+  routing_reason_counts: Record<string, number>;
 }

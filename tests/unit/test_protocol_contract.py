@@ -156,6 +156,8 @@ def test_auto_agent_routes_test_commands_to_test_agent() -> None:
     ).json()
     terminal = wait_for_terminal(accepted["command_id"])
     assert terminal["executor_agent"] == "test-agent"
+    assert terminal["metadata"]["routing_reason"] == "keyword_rule"
+    assert terminal["metadata"]["routing_keyword"] == "pytest"
 
 
 def test_approval_contract_status_transition() -> None:

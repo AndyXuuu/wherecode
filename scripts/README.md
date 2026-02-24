@@ -8,6 +8,7 @@
 - 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check）
 - HTTP 异步链路 smoke 脚本（`http_async_smoke.sh`）
 - Action Layer smoke 脚本（`action_layer_smoke.sh`）
+- 全链路联调 smoke（`full_stack_smoke.sh`，自动 start -> smoke -> stop）
 - 本地统一校验脚本（`check_all.sh`，后端测试 + 前端构建）
 
 约定：

@@ -10,3 +10,4 @@
 - `design_acceptance.md`: Pencil 设计验收记录（只读检查与结论）
 - `pencil_app_pages_mapping.md`: Pencil 节点到 Next 路由/组件的映射清单
 - `progress_audit_2026-02-22.md`: 项目进度审计结论与下一阶段建议
+- `troubleshooting.md`: 常见故障与排查路径

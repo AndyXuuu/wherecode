@@ -108,6 +108,7 @@ bash scripts/check_all.sh
 ```bash
 bash scripts/http_async_smoke.sh
 bash scripts/action_layer_smoke.sh
+bash scripts/full_stack_smoke.sh
 ```
 
 注意：该脚本依赖 Control Center 已运行（`http://127.0.0.1:8000`）。
@@ -152,3 +153,4 @@ curl -s http://127.0.0.1:8000/commands/<command_id> \
   - Command Center：`bash scripts/stationctl.sh install command-center`
 - 401 unauthorized：确认 `WHERECODE_TOKEN` 与请求头 `X-WhereCode-Token` 一致
 - 环境变量未生效：确认是否已加载 `control_center/.env` 或手动导出变量
+- 更多问题排查：见 `docs/troubleshooting.md`

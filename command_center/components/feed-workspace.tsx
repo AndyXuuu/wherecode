@@ -11,10 +11,12 @@ import {
   createProject,
   createTask,
   getCommand,
+  getMetricsSummary,
   listProjects,
   listTasks,
   submitCommand
 } from "@/lib/control-center-client";
+import type { MetricsSummaryResponse } from "@/types/api";
 import type { Command, CommandStatus, Project, Task } from "@/types/hierarchy";
 
 type FeedEventTone = "neutral" | "success" | "warning" | "danger";
@@ -58,6 +60,12 @@ function eventToneByStatus(status: CommandStatus): FeedEventTone {
 }
 
 const FINAL_STATUSES: CommandStatus[] = ["success", "failed", "canceled"];
+const TASK_ASSIGNEE_OPTIONS = [
+  { value: "auto-agent", label: "auto-agent（按规则自动选择）" },
+  { value: "coding-agent", label: "coding-agent（开发实现）" },
+  { value: "test-agent", label: "test-agent（测试执行）" },
+  { value: "review-agent", label: "review-agent（审查风控）" }
+];
 
 export function FeedWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -66,6 +74,7 @@ export function FeedWorkspace() {
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [newProjectName, setNewProjectName] = useState("wherecode-mobile");
   const [newTaskTitle, setNewTaskTitle] = useState("登录模块重构");
+  const [newTaskAssignee, setNewTaskAssignee] = useState("auto-agent");
   const [commandText, setCommandText] = useState("重构登录模块并运行单元测试");
   const [requestedBy, setRequestedBy] = useState("andy");
   const [requiresApproval, setRequiresApproval] = useState(false);
@@ -74,6 +83,7 @@ export function FeedWorkspace() {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [metrics, setMetrics] = useState<MetricsSummaryResponse | null>(null);
   const lastStatusRef = useRef<CommandStatus | null>(null);
 
   const selectedProject = useMemo(
@@ -134,6 +144,32 @@ export function FeedWorkspace() {
       setError(loadError instanceof Error ? loadError.message : "加载任务失败");
     });
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadMetrics = async () => {
+      try {
+        const summary = await getMetricsSummary();
+        if (cancelled) {
+          return;
+        }
+        setMetrics(summary);
+      } catch (metricsError) {
+        if (cancelled) {
+          return;
+        }
+        setError(metricsError instanceof Error ? metricsError.message : "加载指标失败");
+      }
+    };
+    loadMetrics().catch(() => undefined);
+    const timer = window.setInterval(() => {
+      loadMetrics().catch(() => undefined);
+    }, 4000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!pollingCommandId) {
@@ -216,11 +252,16 @@ export function FeedWorkspace() {
     try {
       const task = await createTask(selectedProjectId, {
         title: newTaskTitle.trim(),
-        priority: 3
+        priority: 3,
+        assignee_agent: newTaskAssignee
       });
       await loadTasks(selectedProjectId);
       setSelectedTaskId(task.id);
-      pushEvent("任务已创建", `${task.title} (${task.id})`, "success");
+      pushEvent(
+        "任务已创建",
+        `${task.title} (${task.id}) -> ${task.assignee_agent}`,
+        "success"
+      );
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "创建任务失败");
     } finally {
@@ -351,11 +392,31 @@ export function FeedWorkspace() {
                   placeholder="登录模块重构"
                 />
               </label>
+              <label className="space-y-1 text-xs text-muted">
+                执行智能体
+                <select
+                  className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"
+                  value={newTaskAssignee}
+                  onChange={(event) => setNewTaskAssignee(event.target.value)}
+                >
+                  {TASK_ASSIGNEE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <p className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted">
+                `auto-agent` 会根据命令关键词自动路由到 test/review/coding 智能体。
+              </p>
               <button
                 type="button"
                 disabled={busy || !selectedProjectId}
                 onClick={handleCreateTask}
-                className="mt-5 rounded-xl border border-border bg-card px-3 py-2 text-sm text-text hover:bg-bg disabled:opacity-60"
+                className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-text hover:bg-bg disabled:opacity-60"
               >
                 创建任务
               </button>
@@ -476,7 +537,7 @@ export function FeedWorkspace() {
         </PanelCard>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
         <div className="rounded-xl border border-border bg-panel p-3">
           <p className="text-xs text-muted">项目</p>
           <p className="mt-1 truncate text-sm text-text">{selectedProject ? `${selectedProject.name} (${selectedProject.id})` : "未选择"}</p>
@@ -484,10 +545,26 @@ export function FeedWorkspace() {
         <div className="rounded-xl border border-border bg-panel p-3">
           <p className="text-xs text-muted">任务</p>
           <p className="mt-1 truncate text-sm text-text">{selectedTask ? `${selectedTask.title} (${selectedTask.id})` : "未选择"}</p>
+          <p className="mt-1 truncate text-xs text-muted">
+            智能体: {selectedTask ? selectedTask.assignee_agent : "n/a"}
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-panel p-3">
           <p className="text-xs text-muted">命令</p>
           <p className="mt-1 truncate text-sm text-text">{currentCommand ? `${currentCommand.id} (${currentCommand.status})` : "未提交"}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-panel p-3">
+          <p className="text-xs text-muted">系统指标</p>
+          <p className="mt-1 text-sm text-text">
+            Success: {metrics ? `${(metrics.success_rate * 100).toFixed(1)}%` : "n/a"}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            运行中: {metrics?.in_flight_command_count ?? "n/a"} | 等待审批:{" "}
+            {metrics?.waiting_approval_count ?? "n/a"}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            平均耗时: {metrics ? `${metrics.average_duration_ms.toFixed(1)} ms` : "n/a"}
+          </p>
         </div>
       </div>
     </WorkspaceShell>

@@ -52,3 +52,15 @@ export interface ActionExecuteResponse {
   agent: string;
   trace_id: string;
 }
+
+export interface MetricsSummaryResponse {
+  total_projects: number;
+  total_tasks: number;
+  total_commands: number;
+  in_flight_command_count: number;
+  waiting_approval_count: number;
+  success_count: number;
+  failed_count: number;
+  success_rate: number;
+  average_duration_ms: number;
+}

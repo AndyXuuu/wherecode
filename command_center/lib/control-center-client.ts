@@ -8,6 +8,7 @@ import type {
   ActionExecuteInput,
   ActionExecuteResponse,
   ActionLayerHealthResponse,
+  MetricsSummaryResponse,
   ApproveCommandInput,
   CommandAcceptedResponse,
   CreateCommandInput,
@@ -144,6 +145,12 @@ export async function approveCommand(
 
 export async function getProjectSnapshot(projectId: string): Promise<ProjectDetail> {
   return requestJson<ProjectDetail>(`/projects/${projectId}/snapshot`, {
+    method: "GET"
+  });
+}
+
+export async function getMetricsSummary(): Promise<MetricsSummaryResponse> {
+  return requestJson<MetricsSummaryResponse>("/metrics/summary", {
     method: "GET"
   });
 }

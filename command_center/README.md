@@ -76,5 +76,6 @@ pnpm build
 - 通信接入：`/command-lab` 已接入 Control Center 的 HTTP 异步链路（提交 + 轮询 + 审批）。
 - 智能体路由：创建任务时可指定 `auto-agent/coding-agent/test-agent/review-agent`。
 - 指标观测：`/command-lab` 已展示 `/metrics/summary`（成功率、平均耗时、在途命令、热门 Agent、主路由原因）。
+- 路由解释：`/command-lab` 已展示“路由决策历史”（命令 -> 智能体、路由原因、命中关键词）。
 - 联通探活：`/command-lab` 侧边探针同时检查 Control Center 与 Action Layer（经 Control Center 代理）。
 - 路由兼容：`/feed` 保留为旧地址并重定向到 `/overview`。

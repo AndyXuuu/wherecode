@@ -30,6 +30,15 @@
 - `WHERECODE_SQLITE_PATH`：SQLite 文件路径（默认 `.wherecode/state.db`）
 - `WHERECODE_AGENT_ROUTING_FILE`：智能体路由规则文件（默认 `control_center/agents.routing.json`）
 
+## 智能体路由规则
+
+- 规则文件默认位于 `control_center/agents.routing.json`
+- 每条规则支持：
+  - `agent`：目标智能体
+  - `keywords`：关键词数组（命中即路由）
+  - `priority`：优先级（数字越小优先）
+  - `enabled`：是否启用
+
 ## 开发约定
 
 - 先保证最小可运行，再逐步扩展模块。

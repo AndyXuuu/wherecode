@@ -3,6 +3,8 @@
   "rules": [
     {
       "agent": "test-agent",
+      "priority": 10,
+      "enabled": true,
       "keywords": [
         "pytest",
         "unit test",
@@ -14,6 +16,8 @@
     },
     {
       "agent": "review-agent",
+      "priority": 20,
+      "enabled": true,
       "keywords": [
         "review",
         "security",

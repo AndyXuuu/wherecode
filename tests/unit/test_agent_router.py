@@ -51,3 +51,26 @@ def test_agent_router_routes_auto_agent_by_keyword(tmp_path: Path) -> None:
     route_default = router.route("auto-agent", "implement login ui")
     assert route_default.reason == "default_agent"
     assert route_default.matched_keyword is None
+
+
+def test_agent_router_respects_rule_priority_and_enabled(tmp_path: Path) -> None:
+    config_path = tmp_path / "agents.routing.json"
+    config_path.write_text(
+        """
+{
+  "default_agent": "coding-agent",
+  "rules": [
+    {"agent": "review-agent", "priority": 20, "enabled": true, "keywords": ["test"]},
+    {"agent": "test-agent", "priority": 5, "enabled": true, "keywords": ["test"]},
+    {"agent": "disabled-agent", "priority": 1, "enabled": false, "keywords": ["test"]}
+  ]
+}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    router = AgentRouter(str(config_path))
+    decision = router.route("auto-agent", "please test this flow")
+    assert decision.agent == "test-agent"
+    assert decision.reason == "keyword_rule"
+    assert decision.matched_keyword == "test"

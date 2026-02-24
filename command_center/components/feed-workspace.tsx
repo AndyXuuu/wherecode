@@ -29,6 +29,15 @@ interface FeedEvent {
   createdAt: string;
 }
 
+interface RoutingHistoryItem {
+  commandId: string;
+  agent: string;
+  reason: string;
+  keyword?: string;
+  status: CommandStatus;
+  updatedAt: string;
+}
+
 function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString("zh-CN", { hour12: false });
 }
@@ -57,6 +66,24 @@ function eventToneByStatus(status: CommandStatus): FeedEventTone {
     return "danger";
   }
   return "neutral";
+}
+
+function routingReasonLabel(reason: string): string {
+  if (reason === "explicit_assignee") {
+    return "指定智能体";
+  }
+  if (reason === "keyword_rule") {
+    return "关键词路由";
+  }
+  if (reason === "default_agent") {
+    return "默认路由";
+  }
+  return reason;
+}
+
+function readMetadataString(command: Command, key: string): string | undefined {
+  const value = command.metadata?.[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
 const FINAL_STATUSES: CommandStatus[] = ["success", "failed", "canceled"];
@@ -96,6 +123,7 @@ export function FeedWorkspace() {
   const [currentCommand, setCurrentCommand] = useState<Command | null>(null);
   const [pollingCommandId, setPollingCommandId] = useState<string | null>(null);
   const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [routingHistory, setRoutingHistory] = useState<RoutingHistoryItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [metrics, setMetrics] = useState<MetricsSummaryResponse | null>(null);
@@ -206,6 +234,24 @@ export function FeedWorkspace() {
             `${detail.id} (${detail.task_id})`,
             eventToneByStatus(detail.status)
           );
+          if (detail.executor_agent) {
+            const reason = readMetadataString(detail, "routing_reason") ?? "n/a";
+            const keyword = readMetadataString(detail, "routing_keyword");
+            setRoutingHistory((previous) => {
+              const next: RoutingHistoryItem[] = [
+                {
+                  commandId: detail.id,
+                  agent: detail.executor_agent ?? "n/a",
+                  reason,
+                  keyword,
+                  status: detail.status,
+                  updatedAt: detail.updated_at
+                },
+                ...previous.filter((item) => item.commandId !== detail.id)
+              ];
+              return next.slice(0, 10);
+            });
+          }
         }
 
         if (detail.status === "waiting_approval" || FINAL_STATUSES.includes(detail.status)) {
@@ -561,6 +607,32 @@ export function FeedWorkspace() {
                     <span className="text-xs text-muted">{timeLabel(event.createdAt)}</span>
                   </div>
                   <p className="mt-1 text-xs text-muted">{event.body}</p>
+                </article>
+              ))
+            )}
+          </div>
+        </PanelCard>
+      </div>
+
+      <div className="mt-4">
+        <PanelCard title="路由决策历史" subtitle="展示最近命令选择了哪个智能体，以及路由原因。">
+          <div className="space-y-2">
+            {routingHistory.length === 0 ? (
+              <p className="text-sm text-muted">暂无路由记录</p>
+            ) : (
+              routingHistory.map((item) => (
+                <article key={item.commandId} className="rounded-xl border border-border bg-card p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-text">
+                      {item.commandId} {"->"} {item.agent}
+                    </p>
+                    <StatusChip status={item.status} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    路由原因: {routingReasonLabel(item.reason)}
+                    {item.keyword ? ` | 命中关键词: ${item.keyword}` : ""}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">更新时间: {timeLabel(item.updatedAt)}</p>
                 </article>
               ))
             )}

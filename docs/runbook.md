@@ -56,6 +56,10 @@ export WHERECODE_SQLITE_PATH=.wherecode/state.db
 export WHERECODE_AGENT_ROUTING_FILE=control_center/agents.routing.json
 ```
 
+路由规则字段说明（JSON）：
+- `priority`: 数字越小优先
+- `enabled`: `true/false` 控制是否生效
+
 ## 3. 快速检查
 
 ```bash

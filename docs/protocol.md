@@ -201,6 +201,9 @@ X-WhereCode-Token: change-me
 - 审批命令：`waiting_approval -> (approve) -> queued -> running -> success|failed`
 - 执行来源：由 Control Center 调用 Action Layer `/execute`，并把 `agent/trace_id` 回填到命令记录
 - 失败判定（当前 mock 规则）：命令文本包含 `fail` 或 `error` 时进入 `failed`
+- 路由元信息：
+  - `metadata.routing_reason`：`explicit_assignee|keyword_rule|default_agent`
+  - `metadata.routing_keyword`：仅在 `keyword_rule` 时出现
 
 ### 8.2 任务状态（按命令聚合）
 

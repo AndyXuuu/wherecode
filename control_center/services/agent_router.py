@@ -12,11 +12,19 @@ class AgentRoutingDecision:
     matched_keyword: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class AgentRule:
+    agent: str
+    keywords: tuple[str, ...]
+    priority: int
+    enabled: bool
+
+
 class AgentRouter:
     def __init__(self, config_path: str) -> None:
         self._config_path = Path(config_path)
         self._default_agent = "coding-agent"
-        self._rules: list[dict[str, object]] = []
+        self._rules: list[AgentRule] = []
         self._load_config()
 
     def _load_config(self) -> None:
@@ -36,8 +44,8 @@ class AgentRouter:
             if not isinstance(rules, list):
                 rules = []
 
-            normalized_rules: list[dict[str, object]] = []
-            for item in rules:
+            parsed_rules: list[tuple[int, AgentRule]] = []
+            for index, item in enumerate(rules):
                 if not isinstance(item, dict):
                     continue
                 agent = item.get("agent")
@@ -46,6 +54,12 @@ class AgentRouter:
                     continue
                 if not isinstance(keywords, list):
                     continue
+                enabled = item.get("enabled", True)
+                priority_raw = item.get("priority", 100)
+                if not isinstance(enabled, bool):
+                    enabled = True
+                if not isinstance(priority_raw, int):
+                    priority_raw = 100
                 normalized_keywords = [
                     keyword.strip().lower()
                     for keyword in keywords
@@ -53,28 +67,43 @@ class AgentRouter:
                 ]
                 if not normalized_keywords:
                     continue
-                normalized_rules.append(
-                    {
-                        "agent": agent.strip(),
-                        "keywords": normalized_keywords,
-                    }
+                parsed_rules.append(
+                    (
+                        index,
+                        AgentRule(
+                            agent=agent.strip(),
+                            keywords=tuple(normalized_keywords),
+                            priority=priority_raw,
+                            enabled=enabled,
+                        ),
+                    )
                 )
             self._default_agent = default_agent.strip()
-            self._rules = normalized_rules
+            self._rules = [
+                rule
+                for _, rule in sorted(
+                    parsed_rules,
+                    key=lambda pair: (pair[1].priority, pair[0]),
+                )
+            ]
         except Exception:  # noqa: BLE001
             self._set_default_rules()
 
     def _set_default_rules(self) -> None:
         self._default_agent = "coding-agent"
         self._rules = [
-            {
-                "agent": "test-agent",
-                "keywords": ["pytest", "unit test", "run tests", "integration test", "coverage", "test"],
-            },
-            {
-                "agent": "review-agent",
-                "keywords": ["review", "security", "audit", "risk"],
-            },
+            AgentRule(
+                agent="test-agent",
+                keywords=("pytest", "unit test", "run tests", "integration test", "coverage", "test"),
+                priority=10,
+                enabled=True,
+            ),
+            AgentRule(
+                agent="review-agent",
+                keywords=("review", "security", "audit", "risk"),
+                priority=20,
+                enabled=True,
+            ),
         ]
 
     def select_agent(self, task_assignee_agent: str, command_text: str) -> str:
@@ -90,11 +119,12 @@ class AgentRouter:
 
         lowered = command_text.lower()
         for rule in self._rules:
-            keywords = rule["keywords"]
-            for keyword in keywords:  # type: ignore[assignment]
+            if not rule.enabled:
+                continue
+            for keyword in rule.keywords:
                 if keyword in lowered:
                     return AgentRoutingDecision(
-                        agent=str(rule["agent"]),
+                        agent=rule.agent,
                         reason="keyword_rule",
                         matched_keyword=str(keyword),
                     )

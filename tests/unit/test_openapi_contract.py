@@ -58,6 +58,10 @@ def test_openapi_validation_schema_contract() -> None:
     assert "requires_approval" in create_command_props
     assert create_command_props["requires_approval"].get("default") is False
 
+    action_execute = schemas["ActionExecuteRequest"]
+    action_execute_props = action_execute["properties"]
+    assert "agent" in action_execute_props
+
     approve_command = schemas["ApproveCommandRequest"]
     assert "approved_by" in approve_command["properties"]
     assert "approved_by" in approve_command["required"]

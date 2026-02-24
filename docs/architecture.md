@@ -33,6 +33,7 @@
 - 任务默认 `assignee_agent=auto-agent`
 - Control Center 按 `control_center/agents.routing.json` 规则选择执行智能体
 - 可通过 `WHERECODE_AGENT_ROUTING_FILE` 指定自定义规则文件
+- 规则支持 `priority` 与 `enabled`，用于灰度启停和优先级控制
 
 ## 观测（基础版）
 

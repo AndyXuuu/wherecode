@@ -399,15 +399,10 @@
       "CreateTaskRequest": {
         "properties": {
           "assignee_agent": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Agent"
+            "default": "coding-agent",
+            "minLength": 1,
+            "title": "Assignee Agent",
+            "type": "string"
           },
           "description": {
             "anyOf": [
@@ -680,15 +675,9 @@
       "Task": {
         "properties": {
           "assignee_agent": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Agent"
+            "default": "coding-agent",
+            "title": "Assignee Agent",
+            "type": "string"
           },
           "command_count": {
             "default": 0,
@@ -780,15 +769,9 @@
       "TaskDetail": {
         "properties": {
           "assignee_agent": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Agent"
+            "default": "coding-agent",
+            "title": "Assignee Agent",
+            "type": "string"
           },
           "command_count": {
             "default": 0,

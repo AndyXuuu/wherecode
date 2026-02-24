@@ -61,6 +61,7 @@ def test_task_command_snapshot_contract() -> None:
     task = task_resp.json()
     task_id = task["id"]
     assert task["project_id"] == project_id
+    assert task["assignee_agent"] == "coding-agent"
 
     cmd_resp = client.post(
         f"/tasks/{task_id}/commands",
@@ -102,6 +103,17 @@ def test_task_command_snapshot_contract() -> None:
     assert any(item["id"] == task_id for item in snapshot["tasks"])
     snapshot_task = next(item for item in snapshot["tasks"] if item["id"] == task_id)
     assert any(item["id"] == accepted["command_id"] for item in snapshot_task["commands"])
+
+
+def test_task_default_assignee_agent_is_applied() -> None:
+    project = client.post("/projects", json={"name": "default-assignee"}).json()
+    response = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "task-with-default-assignee"},
+    )
+    assert response.status_code == 201
+    task = response.json()
+    assert task["assignee_agent"] == "coding-agent"
 
 
 def test_failed_command_contract_and_task_status() -> None:

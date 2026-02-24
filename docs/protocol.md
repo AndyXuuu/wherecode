@@ -69,6 +69,10 @@ X-WhereCode-Token: change-me
 }
 ```
 
+说明：
+- `assignee_agent` 为空时将使用默认值 `coding-agent`
+- 所有任务默认由智能体执行
+
 ### 响应
 `201 Created`
 

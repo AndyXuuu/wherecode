@@ -48,7 +48,7 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: 1 | 2 | 3 | 4 | 5;
-  assignee_agent?: string;
+  assignee_agent: string;
   command_count: number;
   success_count: number;
   failed_count: number;

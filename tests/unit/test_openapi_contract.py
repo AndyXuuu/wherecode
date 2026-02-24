@@ -61,3 +61,8 @@ def test_openapi_validation_schema_contract() -> None:
     approve_command = schemas["ApproveCommandRequest"]
     assert "approved_by" in approve_command["properties"]
     assert "approved_by" in approve_command["required"]
+
+    create_task = schemas["CreateTaskRequest"]
+    create_task_props = create_task["properties"]
+    assert "assignee_agent" in create_task_props
+    assert create_task_props["assignee_agent"].get("default") == "coding-agent"

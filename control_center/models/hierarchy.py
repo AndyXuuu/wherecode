@@ -86,7 +86,7 @@ class Task(BaseEntity):
     description: str | None = None
     status: TaskStatus = TaskStatus.TODO
     priority: int = Field(default=3, ge=1, le=5)
-    assignee_agent: str | None = None
+    assignee_agent: str = "coding-agent"
     command_count: int = Field(default=0, ge=0)
     success_count: int = Field(default=0, ge=0)
     failed_count: int = Field(default=0, ge=0)

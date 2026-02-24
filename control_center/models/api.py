@@ -16,7 +16,7 @@ class CreateTaskRequest(BaseModel):
     title: str = Field(min_length=1)
     description: str | None = None
     priority: int = Field(default=3, ge=1, le=5)
-    assignee_agent: str | None = None
+    assignee_agent: str = Field(default="coding-agent", min_length=1)
 
 
 class CreateCommandRequest(BaseModel):

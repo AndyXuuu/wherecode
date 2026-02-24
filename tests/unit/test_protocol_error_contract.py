@@ -90,6 +90,13 @@ def test_create_task_validation_contract_422() -> None:
     assert response.status_code == 422
     _assert_validation_field(response.json(), "title")
 
+    invalid_assignee = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "ok-title", "assignee_agent": ""},
+    )
+    assert invalid_assignee.status_code == 422
+    _assert_validation_field(invalid_assignee.json(), "assignee_agent")
+
 
 def test_create_command_validation_contract_422() -> None:
     project = client.post("/projects", json={"name": "validation-command-project"}).json()

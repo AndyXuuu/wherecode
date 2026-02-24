@@ -65,13 +65,14 @@ X-WhereCode-Token: change-me
   "title": "login-refactor",
   "description": "refactor auth module",
   "priority": 3,
-  "assignee_agent": "coding-agent"
+  "assignee_agent": "auto-agent"
 }
 ```
 
 说明：
-- `assignee_agent` 为空时将使用默认值 `coding-agent`
+- `assignee_agent` 为空时将使用默认值 `auto-agent`
 - 所有任务默认由智能体执行
+- `auto-agent` 会按路由规则自动选择执行智能体（如 `test-agent` / `review-agent` / `coding-agent`）
 
 ### 响应
 `201 Created`

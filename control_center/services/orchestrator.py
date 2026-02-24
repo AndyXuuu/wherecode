@@ -26,7 +26,7 @@ from control_center.models.hierarchy import (
 )
 from control_center.services.sqlite_state_store import SQLiteStateStore
 
-ActionExecutor = Callable[[Command], Awaitable[ActionExecuteResponse]]
+ActionExecutor = Callable[[Command, Task], Awaitable[ActionExecuteResponse]]
 
 
 class InMemoryOrchestrator:
@@ -205,7 +205,7 @@ class InMemoryOrchestrator:
             return
 
         try:
-            result = await self._action_executor(command)
+            result = await self._action_executor(command, task)
         except Exception as exc:  # noqa: BLE001
             command.status = CommandStatus.FAILED
             command.error_message = f"execution failed: {exc}"

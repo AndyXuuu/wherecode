@@ -16,7 +16,7 @@ class CreateTaskRequest(BaseModel):
     title: str = Field(min_length=1)
     description: str | None = None
     priority: int = Field(default=3, ge=1, le=5)
-    assignee_agent: str = Field(default="coding-agent", min_length=1)
+    assignee_agent: str = Field(default="auto-agent", min_length=1)
 
 
 class CreateCommandRequest(BaseModel):
@@ -46,6 +46,7 @@ class ActionLayerHealthResponse(BaseModel):
 
 class ActionExecuteRequest(BaseModel):
     text: str = Field(min_length=1)
+    agent: str | None = Field(default=None, min_length=1)
     requested_by: str | None = None
     task_id: str | None = None
     project_id: str | None = None

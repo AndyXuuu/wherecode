@@ -1,0 +1,25 @@
+{
+  "default_agent": "coding-agent",
+  "rules": [
+    {
+      "agent": "test-agent",
+      "keywords": [
+        "pytest",
+        "unit test",
+        "integration test",
+        "run tests",
+        "coverage",
+        "test"
+      ]
+    },
+    {
+      "agent": "review-agent",
+      "keywords": [
+        "review",
+        "security",
+        "audit",
+        "risk"
+      ]
+    }
+  ]
+}

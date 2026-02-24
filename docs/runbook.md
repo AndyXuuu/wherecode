@@ -50,6 +50,12 @@ export WHERECODE_STATE_BACKEND=sqlite
 export WHERECODE_SQLITE_PATH=.wherecode/state.db
 ```
 
+如需自定义智能体路由规则：
+
+```bash
+export WHERECODE_AGENT_ROUTING_FILE=control_center/agents.routing.json
+```
+
 ## 3. 快速检查
 
 ```bash

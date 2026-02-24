@@ -3,6 +3,18 @@
     "schemas": {
       "ActionExecuteRequest": {
         "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
           "project_id": {
             "anyOf": [
               {
@@ -399,7 +411,7 @@
       "CreateTaskRequest": {
         "properties": {
           "assignee_agent": {
-            "default": "coding-agent",
+            "default": "auto-agent",
             "minLength": 1,
             "title": "Assignee Agent",
             "type": "string"
@@ -675,7 +687,7 @@
       "Task": {
         "properties": {
           "assignee_agent": {
-            "default": "coding-agent",
+            "default": "auto-agent",
             "title": "Assignee Agent",
             "type": "string"
           },
@@ -769,7 +781,7 @@
       "TaskDetail": {
         "properties": {
           "assignee_agent": {
-            "default": "coding-agent",
+            "default": "auto-agent",
             "title": "Assignee Agent",
             "type": "string"
           },

@@ -28,6 +28,7 @@
 - `ACTION_LAYER_BASE_URL`：Action Layer 代理地址，默认 `http://127.0.0.1:8100`
 - `WHERECODE_STATE_BACKEND`：状态存储后端，`memory` 或 `sqlite`（默认 `memory`）
 - `WHERECODE_SQLITE_PATH`：SQLite 文件路径（默认 `.wherecode/state.db`）
+- `WHERECODE_AGENT_ROUTING_FILE`：智能体路由规则文件（默认 `control_center/agents.routing.json`）
 
 ## 开发约定
 

@@ -25,6 +25,7 @@ from control_center.models import (
 from control_center.services import (
     ActionLayerClient,
     ActionLayerClientError,
+    AgentRouter,
     InMemoryOrchestrator,
     SQLiteStateStore,
 )
@@ -39,6 +40,9 @@ if not logging.getLogger().handlers:
 action_layer = ActionLayerClient(
     base_url=os.getenv("ACTION_LAYER_BASE_URL", "http://127.0.0.1:8100")
 )
+agent_router = AgentRouter(
+    os.getenv("WHERECODE_AGENT_ROUTING_FILE", "control_center/agents.routing.json")
+)
 AUTH_ENABLED = os.getenv("WHERECODE_AUTH_ENABLED", "true").lower() == "true"
 AUTH_TOKEN = os.getenv("WHERECODE_TOKEN", "change-me")
 AUTH_WHITELIST_PREFIXES = (
@@ -49,10 +53,12 @@ AUTH_WHITELIST_PREFIXES = (
 )
 
 
-async def execute_with_action_layer(command: Command) -> ActionExecuteResponse:
+async def execute_with_action_layer(command: Command, task: Task) -> ActionExecuteResponse:
+    selected_agent = agent_router.select_agent(task.assignee_agent, command.text)
     return await action_layer.execute(
         ActionExecuteRequest(
             text=command.text,
+            agent=selected_agent,
             requested_by=command.requested_by,
             task_id=command.task_id,
             project_id=command.project_id,

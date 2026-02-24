@@ -11,7 +11,7 @@
 - `Task.project_id` 必须对应一个 `Project.id`
 - `Command.project_id` 与 `Command.task_id` 必须同时匹配其所属 `Task`
 - 允许按 `project_id -> task_id -> command_id` 做逐层查询和筛选
-- `Task.assignee_agent` 必须存在（默认 `coding-agent`），表示任务由智能体执行
+- `Task.assignee_agent` 必须存在（默认 `auto-agent`），表示任务由智能体执行
 
 ## 后端模型位置
 

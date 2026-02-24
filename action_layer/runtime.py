@@ -58,19 +58,20 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
             )
             return
 
+        requested_agent = str(payload.get("agent", "")).strip() or "coding-agent"
         lowered = text.lower()
         if "fail" in lowered or "error" in lowered:
             result = {
                 "status": "failed",
                 "summary": "mock execution failed by command content",
-                "agent": "coding",
+                "agent": requested_agent,
                 "trace_id": f"act_{uuid4().hex[:12]}",
             }
         else:
             result = {
                 "status": "success",
                 "summary": "mock execution completed",
-                "agent": "coding",
+                "agent": requested_agent,
                 "trace_id": f"act_{uuid4().hex[:12]}",
             }
 

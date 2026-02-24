@@ -28,6 +28,12 @@
 - 可选：`sqlite`（通过 `WHERECODE_STATE_BACKEND=sqlite` 启用）
 - SQLite 路径由 `WHERECODE_SQLITE_PATH` 配置
 
+## 智能体路由（新增）
+
+- 任务默认 `assignee_agent=auto-agent`
+- Control Center 按 `control_center/agents.routing.json` 规则选择执行智能体
+- 可通过 `WHERECODE_AGENT_ROUTING_FILE` 指定自定义规则文件
+
 ## 观测（基础版）
 
 - Control Center 中间件会生成 `X-Request-Id`

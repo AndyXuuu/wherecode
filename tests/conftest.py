@@ -18,18 +18,19 @@ class TestActionLayerClient:
         )
 
     async def execute(self, payload: ActionExecuteRequest) -> ActionExecuteResponse:
+        selected_agent = payload.agent or "coding-agent"
         lowered = payload.text.lower()
         if "fail" in lowered or "error" in lowered:
             return ActionExecuteResponse(
                 status="failed",
                 summary="mock execution failed by command content",
-                agent="coding",
+                agent=selected_agent,
                 trace_id="act_test_fail",
             )
         return ActionExecuteResponse(
             status="success",
             summary="mock execution completed",
-            agent="coding",
+            agent=selected_agent,
             trace_id="act_test_success",
         )
 

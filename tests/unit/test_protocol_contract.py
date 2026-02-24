@@ -83,7 +83,7 @@ def test_task_command_snapshot_contract() -> None:
     assert terminal["id"] == accepted["command_id"]
     assert terminal["project_id"] == project_id
     assert terminal["task_id"] == task_id
-    assert terminal["executor_agent"] == "coding"
+    assert terminal["executor_agent"] == "coding-agent"
     assert terminal["trace_id"].startswith("act_")
 
     listed_tasks = client.get(f"/projects/{project_id}/tasks")
@@ -113,7 +113,7 @@ def test_task_default_assignee_agent_is_applied() -> None:
     )
     assert response.status_code == 201
     task = response.json()
-    assert task["assignee_agent"] == "coding-agent"
+    assert task["assignee_agent"] == "auto-agent"
 
 
 def test_failed_command_contract_and_task_status() -> None:
@@ -130,7 +130,7 @@ def test_failed_command_contract_and_task_status() -> None:
 
     assert terminal["status"] == "failed"
     assert terminal["error_message"] == "mock execution failed by command content"
-    assert terminal["executor_agent"] == "coding"
+    assert terminal["executor_agent"] == "coding-agent"
     assert terminal["trace_id"].startswith("act_")
 
     task_detail = client.get(f"/tasks/{task_id}")
@@ -142,6 +142,20 @@ def test_failed_command_contract_and_task_status() -> None:
     projects = client.get("/projects").json()
     project_payload = next(item for item in projects if item["id"] == project_id)
     assert project_payload["active_task_count"] == 0
+
+
+def test_auto_agent_routes_test_commands_to_test_agent() -> None:
+    project = client.post("/projects", json={"name": "auto-route-project"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "auto-route-task"},
+    ).json()
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={"text": "run pytest for login module"},
+    ).json()
+    terminal = wait_for_terminal(accepted["command_id"])
+    assert terminal["executor_agent"] == "test-agent"
 
 
 def test_approval_contract_status_transition() -> None:

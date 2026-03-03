@@ -48,7 +48,7 @@ Task log rule:
 
 ## 5) Next Action
 
-- Execute `DOC-2026-03-04-IGNORE-AND-COMMIT`.
+- Monitor live `TST2-T1` soak and run `tst2_soak_status.sh --strict`.
 
 ## 6) Task Log (Active Window)
 
@@ -76,3 +76,6 @@ Task log rule:
 - 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` started (`doing`)
 - 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` completed (`done`)
 - 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` started (`doing`)
+- 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` completed (`done`)
+- 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` started (`doing`)
+- 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` completed (`done`)

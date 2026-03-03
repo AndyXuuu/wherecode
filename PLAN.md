@@ -73,4 +73,6 @@ Task log rule:
 - 2026-03-03 `TST2-T1` 24h soak live session started (`doing`)
 - 2026-03-04 `DOC-2026-03-04-TST2-SOAK-CHECKPOINT` started (`doing`)
 - 2026-03-04 `DOC-2026-03-04-TST2-SOAK-CHECKPOINT` completed (`done`)
+- 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` started (`doing`)
+- 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` completed (`done`)
 - 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` started (`doing`)

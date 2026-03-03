@@ -48,7 +48,7 @@ Task log rule:
 
 ## 5) Next Action
 
-- Monitor live `TST2-T1` soak and run `tst2_soak_status.sh --strict`.
+- Monitor `TST2-T1` with `bash scripts/tst2_soak_status.sh --strict`.
 
 ## 6) Task Log (Active Window)
 
@@ -79,3 +79,7 @@ Task log rule:
 - 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` completed (`done`)
 - 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` started (`doing`)
 - 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` completed (`done`)
+- 2026-03-04 `DOC-2026-03-04-RESTORE-README-INTRO` started (`doing`)
+- 2026-03-04 `DOC-2026-03-04-RESTORE-README-INTRO` completed (`done`)
+- 2026-03-04 `DOC-2026-03-04-README-PLAN-COMPLETED-PHASE-SYNC` started (`doing`)
+- 2026-03-04 `DOC-2026-03-04-README-PLAN-COMPLETED-PHASE-SYNC` completed (`done`)

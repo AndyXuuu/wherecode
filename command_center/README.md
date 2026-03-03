@@ -60,12 +60,7 @@ pnpm build
 
 ## 设计交付
 
-- Command Center 的详细拆解与 Pencil 实施说明见：
-  - `../docs/command_center_pencil_spec.md`
-- Pencil 设计验收记录（2026-02-22，只读验收）见：
-  - `../docs/design_acceptance.md`
-- Pencil 节点与页面实现映射见：
-  - `../docs/pencil_app_pages_mapping.md`
+- UI 规格与路由映射见：`../docs/ui_spec.md`
 
 ## 当前状态说明
 

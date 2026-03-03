@@ -7,6 +7,93 @@
 - 日志清理与数据迁移脚本
 - 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check）
 - HTTP 异步链路 smoke 脚本（`http_async_smoke.sh`）
+- v3 workflow 闭环 smoke（`v3_workflow_smoke.sh`，覆盖 bootstrap/execute/discussion/approval/artifacts）
+- v3 持久化恢复演练（`v3_recovery_drill.sh`，自动重启 control-center 并校验 run/gates/artifacts）
+- v3 并发探测脚本（`v3_parallel_probe.sh`，并发创建 run 并统计终态分布）
+- v3 CI 演练入口（`ci_v3_rehearsal.sh`，串联 smoke/probe/recovery）
+- TST2 稳定性 soak 脚本（`tst2_soak.sh`，按间隔采样 metrics 漂移并执行并发 probe）
+- TST2 soak 状态脚本（`tst2_soak_status.sh`，读取最新样本并输出 guard 状态，支持 `--strict`）
+- v3 夜间指标报告（`v3_metrics_report.sh`，采集 `/metrics/workflows` + `/metrics/summary` 并生成 delta 报告）
+- v3 指标阈值告警检查（`v3_metrics_alert_check.sh`，按策略生成告警工单草稿）
+- v3 指标策略回滚（`v3_metrics_policy_rollback.sh`，默认调用回滚 API，支持 `--dry-run` 和 `--local-file-mode`）
+  - 可选：`METRICS_POLICY_ROLLBACK_IDEMPOTENCY_KEY` 避免重试重复落盘
+  - 可选：`METRICS_POLICY_ROLLBACK_APPROVAL_ID`（开启审批门时必须）
+- v3 回滚审批单清理（`v3_metrics_rollback_approval_gc.sh`，清理 `used/expired` 审批单）
+  - 支持 `--dry-run`
+  - 支持 `--keep-used` / `--keep-expired`
+  - 支持 `--older-than-seconds <seconds>`（仅清理超过保留窗口的审批单）
+  - 支持 `--purge-audits`（改为清理 purge 审计日志）
+  - `--purge-audits` 模式支持 `--keep-latest <count>`（安全保留最近 N 条）
+  - 支持 `--export-purge-audits`（导出 purge 审计）
+  - 导出模式支持 `--from-iso` / `--to-iso` / `--event-type` / `--limit` / `--output`
+  - 导出结果包含 `checksum_scope` + `checksum_sha256`（用于完整性校验）
+  - 可选 `--manifest <file>` 追加导出索引（jsonl）
+  - manifest 记录支持 `key_id` / `signature` 字段（占位）
+  - 可选 `--manifest-key-id` / `--manifest-signature` 写入 manifest
+  - 可选 `--manifest-signer-cmd` + `--manifest-signer-timeout` 调用外部 signer hook
+  - 支持 `--signer-preflight --manifest-signer-cmd <cmd>` 预检 signer hook 可用性
+  - 可选 `--preflight-history <file>` 落盘 preflight 结果（jsonl）
+  - 可选 `--preflight-history-window <count>` 输出 preflight 趋势摘要
+  - 支持 `--verify-manifest --manifest <file> [--manifest-id <id>]` 校验导出文件摘要
+  - 可选 `--verify-report <file>` 输出校验摘要报告（operator 友好）
+  - 可选 `--verify-report-format txt|json` 设置报告格式
+  - 可选 `--verify-trend-window <count>` 输出最近 N 条 manifest 验证趋势摘要
+  - 可选 `--verify-archive-dir <dir>` 当原始导出路径失效时从归档目录回退验签
+  - 可选 `--verify-fetch-cmd <cmd>` 调用外部 fetch hook 拉取远端工件再验签
+  - 可选 `--verify-fetch-timeout <seconds>` 设置 fetch hook 超时时间
+  - 可选 `--policy-profile strict|standard|degraded|custom` 使用预设策略组合
+  - 可选 `--policy-file <file>` 从集中策略文件加载 profile 默认值
+  - 可选 `--policy-source-url <url>` 从 URL 拉取策略配置（支持 file/http/https）
+  - 可选 `--policy-source-timeout <seconds>` 设置策略 URL 拉取超时（默认 10 秒）
+  - 可选 `--policy-source-token <token>` 拉取 policy-source-url 时附加 `X-WhereCode-Token`
+  - 可选 `--export-effective-policy <file>` 导出生效策略快照供下游分发
+  - 可选 `--distribute-effective-policy-dir <dir>` 自动分发生效策略（latest + 版本化文件）
+  - 可选 `--distribute-effective-policy-retain-seconds <seconds>` 清理超出保留窗口的历史分发版本
+  - 可选 `--distribute-effective-policy-keep-latest <count>` 额外保留最近 N 个历史分发版本
+  - 可选 `--list-effective-policy-distributions` 查询分发索引（distribution-index.jsonl）
+  - 可选 `--list-effective-policy-distributions-limit <count>` 设置分发索引查询条数
+  - 可选 `--list-effective-policy-distributions-mode verify_manifest|signer_preflight` 按分发模式过滤
+  - 可选 `--list-effective-policy-distributions-since-iso <iso>` 按时间窗口过滤分发索引
+  - 可选 `--list-effective-policy-fail-on-integrity-error` 完整性失败时返回非零（用于门禁）
+  - 可选 `--list-effective-policy-fail-on-empty` 无匹配条目时返回非零（用于门禁）
+  - 可选 `--list-effective-policy-min-selected <count>` 匹配条目数低于阈值时返回非零（用于门禁）
+  - 可选 `--list-effective-policy-state-file <path>` 将 list 汇总写入状态文件
+  - 可选 `--restore-effective-policy-distributions` 从归档索引恢复分发条目（演练）
+  - 可选 `--restore-effective-policy-distributions-limit <count>` 设置恢复条目上限
+  - 可选 `--restore-effective-policy-distributions-since-iso <iso>` 按归档时间窗口筛选恢复候选
+  - restore 可结合 `--dry-run` 预演候选（仅返回统计，不写 active index）
+  - 可选 `--restore-effective-policy-verify-integrity` 对 restore 候选执行完整性校验（checksum + versioned 文件存在性）
+  - 可选 `--restore-effective-policy-fail-on-integrity-error` 完整性失败时返回非零（依赖 verify-integrity）
+  - 可选 `--restore-effective-policy-remap-from <path>` + `--restore-effective-policy-remap-to <path>` 做路径前缀重映射（必须成对）
+  - 可选 `--restore-effective-policy-state-file <path>` 将 restore 汇总写入状态文件
+  - 可选 `--restore-effective-policy-min-restored <count>` 恢复条目数低于阈值时返回非零（用于门禁）
+  - 分发索引记录 `versioned_checksum_sha256`，list 查询会执行完整性守护并返回 guard 统计
+  - 分发索引在分发写入时自动压缩到保留上限，输出含 compaction 统计字段
+  - 压缩归档输出字段：`effective_policy_distribution_index_archive_path` / `effective_policy_distribution_index_archive_appended_total`
+  - restore 输出字段包含：`restore_candidate_ids` / `would_restore_ids` / `restored_ids` / `skipped_existing_ids`
+  - restore 完整性输出字段：`integrity_checked_total` / `integrity_failed_total` / `integrity_failed_ids` / `restore_skipped_integrity_total`
+  - restore 安全输出字段：`restore_safety_risk_level` / `restore_recommendations` / `summary`
+  - restore remap 输出字段：`restore_path_remap_enabled` / `restore_path_remap_from` / `restore_path_remap_to` / `restore_path_remap_applied_total`
+  - restore 阈值输出字段：`restore_min_restored` / `restore_min_restored_guard_passed` / `restore_min_restored_effective_count`
+  - 开启 state-file 时输出字段：`state_file`
+  - list state-file 内容字段：`list.integrity_guard_passed` / `list.integrity_failed_total` / `list.matched_total`
+  - state-file 写回采用 merge 语义：若目标文件已有 JSON 对象，会保留原有键并覆盖同名键
+  - list 输出字段：`list_safety_risk_level` / `list_recommendations` / `summary` / `list_integrity_fail_on_error` / `list_empty_fail_on_error` / `list_empty_guard_passed` / `list_min_selected` / `list_min_selected_guard_passed`
+  - 可选 `--verify-allowed-resolvers <csv>` 限制允许的验签来源（manifest/archive/fetch_hook）
+  - 可选 `--verify-slo-min-pass-rate <0..1>` 对趋势窗口启用最低通过率门禁
+  - 可选 `--verify-slo-max-fetch-failures <n>` 对趋势窗口启用 fetch 失败次数门禁
+  - 可选 `--preflight-slo-min-pass-rate <0..1>` 对 preflight 历史启用最低通过率门禁
+  - 可选 `--preflight-slo-max-consecutive-failures <n>` 对 preflight 历史启用连续失败门禁
+  - 明确传入 SLO/resolver 选项时，优先级高于 profile 默认值
+  - 可对齐 control-center 注册表 API：`/metrics/workflows/alert-policy/verify-policy/export`
+  - 支持 `--rotate-exports --export-dir <dir>`（导出文件轮转）
+  - 轮转模式支持 `--retain-seconds` / `--keep-export-latest`
+  - 可选环境变量 `METRICS_ROLLBACK_APPROVAL_GC_REQUESTED_BY`（写入清理审计操作者）
+- v3 里程碑门禁（`v3_milestone_gate.sh`，检查是否满足进入测试阶段）
+  - 支持 `--milestone test-entry`
+  - 支持 `--strict`（未达标返回非零）
+  - 可选 `--state-file <path>` / `--milestone-file <path>`
+  - 输出字段：`passed` / `missing_checks` / `next_phase` / `recommended_next_action`
 - Action Layer smoke 脚本（`action_layer_smoke.sh`）
 - 全链路联调 smoke（`full_stack_smoke.sh`，自动 start -> smoke -> stop）
 - 本地统一校验脚本（`check_all.sh`，后端测试 + 前端构建）

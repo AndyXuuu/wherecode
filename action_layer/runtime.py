@@ -6,6 +6,14 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from uuid import uuid4
 
+from action_layer.services import (
+    AgentProfileAccessError,
+    AgentProfileLoader,
+    AgentProfileNotFoundError,
+    AgentRegistry,
+    UnknownAgentRoleError,
+)
+
 
 def _json_bytes(payload: dict[str, object]) -> bytes:
     return json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -13,6 +21,10 @@ def _json_bytes(payload: dict[str, object]) -> bytes:
 
 class ActionLayerHandler(BaseHTTPRequestHandler):
     server_version = "WhereCodeActionLayer/0.1"
+    registry = AgentRegistry()
+    profile_loader = AgentProfileLoader(
+        os.getenv("ACTION_LAYER_AGENT_PROFILES_ROOT", "action_layer/agents")
+    )
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/healthz":
@@ -26,11 +38,8 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
             self._send_json(
                 HTTPStatus.OK,
                 {
-                    "agents": [
-                        "coding",
-                        "test",
-                        "review",
-                    ],
+                    "agents": sorted(set(self.registry.as_dict().values())),
+                    "roles": self.registry.list_roles(),
                     "status": "stub",
                 },
             )
@@ -58,14 +67,72 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
             )
             return
 
-        requested_agent = str(payload.get("agent", "")).strip() or "coding-agent"
+        requested_role = str(payload.get("role", "")).strip().lower()
+        requested_agent = str(payload.get("agent", "")).strip()
+        profile_hash = None
+        resolved_role = None
+
+        if requested_role:
+            try:
+                profile = self.profile_loader.load(requested_role)
+                profile_hash = profile.profile_hash
+                resolved_role = profile.role
+            except (AgentProfileAccessError, AgentProfileNotFoundError) as exc:
+                self._send_json(
+                    HTTPStatus.UNPROCESSABLE_ENTITY,
+                    {"detail": str(exc)},
+                )
+                return
+
+            if not requested_agent:
+                try:
+                    requested_agent = self.registry.resolve(requested_role)
+                except UnknownAgentRoleError as exc:
+                    self._send_json(
+                        HTTPStatus.UNPROCESSABLE_ENTITY,
+                        {"detail": str(exc)},
+                    )
+                    return
+
+        if not requested_agent:
+            requested_agent = "coding-agent"
+
         lowered = text.lower()
+        if (
+            "role=module-dev" in lowered
+            and "module=needs-discussion" in lowered
+            and "discussion_resolved=true" not in lowered
+        ):
+            result = {
+                "status": "needs_discussion",
+                "summary": "need discussion before implementation",
+                "agent": requested_agent,
+                "trace_id": f"act_{uuid4().hex[:12]}",
+                "discussion": {
+                    "question": "Pick implementation strategy",
+                    "options": ["option-a", "option-b"],
+                    "recommendation": "option-a",
+                    "impact": "changes module behavior",
+                    "fingerprint": "needs-discussion-module-dev",
+                },
+                "metadata": {
+                    "role": resolved_role,
+                    "profile_hash": profile_hash,
+                },
+            }
+            self._send_json(HTTPStatus.OK, result)
+            return
+
         if "fail" in lowered or "error" in lowered:
             result = {
                 "status": "failed",
                 "summary": "mock execution failed by command content",
                 "agent": requested_agent,
                 "trace_id": f"act_{uuid4().hex[:12]}",
+                "metadata": {
+                    "role": resolved_role,
+                    "profile_hash": profile_hash,
+                },
             }
         else:
             result = {
@@ -73,6 +140,10 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
                 "summary": "mock execution completed",
                 "agent": requested_agent,
                 "trace_id": f"act_{uuid4().hex[:12]}",
+                "metadata": {
+                    "role": resolved_role,
+                    "profile_hash": profile_hash,
+                },
             }
 
         self._send_json(HTTPStatus.OK, result)

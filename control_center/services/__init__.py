@@ -7,6 +7,14 @@ from control_center.services.action_layer_client import (
 )
 from control_center.services.orchestrator import InMemoryOrchestrator
 from control_center.services.sqlite_state_store import SQLiteStateStore
+from control_center.services.gatekeeper import Gatekeeper
+from control_center.services.metrics_alert_policy_store import (
+    MetricsAlertPolicyStore,
+    PolicyRollbackApprovalError,
+    PolicyRollbackConflictError,
+)
+from control_center.services.workflow_engine import WorkflowEngine
+from control_center.services.workflow_scheduler import WorkflowScheduler
 
 __all__ = [
     "AgentRouter",
@@ -15,4 +23,10 @@ __all__ = [
     "ActionLayerClientError",
     "InMemoryOrchestrator",
     "SQLiteStateStore",
+    "Gatekeeper",
+    "MetricsAlertPolicyStore",
+    "PolicyRollbackApprovalError",
+    "PolicyRollbackConflictError",
+    "WorkflowEngine",
+    "WorkflowScheduler",
 ]

@@ -15,6 +15,17 @@
             ],
             "title": "Agent"
           },
+          "module_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Module Key"
+          },
           "project_id": {
             "anyOf": [
               {
@@ -36,6 +47,18 @@
               }
             ],
             "title": "Requested By"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
           },
           "task_id": {
             "anyOf": [
@@ -65,6 +88,21 @@
           "agent": {
             "title": "Agent",
             "type": "string"
+          },
+          "discussion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiscussionPrompt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
           },
           "status": {
             "title": "Status",
@@ -164,6 +202,135 @@
           "approved_by"
         ],
         "title": "ApproveCommandRequest",
+        "type": "object"
+      },
+      "ApproveRollbackApprovalRequest": {
+        "properties": {
+          "approved_by": {
+            "minLength": 1,
+            "title": "Approved By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved_by"
+        ],
+        "title": "ApproveRollbackApprovalRequest",
+        "type": "object"
+      },
+      "ApproveWorkItemRequest": {
+        "properties": {
+          "approved_by": {
+            "minLength": 1,
+            "title": "Approved By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved_by"
+        ],
+        "title": "ApproveWorkItemRequest",
+        "type": "object"
+      },
+      "Artifact": {
+        "properties": {
+          "artifact_type": {
+            "$ref": "#/components/schemas/ArtifactType"
+          },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "minLength": 1,
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "owner_id": {
+            "minLength": 1,
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "owner_type": {
+            "$ref": "#/components/schemas/ArtifactOwnerType"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "uri_or_path": {
+            "minLength": 1,
+            "title": "Uri Or Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner_type",
+          "owner_id",
+          "artifact_type",
+          "title",
+          "uri_or_path",
+          "created_by"
+        ],
+        "title": "Artifact",
+        "type": "object"
+      },
+      "ArtifactOwnerType": {
+        "enum": [
+          "workitem",
+          "task",
+          "command",
+          "workflow_run"
+        ],
+        "title": "ArtifactOwnerType",
+        "type": "string"
+      },
+      "ArtifactType": {
+        "enum": [
+          "plan",
+          "diff_summary",
+          "test_report",
+          "doc_update",
+          "security_report",
+          "acceptance_report",
+          "release_note",
+          "rollback_plan"
+        ],
+        "title": "ArtifactType",
+        "type": "string"
+      },
+      "BootstrapWorkflowRequest": {
+        "properties": {
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Modules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "modules"
+        ],
+        "title": "BootstrapWorkflowRequest",
         "type": "object"
       },
       "Command": {
@@ -372,6 +539,19 @@
         "title": "CommandStatus",
         "type": "string"
       },
+      "CompleteWorkItemRequest": {
+        "properties": {
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "CompleteWorkItemRequest",
+        "type": "object"
+      },
       "CreateCommandRequest": {
         "properties": {
           "requested_by": {
@@ -449,6 +629,37 @@
         "title": "CreateProjectRequest",
         "type": "object"
       },
+      "CreateRollbackApprovalRequest": {
+        "properties": {
+          "audit_id": {
+            "minLength": 1,
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_by": {
+            "minLength": 1,
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "audit_id",
+          "requested_by"
+        ],
+        "title": "CreateRollbackApprovalRequest",
+        "type": "object"
+      },
       "CreateTaskRequest": {
         "properties": {
           "assignee_agent": {
@@ -487,6 +698,575 @@
         "title": "CreateTaskRequest",
         "type": "object"
       },
+      "CreateWorkItemRequest": {
+        "properties": {
+          "assignee_agent": {
+            "default": "auto-agent",
+            "minLength": 1,
+            "title": "Assignee Agent",
+            "type": "string"
+          },
+          "depends_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On",
+            "type": "array"
+          },
+          "discussion_budget": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Discussion Budget",
+            "type": "integer"
+          },
+          "discussion_timeout_seconds": {
+            "default": 120,
+            "minimum": 1.0,
+            "title": "Discussion Timeout Seconds",
+            "type": "integer"
+          },
+          "module_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Module Key"
+          },
+          "priority": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "requires_approval": {
+            "default": false,
+            "title": "Requires Approval",
+            "type": "boolean"
+          },
+          "role": {
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "CreateWorkItemRequest",
+        "type": "object"
+      },
+      "CreateWorkflowRunRequest": {
+        "properties": {
+          "project_id": {
+            "minLength": 1,
+            "title": "Project Id",
+            "type": "string"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          }
+        },
+        "required": [
+          "project_id"
+        ],
+        "title": "CreateWorkflowRunRequest",
+        "type": "object"
+      },
+      "DiscussionPrompt": {
+        "properties": {
+          "fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fingerprint"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "DiscussionPrompt",
+        "type": "object"
+      },
+      "DiscussionSession": {
+        "properties": {
+          "budget": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Budget",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fingerprint"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "opened_by_role": {
+            "minLength": 1,
+            "title": "Opened By Role",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          },
+          "resolved_by_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By Role"
+          },
+          "round": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Round",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DiscussionStatus",
+            "default": "open"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "workflow_run_id": {
+            "minLength": 1,
+            "title": "Workflow Run Id",
+            "type": "string"
+          },
+          "workitem_id": {
+            "minLength": 1,
+            "title": "Workitem Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_run_id",
+          "workitem_id",
+          "question",
+          "opened_by_role"
+        ],
+        "title": "DiscussionSession",
+        "type": "object"
+      },
+      "DiscussionStatus": {
+        "enum": [
+          "open",
+          "resolved",
+          "exhausted",
+          "timeout"
+        ],
+        "title": "DiscussionStatus",
+        "type": "string"
+      },
+      "ExecuteWorkflowRunRequest": {
+        "properties": {
+          "max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Loops",
+            "type": "integer"
+          }
+        },
+        "title": "ExecuteWorkflowRunRequest",
+        "type": "object"
+      },
+      "ExecuteWorkflowRunResponse": {
+        "properties": {
+          "executed_count": {
+            "title": "Executed Count",
+            "type": "integer"
+          },
+          "executed_workitem_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Executed Workitem Ids",
+            "type": "array"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "failed_workitem_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed Workitem Ids",
+            "type": "array"
+          },
+          "remaining_pending_count": {
+            "title": "Remaining Pending Count",
+            "type": "integer"
+          },
+          "remaining_ready_count": {
+            "title": "Remaining Ready Count",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "waiting_approval_count": {
+            "title": "Waiting Approval Count",
+            "type": "integer"
+          },
+          "waiting_approval_workitem_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Waiting Approval Workitem Ids",
+            "type": "array"
+          },
+          "waiting_discussion_count": {
+            "title": "Waiting Discussion Count",
+            "type": "integer"
+          },
+          "waiting_discussion_workitem_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Waiting Discussion Workitem Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_status",
+          "executed_count",
+          "failed_count",
+          "remaining_ready_count",
+          "remaining_pending_count",
+          "waiting_discussion_count",
+          "waiting_approval_count"
+        ],
+        "title": "ExecuteWorkflowRunResponse",
+        "type": "object"
+      },
+      "ExportRollbackApprovalPurgeAuditsResponse": {
+        "properties": {
+          "checksum_scope": {
+            "default": "entries",
+            "title": "Checksum Scope",
+            "type": "string"
+          },
+          "checksum_sha256": {
+            "title": "Checksum Sha256",
+            "type": "string"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/PurgeRollbackApprovalsAuditEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "event_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Type"
+          },
+          "exported_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Exported Total",
+            "type": "integer"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "generated_at",
+          "checksum_sha256"
+        ],
+        "title": "ExportRollbackApprovalPurgeAuditsResponse",
+        "type": "object"
+      },
+      "GateCheck": {
+        "properties": {
+          "attempt": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_artifact_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Artifact Ids",
+            "type": "array"
+          },
+          "executed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executed By"
+          },
+          "gate_type": {
+            "$ref": "#/components/schemas/GateType"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GateStatus",
+            "default": "not_started"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "workflow_run_id": {
+            "minLength": 1,
+            "title": "Workflow Run Id",
+            "type": "string"
+          },
+          "workitem_id": {
+            "minLength": 1,
+            "title": "Workitem Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_run_id",
+          "workitem_id",
+          "gate_type"
+        ],
+        "title": "GateCheck",
+        "type": "object"
+      },
+      "GateStatus": {
+        "enum": [
+          "not_started",
+          "running",
+          "passed",
+          "failed",
+          "waived"
+        ],
+        "title": "GateStatus",
+        "type": "string"
+      },
+      "GateType": {
+        "enum": [
+          "doc",
+          "test",
+          "security",
+          "acceptance",
+          "release"
+        ],
+        "title": "GateType",
+        "type": "string"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -498,6 +1278,224 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "MetricsAlertPolicy": {
+        "properties": {
+          "blocked_run_count_gte": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Blocked Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_count_gte": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Failed Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_delta_gt": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Failed Run Delta Gt",
+            "type": "integer"
+          },
+          "in_flight_command_count_gte": {
+            "default": 50,
+            "minimum": 0.0,
+            "title": "In Flight Command Count Gte",
+            "type": "integer"
+          },
+          "waiting_approval_count_gte": {
+            "default": 10,
+            "minimum": 0.0,
+            "title": "Waiting Approval Count Gte",
+            "type": "integer"
+          }
+        },
+        "title": "MetricsAlertPolicy",
+        "type": "object"
+      },
+      "MetricsAlertPolicyAuditEntry": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/MetricsAlertPolicy"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rollback_approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rollback Approval Id"
+          },
+          "rollback_from_audit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rollback From Audit Id"
+          },
+          "rollback_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rollback Request Id"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "title": "Updated By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "updated_at",
+          "updated_by",
+          "policy"
+        ],
+        "title": "MetricsAlertPolicyAuditEntry",
+        "type": "object"
+      },
+      "MetricsAlertPolicyResponse": {
+        "properties": {
+          "audit_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Audit Count",
+            "type": "integer"
+          },
+          "blocked_run_count_gte": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Blocked Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_count_gte": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Failed Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_delta_gt": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Failed Run Delta Gt",
+            "type": "integer"
+          },
+          "in_flight_command_count_gte": {
+            "default": 50,
+            "minimum": 0.0,
+            "title": "In Flight Command Count Gte",
+            "type": "integer"
+          },
+          "policy_path": {
+            "title": "Policy Path",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "waiting_approval_count_gte": {
+            "default": 10,
+            "minimum": 0.0,
+            "title": "Waiting Approval Count Gte",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "policy_path",
+          "updated_at"
+        ],
+        "title": "MetricsAlertPolicyResponse",
+        "type": "object"
+      },
+      "MetricsAlertPolicyUpdateRequest": {
+        "properties": {
+          "blocked_run_count_gte": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Blocked Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_count_gte": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Failed Run Count Gte",
+            "type": "integer"
+          },
+          "failed_run_delta_gt": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Failed Run Delta Gt",
+            "type": "integer"
+          },
+          "in_flight_command_count_gte": {
+            "default": 50,
+            "minimum": 0.0,
+            "title": "In Flight Command Count Gte",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "updated_by": {
+            "minLength": 1,
+            "title": "Updated By",
+            "type": "string"
+          },
+          "waiting_approval_count_gte": {
+            "default": 10,
+            "minimum": 0.0,
+            "title": "Waiting Approval Count Gte",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "updated_by"
+        ],
+        "title": "MetricsAlertPolicyUpdateRequest",
         "type": "object"
       },
       "MetricsSummaryResponse": {
@@ -798,6 +1796,585 @@
         "title": "ProjectStatus",
         "type": "string"
       },
+      "PurgeRollbackApprovalPurgeAuditsRequest": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "keep_latest": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Keep Latest",
+            "type": "integer"
+          },
+          "older_than_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Than Seconds"
+          },
+          "requested_by": {
+            "minLength": 1,
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_by"
+        ],
+        "title": "PurgeRollbackApprovalPurgeAuditsRequest",
+        "type": "object"
+      },
+      "PurgeRollbackApprovalPurgeAuditsResponse": {
+        "properties": {
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "keep_latest": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Keep Latest",
+            "type": "integer"
+          },
+          "older_than_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Than Seconds"
+          },
+          "purge_audit_gc_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purge Audit Gc Id"
+          },
+          "remaining_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Remaining Total",
+            "type": "integer"
+          },
+          "removed_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Total",
+            "type": "integer"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_by",
+          "dry_run"
+        ],
+        "title": "PurgeRollbackApprovalPurgeAuditsResponse",
+        "type": "object"
+      },
+      "PurgeRollbackApprovalsAuditEntry": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "event_type": {
+            "default": "approval_purge",
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "keep_latest": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep Latest"
+          },
+          "older_than_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Than Seconds"
+          },
+          "remaining_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Remaining Total",
+            "type": "integer"
+          },
+          "remove_expired": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remove Expired"
+          },
+          "remove_used": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remove Used"
+          },
+          "removed_expired": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Expired",
+            "type": "integer"
+          },
+          "removed_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Total",
+            "type": "integer"
+          },
+          "removed_used": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Used",
+            "type": "integer"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "requested_by",
+          "dry_run",
+          "created_at"
+        ],
+        "title": "PurgeRollbackApprovalsAuditEntry",
+        "type": "object"
+      },
+      "PurgeRollbackApprovalsRequest": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "older_than_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Than Seconds"
+          },
+          "remove_expired": {
+            "default": true,
+            "title": "Remove Expired",
+            "type": "boolean"
+          },
+          "remove_used": {
+            "default": true,
+            "title": "Remove Used",
+            "type": "boolean"
+          },
+          "requested_by": {
+            "minLength": 1,
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_by"
+        ],
+        "title": "PurgeRollbackApprovalsRequest",
+        "type": "object"
+      },
+      "PurgeRollbackApprovalsResponse": {
+        "properties": {
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "older_than_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Than Seconds"
+          },
+          "purge_audit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purge Audit Id"
+          },
+          "remaining_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Remaining Total",
+            "type": "integer"
+          },
+          "remove_expired": {
+            "title": "Remove Expired",
+            "type": "boolean"
+          },
+          "remove_used": {
+            "title": "Remove Used",
+            "type": "boolean"
+          },
+          "removed_expired": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Expired",
+            "type": "integer"
+          },
+          "removed_total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Total",
+            "type": "integer"
+          },
+          "removed_used": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Removed Used",
+            "type": "integer"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_by",
+          "dry_run",
+          "remove_used",
+          "remove_expired"
+        ],
+        "title": "PurgeRollbackApprovalsResponse",
+        "type": "object"
+      },
+      "ResolveDiscussionRequest": {
+        "properties": {
+          "decision": {
+            "minLength": 1,
+            "title": "Decision",
+            "type": "string"
+          },
+          "discussion_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discussion Id"
+          },
+          "resolved_by": {
+            "minLength": 1,
+            "title": "Resolved By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "resolved_by"
+        ],
+        "title": "ResolveDiscussionRequest",
+        "type": "object"
+      },
+      "RollbackApprovalResponse": {
+        "properties": {
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "audit_id": {
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RollbackApprovalStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "used_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used By"
+          }
+        },
+        "required": [
+          "id",
+          "audit_id",
+          "status",
+          "requested_by",
+          "created_at",
+          "updated_at",
+          "expires_at"
+        ],
+        "title": "RollbackApprovalResponse",
+        "type": "object"
+      },
+      "RollbackApprovalStatsResponse": {
+        "properties": {
+          "approved": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Approved",
+            "type": "integer"
+          },
+          "expired": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Expired",
+            "type": "integer"
+          },
+          "pending": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Pending",
+            "type": "integer"
+          },
+          "rejected": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "used": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Used",
+            "type": "integer"
+          }
+        },
+        "title": "RollbackApprovalStatsResponse",
+        "type": "object"
+      },
+      "RollbackApprovalStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "used",
+          "expired"
+        ],
+        "title": "RollbackApprovalStatus",
+        "type": "string"
+      },
+      "RollbackMetricsAlertPolicyRequest": {
+        "properties": {
+          "approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Id"
+          },
+          "audit_id": {
+            "minLength": 1,
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "updated_by": {
+            "minLength": 1,
+            "title": "Updated By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "audit_id",
+          "updated_by"
+        ],
+        "title": "RollbackMetricsAlertPolicyRequest",
+        "type": "object"
+      },
+      "RollbackMetricsAlertPolicyResponse": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "audit_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Audit Count",
+            "type": "integer"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotent_replay": {
+            "default": false,
+            "title": "Idempotent Replay",
+            "type": "boolean"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/MetricsAlertPolicy"
+          },
+          "policy_path": {
+            "title": "Policy Path",
+            "type": "string"
+          },
+          "source_audit_id": {
+            "title": "Source Audit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_audit_id",
+          "dry_run",
+          "applied",
+          "policy",
+          "policy_path"
+        ],
+        "title": "RollbackMetricsAlertPolicyResponse",
+        "type": "object"
+      },
       "RoutingRuleInfo": {
         "properties": {
           "agent": {
@@ -1080,6 +2657,536 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "VerifyPolicyProfileConfig": {
+        "properties": {
+          "allowed_resolvers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Resolvers"
+          },
+          "preflight_slo_max_consecutive_failures": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preflight Slo Max Consecutive Failures"
+          },
+          "preflight_slo_min_pass_rate": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preflight Slo Min Pass Rate"
+          },
+          "verify_slo_max_fetch_failures": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Slo Max Fetch Failures"
+          },
+          "verify_slo_min_pass_rate": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Slo Min Pass Rate"
+          }
+        },
+        "title": "VerifyPolicyProfileConfig",
+        "type": "object"
+      },
+      "VerifyPolicyRegistryAuditEntry": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "registry": {
+            "additionalProperties": true,
+            "title": "Registry",
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "title": "Updated By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "updated_at",
+          "updated_by",
+          "registry"
+        ],
+        "title": "VerifyPolicyRegistryAuditEntry",
+        "type": "object"
+      },
+      "VerifyPolicyRegistryExportResponse": {
+        "properties": {
+          "default_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Profile"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "profiles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VerifyPolicyProfileConfig"
+            },
+            "title": "Profiles",
+            "type": "object"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "generated_at",
+          "source"
+        ],
+        "title": "VerifyPolicyRegistryExportResponse",
+        "type": "object"
+      },
+      "VerifyPolicyRegistryResponse": {
+        "properties": {
+          "audit_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Audit Count",
+            "type": "integer"
+          },
+          "default_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Profile"
+          },
+          "profiles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VerifyPolicyProfileConfig"
+            },
+            "title": "Profiles",
+            "type": "object"
+          },
+          "registry_path": {
+            "title": "Registry Path",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registry_path",
+          "updated_at"
+        ],
+        "title": "VerifyPolicyRegistryResponse",
+        "type": "object"
+      },
+      "VerifyPolicyRegistryUpdateRequest": {
+        "properties": {
+          "default_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Profile"
+          },
+          "profiles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VerifyPolicyProfileConfig"
+            },
+            "title": "Profiles",
+            "type": "object"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "updated_by": {
+            "minLength": 1,
+            "title": "Updated By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "updated_by"
+        ],
+        "title": "VerifyPolicyRegistryUpdateRequest",
+        "type": "object"
+      },
+      "WorkItem": {
+        "properties": {
+          "assignee_agent": {
+            "default": "auto-agent",
+            "minLength": 1,
+            "title": "Assignee Agent",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "depends_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On",
+            "type": "array"
+          },
+          "discussion_budget": {
+            "default": 2,
+            "minimum": 0.0,
+            "title": "Discussion Budget",
+            "type": "integer"
+          },
+          "discussion_timeout_seconds": {
+            "default": 120,
+            "minimum": 1.0,
+            "title": "Discussion Timeout Seconds",
+            "type": "integer"
+          },
+          "discussion_used": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Discussion Used",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "loop_guard_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loop Guard Fingerprint"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "module_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Module Key"
+          },
+          "priority": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "requires_approval": {
+            "default": false,
+            "title": "Requires Approval",
+            "type": "boolean"
+          },
+          "role": {
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkItemStatus",
+            "default": "pending"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "workflow_run_id": {
+            "minLength": 1,
+            "title": "Workflow Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_run_id",
+          "role"
+        ],
+        "title": "WorkItem",
+        "type": "object"
+      },
+      "WorkItemStatus": {
+        "enum": [
+          "pending",
+          "ready",
+          "running",
+          "needs_discussion",
+          "waiting_approval",
+          "failed",
+          "succeeded",
+          "skipped"
+        ],
+        "title": "WorkItemStatus",
+        "type": "string"
+      },
+      "WorkflowMetricsResponse": {
+        "properties": {
+          "artifact_type_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Artifact Type Counts",
+            "type": "object"
+          },
+          "gate_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Gate Status Counts",
+            "type": "object"
+          },
+          "run_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Run Status Counts",
+            "type": "object"
+          },
+          "total_artifacts": {
+            "title": "Total Artifacts",
+            "type": "integer"
+          },
+          "total_gate_checks": {
+            "title": "Total Gate Checks",
+            "type": "integer"
+          },
+          "total_runs": {
+            "title": "Total Runs",
+            "type": "integer"
+          },
+          "total_workitems": {
+            "title": "Total Workitems",
+            "type": "integer"
+          },
+          "workitem_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Workitem Status Counts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "total_runs",
+          "total_workitems",
+          "total_gate_checks",
+          "total_artifacts"
+        ],
+        "title": "WorkflowMetricsResponse",
+        "type": "object"
+      },
+      "WorkflowRun": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "project_id": {
+            "minLength": 1,
+            "title": "Project Id",
+            "type": "string"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus",
+            "default": "planning"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id"
+        ],
+        "title": "WorkflowRun",
+        "type": "object"
+      },
+      "WorkflowRunStatus": {
+        "enum": [
+          "planning",
+          "running",
+          "waiting_approval",
+          "blocked",
+          "failed",
+          "succeeded",
+          "canceled"
+        ],
+        "title": "WorkflowRunStatus",
+        "type": "string"
       }
     }
   },
@@ -1343,6 +3450,649 @@
           }
         },
         "summary": "Get Metrics Summary"
+      }
+    },
+    "/metrics/workflows": {
+      "get": {
+        "operationId": "get_workflow_metrics_metrics_workflows_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowMetricsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Workflow Metrics"
+      }
+    },
+    "/metrics/workflows/alert-policy": {
+      "get": {
+        "operationId": "get_metrics_alert_policy_metrics_workflows_alert_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsAlertPolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Metrics Alert Policy"
+      },
+      "put": {
+        "operationId": "update_metrics_alert_policy_metrics_workflows_alert_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MetricsAlertPolicyUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsAlertPolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Metrics Alert Policy"
+      }
+    },
+    "/metrics/workflows/alert-policy/audits": {
+      "get": {
+        "operationId": "list_metrics_alert_policy_audits_metrics_workflows_alert_policy_audits_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MetricsAlertPolicyAuditEntry"
+                  },
+                  "title": "Response List Metrics Alert Policy Audits Metrics Workflows Alert Policy Audits Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Metrics Alert Policy Audits"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback": {
+      "post": {
+        "operationId": "rollback_metrics_alert_policy_metrics_workflows_alert_policy_rollback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackMetricsAlertPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RollbackMetricsAlertPolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rollback Metrics Alert Policy"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals": {
+      "get": {
+        "operationId": "list_metrics_rollback_approvals_metrics_workflows_alert_policy_rollback_approvals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RollbackApprovalResponse"
+                  },
+                  "title": "Response List Metrics Rollback Approvals Metrics Workflows Alert Policy Rollback Approvals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Metrics Rollback Approvals"
+      },
+      "post": {
+        "operationId": "create_metrics_rollback_approval_metrics_workflows_alert_policy_rollback_approvals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRollbackApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RollbackApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Metrics Rollback Approval"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/purge": {
+      "post": {
+        "operationId": "purge_metrics_rollback_approvals_metrics_workflows_alert_policy_rollback_approvals_purge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurgeRollbackApprovalsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeRollbackApprovalsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge Metrics Rollback Approvals"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/purge-audits": {
+      "get": {
+        "operationId": "list_metrics_rollback_approval_purge_audits_metrics_workflows_alert_policy_rollback_approvals_purge_audits_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PurgeRollbackApprovalsAuditEntry"
+                  },
+                  "title": "Response List Metrics Rollback Approval Purge Audits Metrics Workflows Alert Policy Rollback Approvals Purge Audits Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Metrics Rollback Approval Purge Audits"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/purge-audits/export": {
+      "get": {
+        "operationId": "export_metrics_rollback_approval_purge_audits_metrics_workflows_alert_policy_rollback_approvals_purge_audits_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportRollbackApprovalPurgeAuditsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Metrics Rollback Approval Purge Audits"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/purge-audits/purge": {
+      "post": {
+        "operationId": "purge_metrics_rollback_approval_purge_audits_metrics_workflows_alert_policy_rollback_approvals_purge_audits_purge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurgeRollbackApprovalPurgeAuditsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeRollbackApprovalPurgeAuditsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge Metrics Rollback Approval Purge Audits"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/stats": {
+      "get": {
+        "operationId": "get_metrics_rollback_approval_stats_metrics_workflows_alert_policy_rollback_approvals_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RollbackApprovalStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Metrics Rollback Approval Stats"
+      }
+    },
+    "/metrics/workflows/alert-policy/rollback-approvals/{approval_id}/approve": {
+      "post": {
+        "operationId": "approve_metrics_rollback_approval_metrics_workflows_alert_policy_rollback_approvals__approval_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "approval_id",
+            "required": true,
+            "schema": {
+              "title": "Approval Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRollbackApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RollbackApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Metrics Rollback Approval"
+      }
+    },
+    "/metrics/workflows/alert-policy/verify-policy": {
+      "get": {
+        "operationId": "get_metrics_verify_policy_registry_metrics_workflows_alert_policy_verify_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyPolicyRegistryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Metrics Verify Policy Registry"
+      },
+      "put": {
+        "operationId": "update_metrics_verify_policy_registry_metrics_workflows_alert_policy_verify_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPolicyRegistryUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyPolicyRegistryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Metrics Verify Policy Registry"
+      }
+    },
+    "/metrics/workflows/alert-policy/verify-policy/audits": {
+      "get": {
+        "operationId": "list_metrics_verify_policy_registry_audits_metrics_workflows_alert_policy_verify_policy_audits_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VerifyPolicyRegistryAuditEntry"
+                  },
+                  "title": "Response List Metrics Verify Policy Registry Audits Metrics Workflows Alert Policy Verify Policy Audits Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Metrics Verify Policy Registry Audits"
+      }
+    },
+    "/metrics/workflows/alert-policy/verify-policy/export": {
+      "get": {
+        "operationId": "export_metrics_verify_policy_registry_metrics_workflows_alert_policy_verify_policy_export_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyPolicyRegistryExportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export Metrics Verify Policy Registry"
       }
     },
     "/projects": {
@@ -1659,6 +4409,633 @@
           }
         },
         "summary": "Create Command"
+      }
+    },
+    "/v3/workflows/runs": {
+      "post": {
+        "operationId": "create_workflow_run_v3_workflows_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkflowRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}": {
+      "get": {
+        "operationId": "get_workflow_run_v3_workflows_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/artifacts": {
+      "get": {
+        "operationId": "list_workflow_artifacts_v3_workflows_runs__run_id__artifacts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Artifact"
+                  },
+                  "title": "Response List Workflow Artifacts V3 Workflows Runs  Run Id  Artifacts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Workflow Artifacts"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/bootstrap": {
+      "post": {
+        "operationId": "bootstrap_workflow_run_v3_workflows_runs__run_id__bootstrap_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkItem"
+                  },
+                  "title": "Response Bootstrap Workflow Run V3 Workflows Runs  Run Id  Bootstrap Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bootstrap Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/execute": {
+      "post": {
+        "operationId": "execute_workflow_run_v3_workflows_runs__run_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteWorkflowRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecuteWorkflowRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/gates": {
+      "get": {
+        "operationId": "list_workflow_gate_checks_v3_workflows_runs__run_id__gates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GateCheck"
+                  },
+                  "title": "Response List Workflow Gate Checks V3 Workflows Runs  Run Id  Gates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Workflow Gate Checks"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/tick": {
+      "post": {
+        "operationId": "tick_workflow_run_v3_workflows_runs__run_id__tick_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkItem"
+                  },
+                  "title": "Response Tick Workflow Run V3 Workflows Runs  Run Id  Tick Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tick Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/workitems": {
+      "get": {
+        "operationId": "list_workitems_v3_workflows_runs__run_id__workitems_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkItem"
+                  },
+                  "title": "Response List Workitems V3 Workflows Runs  Run Id  Workitems Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Workitems"
+      },
+      "post": {
+        "operationId": "create_workitem_v3_workflows_runs__run_id__workitems_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Workitem"
+      }
+    },
+    "/v3/workflows/workitems/{workitem_id}/approve": {
+      "post": {
+        "operationId": "approve_workitem_v3_workflows_workitems__workitem_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workitem_id",
+            "required": true,
+            "schema": {
+              "title": "Workitem Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveWorkItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Workitem"
+      }
+    },
+    "/v3/workflows/workitems/{workitem_id}/complete": {
+      "post": {
+        "operationId": "complete_workitem_v3_workflows_workitems__workitem_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workitem_id",
+            "required": true,
+            "schema": {
+              "title": "Workitem Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteWorkItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Workitem"
+      }
+    },
+    "/v3/workflows/workitems/{workitem_id}/discussion/resolve": {
+      "post": {
+        "operationId": "resolve_workitem_discussion_v3_workflows_workitems__workitem_id__discussion_resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workitem_id",
+            "required": true,
+            "schema": {
+              "title": "Workitem Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDiscussionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscussionSession"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Workitem Discussion"
+      }
+    },
+    "/v3/workflows/workitems/{workitem_id}/discussions": {
+      "get": {
+        "operationId": "list_workitem_discussions_v3_workflows_workitems__workitem_id__discussions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workitem_id",
+            "required": true,
+            "schema": {
+              "title": "Workitem Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DiscussionSession"
+                  },
+                  "title": "Response List Workitem Discussions V3 Workflows Workitems  Workitem Id  Discussions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Workitem Discussions"
+      }
+    },
+    "/v3/workflows/workitems/{workitem_id}/start": {
+      "post": {
+        "operationId": "start_workitem_v3_workflows_workitems__workitem_id__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workitem_id",
+            "required": true,
+            "schema": {
+              "title": "Workitem Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Workitem"
       }
     }
   }

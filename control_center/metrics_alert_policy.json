@@ -1,0 +1,7 @@
+{
+  "failed_run_delta_gt": 0,
+  "failed_run_count_gte": 1,
+  "blocked_run_count_gte": 1,
+  "waiting_approval_count_gte": 5,
+  "in_flight_command_count_gte": 20
+}

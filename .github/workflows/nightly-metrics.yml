@@ -1,0 +1,48 @@
+name: nightly-metrics
+
+on:
+  schedule:
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+
+jobs:
+  workflow-metrics-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r control_center/requirements.txt
+
+      - name: Generate nightly workflow metrics report
+        env:
+          WHERECODE_TOKEN: nightly-token
+          WHERECODE_RELOAD: "false"
+          METRICS_REPORT_DIR: ${{ github.workspace }}/nightly-reports
+          METRICS_SNAPSHOT_PATH: ${{ github.workspace }}/nightly-reports/latest_workflow_metrics.json
+          METRICS_FAIL_ON_FAILED_DELTA: "false"
+        run: bash scripts/v3_metrics_report.sh
+
+      - name: Run metrics alert check
+        env:
+          METRICS_ALERT_EXIT_NONZERO: "false"
+        run: |
+          bash scripts/v3_metrics_alert_check.sh \
+            "${{ github.workspace }}/nightly-reports/latest_workflow_metrics.json" \
+            "${{ github.workspace }}/control_center/metrics_alert_policy.json" \
+            "${{ github.workspace }}/nightly-reports"
+
+      - name: Upload nightly metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-workflow-metrics
+          path: nightly-reports/

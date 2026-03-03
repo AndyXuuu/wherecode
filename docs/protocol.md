@@ -1,5 +1,8 @@
 # WhereCode 协议说明（HTTP 异步）
 
+> 更新（2026-03-03）：本文件描述当前 API 契约。  
+> 系统/角色/状态机规范见 `docs/system_spec.md`。
+
 本项目使用 **HTTP 异步指挥模型**，不依赖长连接。
 
 核心原则：
@@ -295,4 +298,55 @@ X-WhereCode-Token: change-me
   - `task_id`
   - `project_id`
   - `status`
-  - `poll_url`
+ - `poll_url`
+
+---
+
+## 11) v3 Workflow（已可跑通最小闭环）
+
+当前新增的 v3 路径：
+
+- `POST /v3/workflows/runs`：创建 workflow run
+- `POST /v3/workflows/runs/{run_id}/bootstrap`：按模块列表自动生成标准流水线
+- `POST /v3/workflows/runs/{run_id}/execute`：执行 ready queue，直到阻塞或终态
+- `GET /v3/workflows/runs/{run_id}`：查看 run 状态
+- `GET /v3/workflows/runs/{run_id}/workitems`：查看 workitem 列表
+- `GET /v3/workflows/runs/{run_id}/gates`：查看门禁执行记录
+- `GET /v3/workflows/runs/{run_id}/artifacts`：查看工件记录（验收报告/发布说明/回滚预案）
+- `GET /v3/workflows/workitems/{workitem_id}/discussions`：查看讨论会话
+- `POST /v3/workflows/workitems/{workitem_id}/discussion/resolve`：提交决策并恢复执行
+- `POST /v3/workflows/workitems/{workitem_id}/approve`：审批等待审批的 workitem
+
+标准流水线（每模块）：
+
+`module-dev -> doc-manager -> qa-test -> security-review`
+
+全局收敛：
+
+`integration-test -> acceptance -> release-manager`
+
+讨论机制（已接入）：
+
+- Action Layer 返回 `status="needs_discussion"` 时，workitem 进入 `needs_discussion`
+- workflow run 状态进入 `blocked`
+- 通过 discussion resolve 接口提交决策后，workitem 回到 `ready`，可继续执行
+- 预算、超时、重复指纹循环会触发失败收敛
+
+门禁与回流（已接入）：
+
+- gate 角色：
+  - `doc-manager` -> doc gate
+  - `qa-test` / `integration-test` -> test gate
+  - `security-review` -> security gate
+- gate 失败时：
+  - 若模块可回流且未超重试预算，自动生成该模块的新一轮 `module-dev -> doc-manager -> qa-test -> security-review`
+  - 自动重连 `integration-test` 对应的模块终点依赖
+  - 超过回流预算则收敛为 `failed`
+
+发布审批与工件（已接入）：
+
+- 当开启 `WHERECODE_RELEASE_APPROVAL_REQUIRED=true` 时，`release-manager` 阶段进入 `waiting_approval`
+- 未审批不可执行，通过 approve 接口后恢复为 `ready`
+- 通过后可继续 execute 到终态
+- `acceptance` 阶段自动产出 `acceptance_report`
+- `release-manager` 阶段自动产出 `release_note` 和 `rollback_plan`

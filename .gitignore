@@ -1,6 +1,8 @@
 .DS_Store
 .pytest_cache/
-.wherecode/run/
+.wherecode/*
+!.wherecode/state.json
+!.wherecode/milestones.json
 
 .env
 *.env
@@ -14,3 +16,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+docs/ops_reports/*T*-tst2-soak-*.jsonl
+docs/ops_reports/*T*-tst2-soak-*.log
+docs/ops_reports/*T*-tst2-soak-*.md

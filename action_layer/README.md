@@ -32,3 +32,8 @@ bash action_layer/run.sh
 
 - `ACTION_LAYER_HOST`（默认 `127.0.0.1`）
 - `ACTION_LAYER_PORT`（默认 `8100`）
+
+角色 profile（v3）：
+
+- 路径：`action_layer/agents/<role>/agent.md`
+- 约束：SubAgent 仅允许读取本角色 profile

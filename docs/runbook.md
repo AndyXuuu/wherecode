@@ -1,197 +1,97 @@
-# WhereCode 运行手册（草案）
+# Runbook (Active)
 
-## 1. 统一命令入口（推荐）
+Updated: 2026-03-03
 
-在根目录使用 `stationctl` 统一管理三个子项目，不在根目录安装依赖。
+## 1) Standard command entry
+
+Use root scripts. Do not install mixed dependencies at repository root.
 
 ```bash
-# 1) 安装子项目依赖（按各自技术栈隔离）
 bash scripts/stationctl.sh install all
-
-# 2) 启动 Command Center + Control Center + Action Layer
 bash scripts/stationctl.sh dev all
+bash scripts/stationctl.sh start all
+bash scripts/stationctl.sh status all
+bash scripts/stationctl.sh stop all
+bash scripts/stationctl.sh check
 ```
 
-命令矩阵：
-
-- `bash scripts/stationctl.sh install command-center`
-- `bash scripts/stationctl.sh install control-center`
-- `bash scripts/stationctl.sh install action-layer`
-- `bash scripts/stationctl.sh dev command-center`
-- `bash scripts/stationctl.sh dev control-center`
-- `bash scripts/stationctl.sh dev action-layer`
-- `bash scripts/stationctl.sh start all`（后台启动）
-- `bash scripts/stationctl.sh status all`（查看运行状态）
-- `bash scripts/stationctl.sh stop all`（后台停机）
-- `bash scripts/stationctl.sh check`（后端测试 + 前端构建）
-
-## 2. 本地启动（手动方式）
-
-```bash
-python3 -m venv control_center/.venv
-source control_center/.venv/bin/activate
-pip install -r control_center/requirements.txt
-cp control_center/.env.example control_center/.env
-bash control_center/run.sh
-```
-
-默认地址：`http://127.0.0.1:8000`
-
-鉴权默认开启，建议先导出 token：
+## 2) Minimal env baseline
 
 ```bash
 export WHERECODE_TOKEN=change-me
-```
-
-如需启用 SQLite 持久化：
-
-```bash
 export WHERECODE_STATE_BACKEND=sqlite
 export WHERECODE_SQLITE_PATH=.wherecode/state.db
 ```
 
-如需自定义智能体路由规则：
+Optional:
 
 ```bash
+export WHERECODE_RELEASE_APPROVAL_REQUIRED=true
 export WHERECODE_AGENT_ROUTING_FILE=control_center/agents.routing.json
 ```
 
-路由规则字段说明（JSON）：
-- `id`: 规则唯一标识（建议设置，便于指标追踪）
-- `priority`: 数字越小优先
-- `enabled`: `true/false` 控制是否生效
-
-更新规则文件后可热重载：
-
-```bash
-curl -sX POST http://127.0.0.1:8000/agent-routing/reload \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
-```
-
-在线查看/更新规则（推荐）：
-
-```bash
-curl -s http://127.0.0.1:8000/agent-routing \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
-
-curl -sX PUT http://127.0.0.1:8000/agent-routing \
-  -H "Content-Type: application/json" \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
-  -d '{
-    "default_agent": "coding-agent",
-    "rules": [
-      {
-        "id": "rule_test_keywords",
-        "agent": "test-agent",
-        "priority": 10,
-        "enabled": true,
-        "keywords": ["pytest", "test", "coverage"]
-      }
-    ]
-  }'
-```
-
-## 3. 快速检查
+## 3) Health and contract checks
 
 ```bash
 curl http://127.0.0.1:8000/healthz
-curl http://127.0.0.1:8000/action-layer/health -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
-curl http://127.0.0.1:8000/metrics/summary -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
-curl http://127.0.0.1:8100/healthz
-control_center/.venv/bin/pytest tests/unit/test_http_async_flow.py
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" http://127.0.0.1:8000/action-layer/health
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" http://127.0.0.1:8000/metrics/summary
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" http://127.0.0.1:8000/metrics/workflows
 control_center/.venv/bin/pytest -q
+bash scripts/check_all.sh
 ```
 
-预期：
-- `/healthz` 返回 `{"status":"ok","transport":"http-async"}`
-- Action Layer `/healthz` 返回 `{"status":"ok","layer":"action","transport":"http"}`
-- Control Center 响应头包含 `X-Request-Id`
-- 测试通过
-
-若修改了接口契约（路径/字段/响应模型），同步更新 OpenAPI 快照：
+If API schema changed:
 
 ```bash
 control_center/.venv/bin/python scripts/update_openapi_snapshot.py
 control_center/.venv/bin/pytest -q
 ```
 
-前端联调（Command Center）：
-
-```bash
-cd command_center
-pnpm install
-pnpm dev
-```
-
-打开 `http://localhost:3000/command-lab`，可直接创建项目/任务并提交命令进行轮询。  
-如需查看 Pencil 页面复刻，访问 `http://localhost:3000/overview`。  
-默认入口会跳转到 `http://localhost:3000/overview`。
-
-前端构建（统一）：
-
-```bash
-cd command_center
-pnpm build
-```
-
-一键校验（后端测试 + 前端构建）：
-
-```bash
-bash scripts/check_all.sh
-```
-
-后台模式日志和 PID 位于：`/Users/andyxu/Documents/project/wherecode/.wherecode/run/`
-
-## 4. HTTP 异步指挥流程检查
-
-推荐直接运行 smoke 脚本：
+## 4) Smoke and rehearsal set
 
 ```bash
 bash scripts/http_async_smoke.sh
 bash scripts/action_layer_smoke.sh
 bash scripts/full_stack_smoke.sh
+bash scripts/v3_workflow_smoke.sh
+bash scripts/v3_recovery_drill.sh
+bash scripts/v3_parallel_probe.sh http://127.0.0.1:8000 6 3
+bash scripts/ci_v3_rehearsal.sh
+SOAK_DURATION_SECONDS=86400 SOAK_INTERVAL_SECONDS=300 bash scripts/tst2_soak.sh
+bash scripts/tst2_soak_status.sh --strict
 ```
 
-注意：该脚本依赖 Control Center 已运行（`http://127.0.0.1:8000`）。
-`action_layer_smoke.sh` 依赖 Action Layer 已运行（`http://127.0.0.1:8100`）。
-
-或手动调用：
+Milestone gate:
 
 ```bash
-# 1) 创建项目
-curl -sX POST http://127.0.0.1:8000/projects \
-  -H "Content-Type: application/json" \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
-  -d '{"name":"wherecode-mobile"}'
-
-# 2) 创建任务
-curl -sX POST http://127.0.0.1:8000/projects/<project_id>/tasks \
-  -H "Content-Type: application/json" \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
-  -d '{"title":"login-refactor"}'
-
-# 3) 提交命令（返回 202 + command_id）
-curl -sX POST http://127.0.0.1:8000/tasks/<task_id>/commands \
-  -H "Content-Type: application/json" \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
-  -d '{"text":"run unit tests"}'
-
-# 4) 轮询命令状态
-curl -s http://127.0.0.1:8000/commands/<command_id> \
-  -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}"
+bash scripts/v3_milestone_gate.sh --milestone test-entry --strict
 ```
 
-预期：
-- 命令提交接口返回 `202 Accepted`
-- 命令状态按 `queued -> running -> success|failed` 变化
-- 无需 WebSocket 常驻连接
+## 5) Metrics and policy operations
 
-## 5. 常见问题
+```bash
+bash scripts/v3_metrics_report.sh
+bash scripts/v3_metrics_alert_check.sh
+bash scripts/v3_metrics_policy_rollback.sh <audit_id> --dry-run
+bash scripts/v3_metrics_rollback_approval_gc.sh --dry-run
+```
 
-- 端口冲突：修改 `control_center/.env` 中 `WHERECODE_PORT`
-- 依赖缺失：
-  - Control Center：`bash scripts/stationctl.sh install control-center`
-  - Command Center：`bash scripts/stationctl.sh install command-center`
-- 401 unauthorized：确认 `WHERECODE_TOKEN` 与请求头 `X-WhereCode-Token` 一致
-- 环境变量未生效：确认是否已加载 `control_center/.env` 或手动导出变量
-- 更多问题排查：见 `docs/troubleshooting.md`
+Policy API:
+
+```bash
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
+  http://127.0.0.1:8000/metrics/workflows/alert-policy
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
+  http://127.0.0.1:8000/metrics/workflows/alert-policy/audits?limit=20
+curl -H "X-WhereCode-Token: ${WHERECODE_TOKEN:-change-me}" \
+  http://127.0.0.1:8000/metrics/workflows/alert-policy/rollback-approvals/stats
+```
+
+## 6) References
+
+- Full script flags: `scripts/README.md`
+- System roles and state model: `docs/system_spec.md`
+- Active release path: `docs/release_map.md`
+- Task board: `docs/v3_task_board.md`
+- Troubleshooting: `docs/troubleshooting.md`

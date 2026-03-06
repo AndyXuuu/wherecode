@@ -1,15 +1,36 @@
-# Change Reports 说明
+# Change Reports Index
 
-本目录用于记录每次改动的总结文档，作为“计划 -> 改动 -> 总结”流程的最后一步。
+Updated: 2026-03-06
 
-建议文件命名：
+## Rule
 
-- `YYYY-MM-DD-<topic>.md`
+- One task -> one report file.
+- Keep only: `Scope`, `Changed Files`, `Validation`.
+- Naming: `YYYY-MM-DD-<topic>.md`.
 
-建议模板：
+## Entry
 
-1. 变更目标
-2. 计划更新
-3. 实施改动
-4. 验证结果
-5. 风险与后续事项
+- Plan source: `PLAN.md`
+- Phase map: `docs/change_reports/MAP.md`
+
+## Daily Volume
+
+- `2026-03-01`: 23
+- `2026-03-02`: 24
+- `2026-03-03`: 20
+- `2026-03-04`: 31
+- `2026-03-05`: 32
+- `2026-03-06`: 32
+
+## Current Day Highlights
+
+- `2026-03-06-main-flow-full-run-assessment.md`
+- `2026-03-06-go3-t1-provider-readiness-validation.md`
+- `2026-03-06-go3-t2-recovery-taxonomy-package.md`
+- `2026-03-06-go4-t1-provider-remediation-checkpoint.md`
+- `2026-03-06-go4-t2-provider-runtime-recovery-closure.md`
+
+## Quick Commands
+
+- `ls -1 docs/change_reports | sort`
+- `ls -1 docs/change_reports/2026-03-06-*.md | sort`

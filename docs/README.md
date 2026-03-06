@@ -1,24 +1,31 @@
-# Docs Index (Active)
+# Docs Index
 
-Updated: 2026-03-03
+Updated: 2026-03-06
 
-## Core docs
+## Core
 
-- `system_spec.md`: architecture + roles + workflow + data entities.
-- `protocol.md`: API contract and auth/error rules.
-- `runbook.md`: install/start/check/smoke/release commands.
-- `troubleshooting.md`: common failures and fast recovery steps.
-- `release_map.md`: release stages and go-live gates.
-- `v3_task_board.md`: active sprint and release track tasks.
-- `oncall_checklist.md`: shift checks and incident response baseline.
+- `system_spec.md`: architecture and domain model.
+- `protocol.md`: API/error/auth contract.
+- `runbook.md`: install/start/check/release commands.
+- `troubleshooting.md`: failure diagnosis and recovery.
+- `release_map.md`: milestone roadmap.
+- `v3_task_board.md`: active sprint board.
+- `oncall_checklist.md`: operation checklist.
 
-## History and reports
+## Change Log
 
-- `change_reports/`: per-change records.
-- `ops_reports/`: generated operation reports and snapshots.
+- `change_reports/README.md`: report rules + quick navigation.
+- `change_reports/MAP.md`: phase map.
+- `change_reports/YYYY-MM-DD-*.md`: one task per report.
 
-## Rule
+## Runtime Evidence
 
-- Keep docs short and executable.
-- Keep one source-of-truth per topic.
-- Move historical narratives to `change_reports/`, not core docs.
+- `ops_reports/INDEX.md`: retained evidence and retention policy.
+- `ops_reports/latest_*.json`: latest pointers.
+- `ops_reports/YYYY-MM-DD-*.md`: manual checkpoints.
+
+## Documentation Rules
+
+- One topic, one source-of-truth.
+- Reports keep only: `Scope`, `Changed Files`, `Validation`.
+- Generated artifacts are disposable after summary is recorded.

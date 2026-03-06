@@ -1,0 +1,36 @@
+{
+  "stamp": "20260306T152313Z",
+  "control_url": "http://127.0.0.1:8000",
+  "action_url": "http://127.0.0.1:8100",
+  "provider_base_url": "https://code.rayinai.com",
+  "provider_model": "gpt-5.3-codex",
+  "provider_wire_api": "responses",
+  "provider_type": "openai-compatible",
+  "has_api_key": true,
+  "api_key_source": "codex_auth",
+  "checks": {
+    "control_health": {
+      "exit_code": 7,
+      "http_code": "000"
+    },
+    "action_health": {
+      "exit_code": 0,
+      "http_code": "200"
+    },
+    "proxy_health": {
+      "exit_code": 7,
+      "http_code": "000"
+    },
+    "provider_models": {
+      "exit_code": 0,
+      "http_code": "200",
+      "response_snippet": "{\"data\":[{\"id\":\"gpt-5\",\"type\":\"model\",\"display_name\":\"gpt-5\",\"created_at\":\"2024-01-01T00:00:00Z\"},{\"id\":\"gpt-5-nano\",\"type\":\"model\",\"display_name\":\"gpt-5-nano\",\"created_at\":\"2024-01-01T00:00:00Z\"},{\"id\":\"gpt-5.1\",\"type\":\"model\",\"display_nam"
+    },
+    "provider_runtime": {
+      "exit_code": 0,
+      "http_code": "200",
+      "endpoint": "https://code.rayinai.com/v1/responses",
+      "response_snippet": "{\"id\":\"resp_07d851249d3be6be0169aaf16346d48191891cd874e449e482\",\"object\":\"response\",\"created_at\":1772810595,\"status\":\"completed\",\"background\":false,\"completed_at\":1772810595,\"error\":null,\"frequency_penalty\":0.0,\"incomplete_details\":null,\"in"
+    }
+  }
+}

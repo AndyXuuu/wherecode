@@ -1,12 +1,15 @@
 # 🛰️ WhereCode: 跨时空 AI 协作指挥中心
 
+> **⚡ Fuel the Machine**：本项目 100% 由 AI 编写。若你希望支持高质量输出与 MCP 边界探索，可赞助 **Tokens** 或 **API Credits**。  
+> **赞助 / 联系**：[andy1770@proton.me](mailto:andy1770@proton.me)
+
 **WhereCode** 是一套创新的个人开发工作流架构。它将开发者从书房的显示器前解放出来，利用手机作为意图终端，让 PC 成为执行中枢，并与多位 AI 合作伙伴（如 Claude、Gemini）深度协同。
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
 ---
 
-## 🤖 AI 声明
+## 🤖 AI 声明 (AI Declaration)
 
 **本项目所有代码全部由 AI 编写，包括但不限于：Claude (Anthropic)、Gemini (Google)、ChatGPT (OpenAI)、GLM (智谱)、DeepSeek、MiniMax 等 AI 工具与平台。**
 
@@ -45,7 +48,7 @@ AI 在本项目中扮演的角色包括：
 - **MCP (Model Context Protocol)**：系统核心通信协议，确保工具调用的标准化。
 - **通信隧道**：支持插件化隧道接口（CF Tunnel, frp, 物理 IP），实现安全远程接入。
 
-## 📦 Monorepo 依赖策略
+## 📦 Monorepo 依赖策略 (Monorepo Dependency Policy)
 
 本仓库由三个子项目组成，技术栈与依赖彼此独立：
 
@@ -65,27 +68,47 @@ bash scripts/stationctl.sh start all
 bash scripts/stationctl.sh status all
 bash scripts/stationctl.sh stop all
 bash scripts/stationctl.sh check
+bash scripts/stationctl.sh check quick
+bash scripts/stationctl.sh check release
 ```
 
-## 📅 计划与完成阶段
+## 📅 计划与里程碑 (Plan & Milestones)
 
-### 已完成
+### 已完成 (Completed)
 
 - [x] `K1-K50`：工作流编排、角色流水线、策略门禁、状态持久化。
 - [x] `M-TEST-ENTRY`：里程碑门禁已通过。
 - [x] `TST1`：集成矩阵与 rollback/policy 回归已完成。
+- [x] `BOUNDARY-1`：子项目工作区（`project/`）已切换为自动化托管。
+- [x] `MB1`（2026-03-06）：decompose -> orchestrate -> recover API 闭环完成。
+- [x] `MB2`（2026-03-06）：command 意图触发 orchestrate 主流程并完成状态持久化。
+- [x] `MB3`（2026-03-06）：股票舆情 dry-run + recover + execute 全链路证据已落盘。
+- [x] `MB4`（2026-03-06）：发布基线 + 发布就绪证据包 + go/no-go 草案已完成。
+- [x] `MB5`（2026-03-06）：验收包 + 严格里程碑门禁 + 上线建议已完成。
+- [x] `REL1`（2026-03-06）：双语发布说明 + 签发包已完成。
+- [x] `GO1`（2026-03-06）：上线演练 + 上线后稳定性清单已完成。
+- [x] `GO2`（2026-03-06）：稳定性检查点 + 观察问题队列已完成。
+- [x] `GO3`（2026-03-06）：目标主机验证包已完成（因 provider 执行失败暂未就绪）。
+- [x] `GO4`（2026-03-06）：本地 codex-config 对齐 + provider 执行链路 + recovery drill 重跑通过。
 
-### 计划中
+### 里程碑计划（预期） (Milestone Plan - Expected)
 
-- [ ] `TST2-T1`：24h 稳定性 soak 测试（指标漂移）。
-- [ ] `TST2-T2`：发布彩排 + 回滚演练。
-- [ ] `TST2-T3`：oncall 清单签署。
-- [ ] `REL1`：发布包与签字。
-- [ ] `GO1`：生产上线清单。
+- [x] `MB3`（目标：2026-03-08）：真实股票舆情项目单机 dry-run 跑通。
+- [x] `MB4`（目标：2026-03-09）：本地 release readiness 包绿灯。
+- [x] `MB5`（目标：2026-03-10）：上线决策包准备完成。
+- [x] `GO1`（目标：2026-03-11）：上线演练与后检查清单完成。
+- [x] `GO2`（目标：2026-03-12）：稳定性观察报告与问题队列完成。
+- [x] `GO3`（目标：2026-03-13）：目标主机 provider/recovery 验证完成。
+- [x] `GO4`（目标：2026-03-14）：provider/recovery 修复并重跑通过。
+
+### 当前冲刺（GO4 修复阶段） (Current Sprint)
+
+- [x] `GO4-T1`：修复目标主机 provider/网络访问问题。
+- [x] `GO4-T2`：重跑 provider 检查 + recovery-drill 直至通过。
 
 ---
 
-## 📜 开源协议
+## 📜 开源协议 (License)
 
 本项目基于 **GNU Affero General Public License v3.0 (AGPL-3.0)** 开源。
 Copyright (C) 2026 AndyXuuu [andy1770@proton.me](mailto:andy1770@proton.me)

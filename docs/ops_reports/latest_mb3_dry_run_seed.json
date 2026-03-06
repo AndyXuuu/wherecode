@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-03-06T14:29:33.410175+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/20260306T142933Z-mb3-dry-run-seed.json",
+  "captured_at": "2026-03-06T14:29:33.409721+00:00",
+  "control_url": "http://127.0.0.1:8000",
+  "project_id": "proj_921a39da55b9",
+  "task_id": "task_fcb80f3b066d",
+  "command_id": "cmd_73632aae49d8",
+  "terminal_status": "success",
+  "workflow_run_id": "wfr_61f95f3e0450",
+  "orchestration_status": "prepared",
+  "workflow_next_action": "confirm_or_reject_decomposition",
+  "primary_recovery_action": "reconfirm_decomposition",
+  "latest_found": true,
+  "latest_orchestration_status": "prepared",
+  "latest_next_action": "confirm_or_reject_decomposition",
+  "command_text": "/orchestrate build stock sentiment pipeline with opinion crawl sentiment scoring and industry theme analysis --module-hints=crawl,sentiment,theme,industry --max-modules=6 --strategy=balanced --execute=false --force-redecompose=false --confirmed-by=owner"
+}

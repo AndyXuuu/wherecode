@@ -1,85 +1,136 @@
-# WhereCode PLAN (Active Only)
+# WhereCode PLAN (Main Business) / WhereCode 计划（主业务）
 
-Updated: 2026-03-03
+Updated: 2026-03-06
 
-## 1) Workflow DNA
+## 1) Workflow DNA / 工作流基因
 
-1. Update plan first.
-2. Implement.
-3. Run checks.
-4. Update docs.
+1. Update plan first / 先更新计划。
+2. Implement changes / 再实施改动。
+3. Run checks / 执行检查。
+4. Write summary docs / 写总结文档。
 
-Task log rule:
+Task log rule / 任务日志规则:
 - Start: `started (doing)`.
 - Finish: `completed (done)`.
-- Completed history is archived in `docs/change_reports/`.
-- Keep PLAN only for active and next release work.
+- If blocked: one short blocker line.
 
-## 2) Active Sprint: TST2
+## 2) Ownership Boundary / 责任边界
 
-| ID | Task | Owner | Depends | Status |
+- AI executes end-to-end delivery / AI 负责端到端交付。
+- User provides goals/suggestions only / 用户仅提供目标与建议。
+- Main engineering files are edited directly in this repo / 主工程文件直接在本仓库修改。
+- `project/` is automation-managed subproject workspace / `project/` 是自动化托管子项目工作区。
+- Do not hand-edit subproject business implementation in `project/` / 不手改 `project/` 子项目业务实现。
+
+## 3) Milestones (with expected date) / 里程碑（含预期日期）
+
+| Milestone / 里程碑 | Target Date / 目标日期 | Scope / 范围 | Exit Gate / 退出门禁 | Status / 状态 |
 | --- | --- | --- | --- | --- |
-| TST2-T1 | stability soak test (24h metrics drift) | qa-test | TST1-T3 | doing |
-| TST2-T2 | release rehearsal + rollback drill | release-manager | TST2-T1 | todo |
-| TST2-T3 | oncall checklist signoff | security-review | TST2-T2 | todo |
+| MB1 | 2026-03-06 | chief decompose -> orchestrate -> recover API closed loop | `/orchestrate` + `/orchestrate/latest` + `/orchestrate/recover` usable | done |
+| MB2 | 2026-03-07 | command entry maps to orchestrate flow by policy | one command can trigger full run orchestration | done |
+| MB3 | 2026-03-08 | real project dry-run (single-host) | stock-sentiment task can be decomposed/executed/recovered end-to-end | done |
+| MB4 | 2026-03-09 | local release readiness package | release checklist + runbook + rollback rehearsal green | done |
+| MB5 | 2026-03-10 | go-live decision checkpoint | milestone gate + acceptance report ready for launch decision | done |
+| REL1 | 2026-03-10 | release notes + signoff package | bilingual release notes + signoff package ready | done |
+| GO1 | 2026-03-11 | local go-live launch prep | launch runbook rehearsal + post-checklist ready | done |
+| GO2 | 2026-03-12 | local stability observation | smoke/recovery observation report ready | done |
+| GO3 | 2026-03-13 | target-host go-live validation | provider/recovery validation package ready | done |
+| GO4 | 2026-03-14 | provider/recovery remediation | provider execute + recovery drill pass | done |
 
-## 3) Release Map
+## 4) This Sprint Task Breakdown (GO4) / 本冲刺任务拆解（GO4）
 
-| Stage | Goal | Exit Gate | Status |
-| --- | --- | --- | --- |
-| M-TEST-ENTRY | Enter integration test phase | `bash scripts/v3_milestone_gate.sh --milestone test-entry --strict` | passed |
-| TST1 | Integration matrix + rollback/policy regression | `TST1-T1/T2/T3` all done | done |
-| TST2 | Stability hardening + release rehearsal | full smoke + recovery + oncall drill green | doing |
-| REL1 | Release package and signoff | acceptance report + release note + rollback plan | todo |
-| GO1 | Production launch | go-live checklist all green | todo |
+| ID | Task / 任务 | Owner / 负责人 | Depends / 依赖 | Status / 状态 |
+| --- | --- | --- | --- | --- |
+| GO4-T1 | remediate provider/network access on target host | ops | GO3 | done |
+| GO4-T2 | rerun provider check + recovery drill until pass | qa-test | GO4-T1 | done |
 
-## 4) Gate Commands (Current Baseline)
+## 5) Expected Output (this week) / 本周预期产出
 
-- Full tests: `control_center/.venv/bin/pytest -q`
-- Full checks: `bash scripts/check_all.sh`
-- TST1 matrix:
-  - `bash scripts/http_async_smoke.sh`
-  - `bash scripts/action_layer_smoke.sh`
-  - `bash scripts/full_stack_smoke.sh`
-  - `bash scripts/v3_workflow_smoke.sh`
-  - `bash scripts/v3_recovery_drill.sh`
-  - `bash scripts/v3_parallel_probe.sh http://127.0.0.1:8000 6 3`
-  - `bash scripts/ci_v3_rehearsal.sh`
+- By 2026-03-07: command-level orchestration trigger is runnable.
+- By 2026-03-08: one real stock-sentiment project run completes full workflow loop.
+- By 2026-03-09: local release checklist is green with rollback rehearsal record.
+- By 2026-03-10: launch decision package is ready.
 
-## 5) Next Action
+## 6) Gate Commands / 门禁命令
 
-- Monitor `TST2-T1` with `bash scripts/tst2_soak_status.sh --strict`.
+- Quick loop: `bash scripts/check_all.sh quick`
+- Backend full: `bash scripts/check_backend.sh full`
+- Release scope: `bash scripts/check_all.sh release`
+- Milestone gate: `bash scripts/v3_milestone_gate.sh --milestone tst2-ready --strict`
 
-## 6) Task Log (Active Window)
+## 7) Next Action / 下一步
 
-- 2026-03-03 `TST1-T1/T2/T3` started (`doing`)
-- 2026-03-03 `DOC-2026-03-03-PLAN-RESET-RELEASE-MAP` started (`doing`)
-- 2026-03-03 `DOC-2026-03-03-PLAN-RESET-RELEASE-MAP` completed (`done`)
-- 2026-03-03 `DOC-2026-03-03-DOC-CONSOLIDATION` started (`doing`)
-- 2026-03-03 `DOC-2026-03-03-DOC-CONSOLIDATION` completed (`done`)
-- 2026-03-03 `TST1-T1` started (`doing`)
-- 2026-03-03 `TST1-T1` blocked: `v3_workflow_smoke` failed (`integration-test` profile missing)
-- 2026-03-03 `TST1-T1` completed (`done`)
-- 2026-03-03 `TST1-T2` started (`doing`)
-- 2026-03-03 `TST1-T2` blocked: rollback target matched current policy (`409`)
-- 2026-03-03 `TST1-T2` completed (`done`)
-- 2026-03-03 `TST1-T3` started (`doing`)
-- 2026-03-03 `TST1-T3` completed (`done`)
-- 2026-03-03 `TST2-T1` started (`doing`)
-- 2026-03-03 `TST2-T1` soak automation started (`doing`)
-- 2026-03-03 `TST2-T1` soak rehearsal completed (`done`)
-- 2026-03-03 `TST2-T1` blocked: waiting 24h wall-clock soak window
-- 2026-03-03 `TST2-T1` blocked: 24h background soak process not persistent in tool session
-- 2026-03-03 `TST2-T1` 24h soak live session started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-TST2-SOAK-CHECKPOINT` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-TST2-SOAK-CHECKPOINT` completed (`done`)
-- 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-TST2-LIVE-CHECKPOINT-02` completed (`done`)
-- 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-IGNORE-AND-COMMIT` completed (`done`)
-- 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-DISABLE-CI-WORKFLOW` completed (`done`)
-- 2026-03-04 `DOC-2026-03-04-RESTORE-README-INTRO` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-RESTORE-README-INTRO` completed (`done`)
-- 2026-03-04 `DOC-2026-03-04-README-PLAN-COMPLETED-PHASE-SYNC` started (`doing`)
-- 2026-03-04 `DOC-2026-03-04-README-PLAN-COMPLETED-PHASE-SYNC` completed (`done`)
+- Keep GO4 validation bundle in routine loop: provider probe + llm check/smoke + recovery drill.
+- Keep release baseline command in loop: `bash scripts/check_all.sh release`.
+- Keep recovery route in loop: `/v3/workflows/runs/{run_id}/orchestrate/recover`.
+
+## 8) Task Log (Recent) / 最近任务日志
+
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-ORCHESTRATE-RECOVERY-EXECUTE-API` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-ORCHESTRATE-RECOVERY-EXECUTE-API` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MILESTONE-PLAN-RESET` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MILESTONE-PLAN-RESET` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-README-BILINGUAL-SYNC` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-README-BILINGUAL-SYNC` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-README-BILINGUAL-MIRROR-ORDER` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-README-BILINGUAL-MIRROR-ORDER` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-RELEASE-MAP-BILINGUAL-MIRROR` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-RELEASE-MAP-BILINGUAL-MIRROR` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-TASK-BOARD-BILINGUAL-MIRROR` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-TASK-BOARD-BILINGUAL-MIRROR` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-PLAN-BILINGUAL-MIRROR` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-PLAN-BILINGUAL-MIRROR` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-RUNBOOK-BILINGUAL-MIRROR` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-RUNBOOK-BILINGUAL-MIRROR` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-COMMAND-ORCHESTRATE-POLICY` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-COMMAND-ORCHESTRATE-POLICY` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-COMMAND-WORKFLOW-STATE-PERSISTENCE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-COMMAND-WORKFLOW-STATE-PERSISTENCE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB2-T3-MIN-E2E-CONTRACTS` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB2-T3-MIN-E2E-CONTRACTS` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB2-T4-RUNBOOK-API-DOC-SYNC` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB2-T4-RUNBOOK-API-DOC-SYNC` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-DRY-RUN-SEED-TOOLING` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-DRY-RUN-SEED-TOOLING` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-T4-RECOVERY-EXECUTE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-T4-RECOVERY-EXECUTE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-T5-UNBLOCK-FLOW` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB3-T5-UNBLOCK-FLOW` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-RELEASE-GATE-READINESS` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-RELEASE-GATE-READINESS` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-T2-EVIDENCE-PACKAGE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-T2-EVIDENCE-PACKAGE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-T3-GO-NO-GO-DRAFT` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB4-T3-GO-NO-GO-DRAFT` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T1-ACCEPTANCE-PACKAGE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T1-ACCEPTANCE-PACKAGE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T2-STRICT-MILESTONE-GATE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T2-STRICT-MILESTONE-GATE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T3-LAUNCH-RECOMMENDATION` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-BUSINESS-MB5-T3-LAUNCH-RECOMMENDATION` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-REL1-T1-RELEASE-NOTES` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-REL1-T1-RELEASE-NOTES` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-REL1-T2-SIGNOFF-PACKAGE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-REL1-T2-SIGNOFF-PACKAGE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO1-T1-LAUNCH-REHEARSAL` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO1-T1-LAUNCH-REHEARSAL` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO1-T2-POST-LAUNCH-CHECKLIST` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO1-T2-POST-LAUNCH-CHECKLIST` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO2-T1-STABILITY-OBSERVATION` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO2-T1-STABILITY-OBSERVATION` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO2-T2-OBSERVATION-QUEUE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO2-T2-OBSERVATION-QUEUE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO3-T1-TARGET-VALIDATION` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-FLOW-FULL-RUN-ASSESSMENT` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-MAIN-FLOW-FULL-RUN-ASSESSMENT` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO3-T1-TARGET-VALIDATION` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO3-T2-RECOVERY-TAXONOMY` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO3-T2-RECOVERY-TAXONOMY` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T1-PROVIDER-REMEDIATION` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T1-LOCAL-CODEX-CONFIG-ALIGNMENT` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T1-LOCAL-CODEX-CONFIG-ALIGNMENT` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T1-PROVIDER-REMEDIATION` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T2-RERUN-VALIDATION-BUNDLE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO4-T2-RERUN-VALIDATION-BUNDLE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-DOCS-FULL-CONSOLIDATION` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-DOCS-FULL-CONSOLIDATION` completed (`done`)

@@ -53,14 +53,14 @@ trap cleanup EXIT
 export WHERECODE_TOKEN="${AUTH_TOKEN}"
 export WHERECODE_RELOAD=false
 
-echo "[1/8] ensure action-layer is running"
+echo "[1/5] ensure action-layer is running"
 if ! service_running "action-layer"; then
   bash "${ROOT_DIR}/scripts/stationctl.sh" start action-layer
   STARTED_ACTION_LAYER=1
 fi
 wait_http_ok "${ACTION_URL}/healthz" 45
 
-echo "[2/8] ensure control-center is running"
+echo "[2/5] ensure control-center is running"
 if ! service_running "control-center"; then
   bash "${ROOT_DIR}/scripts/stationctl.sh" start control-center
   STARTED_CONTROL_CENTER=1
@@ -68,24 +68,17 @@ fi
 wait_http_ok "${CONTROL_URL}/healthz" 45
 wait_http_ok "${CONTROL_URL}/action-layer/health" 45 "X-WhereCode-Token: ${AUTH_TOKEN}"
 
-echo "[3/8] run HTTP async smoke"
-WHERECODE_TOKEN="${AUTH_TOKEN}" bash "${ROOT_DIR}/scripts/http_async_smoke.sh" "${CONTROL_URL}"
+echo "[3/5] run backend checks"
+bash "${ROOT_DIR}/scripts/check_backend.sh"
 
-echo "[4/8] run action-layer smoke"
-bash "${ROOT_DIR}/scripts/action_layer_smoke.sh" "${ACTION_URL}"
-
-echo "[5/8] run v3 workflow smoke"
-WHERECODE_TOKEN="${AUTH_TOKEN}" bash "${ROOT_DIR}/scripts/v3_workflow_smoke.sh" "${CONTROL_URL}"
-
-echo "[6/8] run v3 parallel probe"
+echo "[4/5] run v3 parallel probe"
 WHERECODE_TOKEN="${AUTH_TOKEN}" \
 PROBE_STRICT=true \
 bash "${ROOT_DIR}/scripts/v3_parallel_probe.sh" "${CONTROL_URL}" "${PROBE_RUN_COUNT}" "${PROBE_WORKERS}"
 
-echo "[7/8] run v3 recovery drill"
+echo "[5/5] run v3 recovery drill"
 WHERECODE_TOKEN="${AUTH_TOKEN}" \
 WHERECODE_SQLITE_PATH="${RECOVERY_SQLITE_PATH}" \
 bash "${ROOT_DIR}/scripts/v3_recovery_drill.sh" "${RECOVERY_URL}" "${ACTION_URL}"
 
-echo "[8/8] rehearsal summary"
 echo "ci rehearsal passed: control=${CONTROL_URL} action=${ACTION_URL} probe_runs=${PROBE_RUN_COUNT}"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 from typing import Awaitable, Callable
 
 from action_layer.services import AgentRegistry, UnknownAgentRoleError
@@ -27,6 +28,12 @@ class BootstrapResult:
     workitems: list[WorkItem]
 
 
+@dataclass(frozen=True, slots=True)
+class ModuleBootstrapResult:
+    workitems: list[WorkItem]
+    terminal_ids: list[str]
+
+
 class WorkflowEngine:
     MODULE_STAGES = ("module-dev", "doc-manager", "qa-test", "security-review")
     GLOBAL_STAGES = ("integration-test", "acceptance", "release-manager")
@@ -47,28 +54,46 @@ class WorkflowEngine:
         self._max_module_reflows = max_module_reflows
         self._release_requires_approval = release_requires_approval
 
-    def bootstrap_standard_pipeline(self, run_id: str, modules: list[str]) -> BootstrapResult:
+    def bootstrap_standard_pipeline(
+        self,
+        run_id: str,
+        modules: list[str],
+        *,
+        module_task_packages: dict[str, list[dict[str, Any]]] | None = None,
+    ) -> BootstrapResult:
         if self._scheduler.list_workitems(run_id):
             raise ValueError("workflow already has workitems")
 
         normalized_modules = self._normalize_modules(modules)
         created: list[WorkItem] = []
         module_terminal_ids: list[str] = []
+        module_terminal_id_map: dict[str, str] = {}
+        module_terminal_ids_map: dict[str, list[str]] = {}
 
         for module in normalized_modules:
-            depends_on: list[str] = []
-            for role in self.MODULE_STAGES:
-                workitem = self._scheduler.add_workitem(
-                    run_id=run_id,
-                    role=role,
-                    module_key=module,
-                    depends_on=depends_on,
-                )
-                created.append(workitem)
-                depends_on = [workitem.id]
-            module_terminal_ids.extend(depends_on)
+            package = None
+            if isinstance(module_task_packages, dict):
+                raw_package = module_task_packages.get(module)
+                if isinstance(raw_package, list) and raw_package:
+                    package = raw_package
 
-        global_depends_on = list(module_terminal_ids)
+            if package is None:
+                package = [
+                    {"role": role, "objective": f"execute {role} stage for module {module}"}
+                    for role in self.MODULE_STAGES
+                ]
+
+            module_result = self._bootstrap_module_workitems(
+                run_id=run_id,
+                module=module,
+                task_package=package,
+            )
+            created.extend(module_result.workitems)
+            module_terminal_ids.extend(module_result.terminal_ids)
+            module_terminal_id_map[module] = module_result.terminal_ids[-1]
+            module_terminal_ids_map[module] = module_result.terminal_ids
+
+        global_depends_on = list(dict.fromkeys(module_terminal_ids))
         for role in self.GLOBAL_STAGES:
             workitem = self._scheduler.add_workitem(
                 run_id=run_id,
@@ -81,13 +106,98 @@ class WorkflowEngine:
             global_depends_on = [workitem.id]
 
         run = self._scheduler.get_run(run_id)
-        run.metadata["module_terminal_workitems"] = {
-            module: terminal_id
-            for module, terminal_id in zip(normalized_modules, module_terminal_ids, strict=True)
-        }
+        run.metadata["module_terminal_workitems"] = module_terminal_id_map
+        run.metadata["module_terminal_workitem_ids"] = module_terminal_ids_map
         run.metadata["reflow_attempts"] = {}
         self._scheduler.persist_run(run.id)
         return BootstrapResult(workitems=created)
+
+    def _bootstrap_module_workitems(
+        self,
+        *,
+        run_id: str,
+        module: str,
+        task_package: list[dict[str, Any]],
+    ) -> ModuleBootstrapResult:
+        created: list[WorkItem] = []
+        created_ids: list[str] = []
+        role_latest_workitem_id: dict[str, str] = {}
+
+        for item in task_package:
+            role = str(item.get("role", "")).strip().lower()
+            objective = str(item.get("objective", "")).strip()
+            if not role:
+                raise ValueError(f"module task package role is required: module={module}")
+
+            depends_on_roles = self._normalize_depends_on_roles(item.get("depends_on_roles"))
+            depends_on_ids: list[str] = []
+            for depends_role in depends_on_roles:
+                workitem_id = role_latest_workitem_id.get(depends_role)
+                if workitem_id:
+                    depends_on_ids.append(workitem_id)
+            if not depends_on_ids and created_ids:
+                depends_on_ids = [created_ids[-1]]
+
+            priority = item.get("priority")
+            normalized_priority = int(priority) if isinstance(priority, int) else 3
+            if normalized_priority < 1 or normalized_priority > 5:
+                normalized_priority = 3
+
+            metadata: dict[str, Any] = {
+                "task_source": "chief_decomposition",
+            }
+            if objective:
+                metadata["task_objective"] = objective
+            deliverable = str(item.get("deliverable", "")).strip()
+            if deliverable:
+                metadata["task_deliverable"] = deliverable
+            if depends_on_roles:
+                metadata["task_depends_on_roles"] = depends_on_roles
+
+            workitem = self._scheduler.add_workitem(
+                run_id=run_id,
+                role=role,
+                module_key=module,
+                depends_on=depends_on_ids,
+                priority=normalized_priority,
+                metadata=metadata,
+            )
+            created.append(workitem)
+            created_ids.append(workitem.id)
+            role_latest_workitem_id[role] = workitem.id
+
+        if not created:
+            raise ValueError(f"module task package is empty: module={module}")
+
+        internal_referenced: set[str] = set()
+        created_id_set = set(created_ids)
+        for workitem in created:
+            for dependency_id in workitem.depends_on:
+                if dependency_id in created_id_set:
+                    internal_referenced.add(dependency_id)
+
+        terminal_ids = [item_id for item_id in created_ids if item_id not in internal_referenced]
+        if not terminal_ids:
+            terminal_ids = [created_ids[-1]]
+
+        return ModuleBootstrapResult(workitems=created, terminal_ids=terminal_ids)
+
+    @staticmethod
+    def _normalize_depends_on_roles(value: Any) -> list[str]:
+        if isinstance(value, str):
+            tokens = [value]
+        elif isinstance(value, list):
+            tokens = value
+        else:
+            return []
+        output: list[str] = []
+        for item in tokens:
+            role = str(item).strip().lower()
+            if not role:
+                continue
+            if role not in output:
+                output.append(role)
+        return output
 
     async def execute_until_blocked(
         self,
@@ -389,10 +499,19 @@ class WorkflowEngine:
     def _build_execution_text(workitem: WorkItem) -> str:
         module_label = workitem.module_key or "unknown-module"
         discussion_resolved = bool(workitem.metadata.get("discussion_resolved"))
-        return (
-            f"role={workitem.role}; module={module_label}; execute stage; "
-            f"discussion_resolved={str(discussion_resolved).lower()}"
-        )
+        objective = str(workitem.metadata.get("task_objective", "")).strip()
+        deliverable = str(workitem.metadata.get("task_deliverable", "")).strip()
+        parts = [
+            f"role={workitem.role}",
+            f"module={module_label}",
+            "execute stage",
+            f"discussion_resolved={str(discussion_resolved).lower()}",
+        ]
+        if objective:
+            parts.append(f"objective={objective}")
+        if deliverable:
+            parts.append(f"deliverable={deliverable}")
+        return "; ".join(parts)
 
     def is_terminal(self, run_id: str) -> bool:
         run = self._scheduler.get_run(run_id)

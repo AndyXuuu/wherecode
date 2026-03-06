@@ -5,14 +5,44 @@
 - 本地开发辅助脚本
 - CI 前置检查脚本
 - 日志清理与数据迁移脚本
-- 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check）
-- HTTP 异步链路 smoke 脚本（`http_async_smoke.sh`）
-- v3 workflow 闭环 smoke（`v3_workflow_smoke.sh`，覆盖 bootstrap/execute/discussion/approval/artifacts）
+- 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check(quick|dev|release)/soak/soak-checkpoint/tst2-rehearsal/tst2-rehearsal-latest/tst2-progress/tst2-watch/tst2-autopilot/mb3-dry-run/action-llm-check）
 - v3 持久化恢复演练（`v3_recovery_drill.sh`，自动重启 control-center 并校验 run/gates/artifacts）
 - v3 并发探测脚本（`v3_parallel_probe.sh`，并发创建 run 并统计终态分布）
-- v3 CI 演练入口（`ci_v3_rehearsal.sh`，串联 smoke/probe/recovery）
+- v3 CI 演练入口（`ci_v3_rehearsal.sh`，串联 backend/probe/recovery）
 - TST2 稳定性 soak 脚本（`tst2_soak.sh`，按间隔采样 metrics 漂移并执行并发 probe）
-- TST2 soak 状态脚本（`tst2_soak_status.sh`，读取最新样本并输出 guard 状态，支持 `--strict`）
+  - 同一 `samples` 文件启用独占锁（`*.lock`），防止重复启动导致并发写入
+- TST2 soak 状态脚本（`tst2_soak_status.sh`，默认读取“有效样本数最多（同分取较新）”的样本文件并输出 guard 状态，支持 `--strict`）
+- TST2 soak 守护脚本（`tst2_soak_daemon.sh`，支持 `start|status|stop|restart`，适合单机长时运行）
+  - `start` 会优先复用进度最高且未完成的 `*-tst2-soak-samples.jsonl`，继续累计 round（不中断 24h 证据链）
+  - `status/stop` 兼容识别 `.wherecode/run/tst2-soak.pid` 与 `.wherecode/run/tst2-soak-24h.pid`
+  - 当 pid 文件缺失但样本仍在持续刷新时，`status` 会显示 `pid=unknown, source=fresh-samples`，`start` 避免重复启动写入器
+- TST2 soak checkpoint 脚本（`tst2_soak_checkpoint.sh`，落盘实时 checkpoint 报告，支持 `--strict`）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh soak-checkpoint --strict`
+  - `--strict` 默认仅校验 `guard_passed=true`；如需同时要求 daemon 存活，追加 `--require-daemon-running`
+  - 输出包含 full 门槛预测字段：`full_profile_samples_remaining` / `full_profile_coverage_remaining_seconds` / `full_profile_forecast_hours_remaining` / `full_profile_projected_ready_at_utc`
+- TST2-T2 release rehearsal 脚本（`tst2_t2_release_rehearsal.sh`，串联 CI rehearsal + rollback drill + checkpoint）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh tst2-rehearsal`
+  - 可选 `--strict`（要求 rollback drill 成功且 checkpoint guard 通过）
+- TST2-T2 latest 报告查看脚本（`tst2_t2_rehearsal_latest.sh`，输出最新 rehearsal 汇总入口）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh tst2-rehearsal-latest`
+- TST2 进度报告脚本（`tst2_progress_report.sh`，输出 full/local 门槛下的 remaining 信息）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh tst2-progress --profile full`
+  - 输出包含 `samples_remaining` / `coverage_remaining_seconds` / `forecast_hours_remaining` / `projected_ready_at_utc`
+- TST2 ready watchdog（`tst2_ready_watchdog.sh`，按轮询持续检查 full/local readiness）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh tst2-watch --profile full --interval 60 --max-rounds 10`
+  - 每轮可自动执行 `soak-checkpoint --strict` 并落盘 watchdog 报告
+  - `--strict` 模式下若在 `--max-rounds` 内未达标则返回非零
+- TST2 autopilot（`tst2_autopilot.sh`，串联 soak 保活 + readiness watch + T2 演练触发）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh tst2-autopilot --profile full --watch-interval 60 --watch-max-rounds 120`
+  - readiness 未达标时默认返回成功并保留报告（`--strict` 时返回非零）
+  - readiness 达标后自动执行 `bash scripts/stationctl.sh tst2-rehearsal --strict`（可 `--skip-rehearsal`）
+- MB3 主流程 dry-run 种子脚本（`mb3_dry_run_seed.sh`，自动创建 project/task，提交 `/orchestrate` 指令并轮询终态）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh mb3-dry-run`
+  - 默认输出 JSON 报告到 `docs/ops_reports/<timestamp>-mb3-dry-run-seed.json`
+  - 默认更新 latest 指针：`docs/ops_reports/latest_mb3_dry_run_seed.json`
+  - 若 command 终态非 `success` 但已有 `workflow_run_id`，仍视为有效演练并输出恢复建议字段
+- README 阶段状态同步脚本（`readme_phase_sync.sh`，只更新 README 的 Plan & Completed Phases 章节）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh readme-phase-sync --strict`
 - v3 夜间指标报告（`v3_metrics_report.sh`，采集 `/metrics/workflows` + `/metrics/summary` 并生成 delta 报告）
 - v3 指标阈值告警检查（`v3_metrics_alert_check.sh`，按策略生成告警工单草稿）
 - v3 指标策略回滚（`v3_metrics_policy_rollback.sh`，默认调用回滚 API，支持 `--dry-run` 和 `--local-file-mode`）
@@ -89,16 +119,26 @@
   - 支持 `--rotate-exports --export-dir <dir>`（导出文件轮转）
   - 轮转模式支持 `--retain-seconds` / `--keep-export-latest`
   - 可选环境变量 `METRICS_ROLLBACK_APPROVAL_GC_REQUESTED_BY`（写入清理审计操作者）
-- v3 里程碑门禁（`v3_milestone_gate.sh`，检查是否满足进入测试阶段）
+- v3 里程碑门禁（`v3_milestone_gate.sh`，检查测试准入与 TST2 就绪）
   - 支持 `--milestone test-entry`
+  - 支持 `--milestone tst2-ready`（基于 soak 累积 + rehearsal 汇总判断是否可进入 REL1）
+  - `tst2-ready` 默认 profile=`full`（24h/288 样本门槛）；可用 `--tst2-profile local` 做本地演练门槛
   - 支持 `--strict`（未达标返回非零）
   - 可选 `--state-file <path>` / `--milestone-file <path>`
+  - `tst2-ready` 可选：`--tst2-profile` / `--soak-samples-file` / `--tst2-summary-file` / `--tst2-min-samples` / `--tst2-duration-seconds` / `--tst2-interval-seconds` / `--tst2-max-failed-run-delta` / `--tst2-max-probe-failed-rounds`
   - 输出字段：`passed` / `missing_checks` / `next_phase` / `recommended_next_action`
-- Action Layer smoke 脚本（`action_layer_smoke.sh`）
-- 全链路联调 smoke（`full_stack_smoke.sh`，自动 start -> smoke -> stop）
-- 本地统一校验脚本（`check_all.sh`，后端测试 + 前端构建）
+- Action Layer 真实 LLM check（`action_layer_llm_check.sh`，要求 health `mode=llm` 且校验 `llm_target/llm_provider/llm_route_reason`）
+  - 可通过统一入口调用：`bash scripts/stationctl.sh action-llm-check [action_layer_url] [role] [module_key] [text]`
+  - 在 `ACTION_LAYER_REQUIRE_LLM=true` 场景下，建议优先使用该脚本作为可用性门禁
+- 分层校验脚本：
+  - `check_backend.sh`（后端 pytest，支持 `quick|full`，默认 `quick`）
+  - `check_command_center.sh`（前端 build）
+  - `check_all.sh`（聚合入口，支持 `quick|dev|release|all|backend|backend-quick|backend-full|llm-check|frontend|projects`）
+    - `quick`（默认）：后端快速回归
+    - `dev`：`quick` 别名（兼容旧命令）
+    - `release`：后端全量 + 前端构建 + 子项目检查
+    - `all`：`release` 兼容别名
 
 约定：
 - 脚本默认可重复执行（幂等）。
 - 关键脚本需在文件头说明用途和输入参数。
-- `http_async_smoke.sh` 默认读取 `WHERECODE_TOKEN`（未设置时使用 `change-me`）。

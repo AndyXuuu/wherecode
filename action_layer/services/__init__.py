@@ -11,6 +11,15 @@ from action_layer.services.agent_profile_loader import (
     AgentProfileLoader,
     AgentProfileNotFoundError,
 )
+from action_layer.services.llm_executor import (
+    LLMConfigurationError,
+    LLMExecutionError,
+    LLMProviderConfig,
+    LLMRoutingConfig,
+    OllamaLLMExecutor,
+    OpenAICompatibleLLMExecutor,
+    RoutedLLMExecutor,
+)
 
 __all__ = [
     "AgentRegistry",
@@ -20,4 +29,11 @@ __all__ = [
     "AgentProfileAuditEvent",
     "AgentProfileAccessError",
     "AgentProfileNotFoundError",
+    "LLMProviderConfig",
+    "LLMRoutingConfig",
+    "LLMConfigurationError",
+    "LLMExecutionError",
+    "OpenAICompatibleLLMExecutor",
+    "OllamaLLMExecutor",
+    "RoutedLLMExecutor",
 ]

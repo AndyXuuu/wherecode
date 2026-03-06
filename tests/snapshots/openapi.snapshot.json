@@ -552,6 +552,118 @@
         "title": "CompleteWorkItemRequest",
         "type": "object"
       },
+      "ConfirmDecomposeBootstrapWorkflowRequest": {
+        "properties": {
+          "approved": {
+            "default": true,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_by": {
+            "minLength": 1,
+            "title": "Confirmed By",
+            "type": "string"
+          },
+          "expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Modules",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "confirmed_by"
+        ],
+        "title": "ConfirmDecomposeBootstrapWorkflowRequest",
+        "type": "object"
+      },
+      "ConfirmDecomposeBootstrapWorkflowResponse": {
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "confirmation_status": {
+            "title": "Confirmation Status",
+            "type": "string"
+          },
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_by": {
+            "title": "Confirmed By",
+            "type": "string"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "workitems": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "title": "Workitems",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "approved",
+          "confirmation_status",
+          "confirmed_by"
+        ],
+        "title": "ConfirmDecomposeBootstrapWorkflowResponse",
+        "type": "object"
+      },
       "CreateCommandRequest": {
         "properties": {
           "requested_by": {
@@ -818,6 +930,843 @@
         "title": "CreateWorkflowRunRequest",
         "type": "object"
       },
+      "DecomposeBootstrapAdvanceLoopRequest": {
+        "properties": {
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "execute_max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Execute Max Loops",
+            "type": "integer"
+          },
+          "expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Modules",
+            "type": "array"
+          },
+          "force_refresh_preview": {
+            "default": false,
+            "title": "Force Refresh Preview",
+            "type": "boolean"
+          },
+          "max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Steps",
+            "type": "integer"
+          },
+          "stop_when_bootstrap_finished": {
+            "default": true,
+            "title": "Stop When Bootstrap Finished",
+            "type": "boolean"
+          }
+        },
+        "title": "DecomposeBootstrapAdvanceLoopRequest",
+        "type": "object"
+      },
+      "DecomposeBootstrapAdvanceLoopResponse": {
+        "properties": {
+          "action_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Action Status Counts",
+            "type": "object"
+          },
+          "action_taken_sequence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Action Taken Sequence",
+            "type": "array"
+          },
+          "final_status": {
+            "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+          },
+          "halted_reason": {
+            "title": "Halted Reason",
+            "type": "string"
+          },
+          "last_action_taken": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Action Taken"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/DecomposeBootstrapAdvanceResponse"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "steps_executed": {
+            "default": 0,
+            "title": "Steps Executed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "halted_reason",
+          "final_status"
+        ],
+        "title": "DecomposeBootstrapAdvanceLoopResponse",
+        "type": "object"
+      },
+      "DecomposeBootstrapAdvanceRequest": {
+        "properties": {
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Modules",
+            "type": "array"
+          },
+          "force_refresh_preview": {
+            "default": false,
+            "title": "Force Refresh Preview",
+            "type": "boolean"
+          },
+          "max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Loops",
+            "type": "integer"
+          }
+        },
+        "title": "DecomposeBootstrapAdvanceRequest",
+        "type": "object"
+      },
+      "DecomposeBootstrapAdvanceResponse": {
+        "properties": {
+          "action_status": {
+            "title": "Action Status",
+            "type": "string"
+          },
+          "action_taken": {
+            "title": "Action Taken",
+            "type": "string"
+          },
+          "confirmation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfirmDecomposeBootstrapWorkflowResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecuteWorkflowRunResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecomposeBootstrapPreviewResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status_after": {
+            "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+          },
+          "status_before": {
+            "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+          }
+        },
+        "required": [
+          "run_id",
+          "action_taken",
+          "action_status",
+          "status_before",
+          "status_after"
+        ],
+        "title": "DecomposeBootstrapAdvanceResponse",
+        "type": "object"
+      },
+      "DecomposeBootstrapAggregateStatusResponse": {
+        "properties": {
+          "bootstrap_finished": {
+            "default": false,
+            "title": "Bootstrap Finished",
+            "type": "boolean"
+          },
+          "bootstrap_started": {
+            "default": false,
+            "title": "Bootstrap Started",
+            "type": "boolean"
+          },
+          "confirmation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Status"
+          },
+          "decomposition_source": {
+            "default": "none",
+            "title": "Decomposition Source",
+            "type": "string"
+          },
+          "global_workitem_count": {
+            "default": 0,
+            "title": "Global Workitem Count",
+            "type": "integer"
+          },
+          "has_decomposition": {
+            "default": false,
+            "title": "Has Decomposition",
+            "type": "boolean"
+          },
+          "has_pending_confirmation": {
+            "default": false,
+            "title": "Has Pending Confirmation",
+            "type": "boolean"
+          },
+          "module_workitem_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Module Workitem Counts",
+            "type": "object"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "next_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action"
+          },
+          "preview_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Fingerprint"
+          },
+          "preview_generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Generated At"
+          },
+          "preview_ready": {
+            "default": false,
+            "title": "Preview Ready",
+            "type": "boolean"
+          },
+          "preview_stale": {
+            "default": false,
+            "title": "Preview Stale",
+            "type": "boolean"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "workitem_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Workitem Status Counts",
+            "type": "object"
+          },
+          "workitem_total": {
+            "default": 0,
+            "title": "Workitem Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_status"
+        ],
+        "title": "DecomposeBootstrapAggregateStatusResponse",
+        "type": "object"
+      },
+      "DecomposeBootstrapPendingWorkflowResponse": {
+        "properties": {
+          "chief_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chief Agent"
+          },
+          "chief_metadata": {
+            "additionalProperties": true,
+            "title": "Chief Metadata",
+            "type": "object"
+          },
+          "chief_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chief Summary"
+          },
+          "chief_trace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chief Trace Id"
+          },
+          "confirmation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Status"
+          },
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "has_pending_confirmation": {
+            "default": false,
+            "title": "Has Pending Confirmation",
+            "type": "boolean"
+          },
+          "max_modules": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Modules"
+          },
+          "module_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Module Hints",
+            "type": "array"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "preview_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Fingerprint"
+          },
+          "preview_generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Generated At"
+          },
+          "preview_ready": {
+            "default": false,
+            "title": "Preview Ready",
+            "type": "boolean"
+          },
+          "preview_stale": {
+            "default": false,
+            "title": "Preview Stale",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested At"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirements"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "DecomposeBootstrapPendingWorkflowResponse",
+        "type": "object"
+      },
+      "DecomposeBootstrapPreviewResponse": {
+        "properties": {
+          "cache_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Fingerprint"
+          },
+          "cache_hit": {
+            "default": false,
+            "title": "Cache Hit",
+            "type": "boolean"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "parallel_groups": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Parallel Groups",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "task_count": {
+            "default": 0,
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/DecomposeBootstrapPreviewTask"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "terminal_task_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Terminal Task Keys",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "source"
+        ],
+        "title": "DecomposeBootstrapPreviewResponse",
+        "type": "object"
+      },
+      "DecomposeBootstrapPreviewTask": {
+        "properties": {
+          "deliverable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deliverable"
+          },
+          "depends_on_roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On Roles",
+            "type": "array"
+          },
+          "depends_on_task_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On Task Keys",
+            "type": "array"
+          },
+          "level": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Level",
+            "type": "integer"
+          },
+          "module_key": {
+            "title": "Module Key",
+            "type": "string"
+          },
+          "objective": {
+            "title": "Objective",
+            "type": "string"
+          },
+          "phase": {
+            "title": "Phase",
+            "type": "string"
+          },
+          "priority": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "task_key": {
+            "title": "Task Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_key",
+          "phase",
+          "module_key",
+          "role",
+          "objective"
+        ],
+        "title": "DecomposeBootstrapPreviewTask",
+        "type": "object"
+      },
+      "DecomposeBootstrapWorkflowRequest": {
+        "properties": {
+          "max_modules": {
+            "default": 6,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Modules",
+            "type": "integer"
+          },
+          "module_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Module Hints",
+            "type": "array"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requirements": {
+            "minLength": 1,
+            "title": "Requirements",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirements"
+        ],
+        "title": "DecomposeBootstrapWorkflowRequest",
+        "type": "object"
+      },
+      "DecomposeBootstrapWorkflowResponse": {
+        "properties": {
+          "chief_agent": {
+            "title": "Chief Agent",
+            "type": "string"
+          },
+          "chief_metadata": {
+            "additionalProperties": true,
+            "title": "Chief Metadata",
+            "type": "object"
+          },
+          "chief_summary": {
+            "title": "Chief Summary",
+            "type": "string"
+          },
+          "chief_trace_id": {
+            "title": "Chief Trace Id",
+            "type": "string"
+          },
+          "confirmation_required": {
+            "default": false,
+            "title": "Confirmation Required",
+            "type": "boolean"
+          },
+          "confirmation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Status"
+          },
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "workitems": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "title": "Workitems",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "chief_summary",
+          "chief_agent",
+          "chief_trace_id"
+        ],
+        "title": "DecomposeBootstrapWorkflowResponse",
+        "type": "object"
+      },
       "DiscussionPrompt": {
         "properties": {
           "fingerprint": {
@@ -1009,6 +1958,65 @@
       },
       "ExecuteWorkflowRunRequest": {
         "properties": {
+          "auto_advance_decompose": {
+            "default": true,
+            "title": "Auto Advance Decompose",
+            "type": "boolean"
+          },
+          "auto_advance_execute_max_loops": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Advance Execute Max Loops"
+          },
+          "auto_advance_force_refresh_preview": {
+            "default": false,
+            "title": "Auto Advance Force Refresh Preview",
+            "type": "boolean"
+          },
+          "auto_advance_max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Auto Advance Max Steps",
+            "type": "integer"
+          },
+          "decompose_confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decompose Confirmation Token"
+          },
+          "decompose_confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decompose Confirmed By"
+          },
+          "decompose_expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decompose Expected Modules",
+            "type": "array"
+          },
           "max_loops": {
             "default": 20,
             "maximum": 1000.0,
@@ -1022,6 +2030,16 @@
       },
       "ExecuteWorkflowRunResponse": {
         "properties": {
+          "decompose_auto_advance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecomposeBootstrapAdvanceLoopResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "executed_count": {
             "title": "Executed Count",
             "type": "integer"
@@ -3175,6 +4193,1131 @@
         "title": "WorkflowRun",
         "type": "object"
       },
+      "WorkflowRunOrchestrateDecisionMachineReport": {
+        "properties": {
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "decompose_triggered": {
+            "default": false,
+            "title": "Decompose Triggered",
+            "type": "boolean"
+          },
+          "execute_triggered": {
+            "default": false,
+            "title": "Execute Triggered",
+            "type": "boolean"
+          },
+          "execution_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateExecutionProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_action_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action After"
+          },
+          "next_action_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Before"
+          },
+          "orchestration_status": {
+            "title": "Orchestration Status",
+            "type": "string"
+          },
+          "pending_confirmation_after": {
+            "default": false,
+            "title": "Pending Confirmation After",
+            "type": "boolean"
+          },
+          "pending_confirmation_before": {
+            "default": false,
+            "title": "Pending Confirmation Before",
+            "type": "boolean"
+          },
+          "preview_ready_after": {
+            "default": false,
+            "title": "Preview Ready After",
+            "type": "boolean"
+          },
+          "primary_recovery_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Recovery Action"
+          },
+          "primary_recovery_confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Recovery Confidence"
+          },
+          "primary_recovery_priority": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Recovery Priority"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "recovery_actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Actions",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "scored_recovery_actions": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRunOrchestrateRecoveryActionScore"
+            },
+            "title": "Scored Recovery Actions",
+            "type": "array"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateStrategy",
+            "default": "speed"
+          },
+          "workitem_total_after": {
+            "default": 0,
+            "title": "Workitem Total After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "orchestration_status"
+        ],
+        "title": "WorkflowRunOrchestrateDecisionMachineReport",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateDecisionReport": {
+        "properties": {
+          "human_summary": {
+            "title": "Human Summary",
+            "type": "string"
+          },
+          "machine": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateDecisionMachineReport"
+          }
+        },
+        "required": [
+          "human_summary",
+          "machine"
+        ],
+        "title": "WorkflowRunOrchestrateDecisionReport",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateDecomposePayload": {
+        "properties": {
+          "max_modules": {
+            "default": 6,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Modules",
+            "type": "integer"
+          },
+          "module_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Module Hints",
+            "type": "array"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requirements": {
+            "minLength": 1,
+            "title": "Requirements",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirements"
+        ],
+        "title": "WorkflowRunOrchestrateDecomposePayload",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateDecompositionSummary": {
+        "properties": {
+          "confirmation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Status"
+          },
+          "has_pending_confirmation": {
+            "default": false,
+            "title": "Has Pending Confirmation",
+            "type": "boolean"
+          },
+          "mapped_requirement_tag_count": {
+            "default": 0,
+            "title": "Mapped Requirement Tag Count",
+            "type": "integer"
+          },
+          "module_count": {
+            "default": 0,
+            "title": "Module Count",
+            "type": "integer"
+          },
+          "module_task_count": {
+            "default": 0,
+            "title": "Module Task Count",
+            "type": "integer"
+          },
+          "module_task_role_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Module Task Role Counts",
+            "type": "object"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "next_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action"
+          },
+          "preview_generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Generated At"
+          },
+          "preview_ready": {
+            "default": false,
+            "title": "Preview Ready",
+            "type": "boolean"
+          },
+          "preview_stale": {
+            "default": false,
+            "title": "Preview Stale",
+            "type": "boolean"
+          },
+          "required_coverage_tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Coverage Tags",
+            "type": "array"
+          },
+          "requirement_points_count": {
+            "default": 0,
+            "title": "Requirement Points Count",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "workitem_total": {
+            "default": 0,
+            "title": "Workitem Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "WorkflowRunOrchestrateDecompositionSummary",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateExecutionProfile": {
+        "properties": {
+          "auto_advance_decompose": {
+            "default": true,
+            "title": "Auto Advance Decompose",
+            "type": "boolean"
+          },
+          "auto_advance_execute_max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Auto Advance Execute Max Loops",
+            "type": "integer"
+          },
+          "auto_advance_force_refresh_preview": {
+            "default": false,
+            "title": "Auto Advance Force Refresh Preview",
+            "type": "boolean"
+          },
+          "auto_advance_max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Auto Advance Max Steps",
+            "type": "integer"
+          },
+          "execute_max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Execute Max Loops",
+            "type": "integer"
+          }
+        },
+        "title": "WorkflowRunOrchestrateExecutionProfile",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateLatestTelemetryResponse": {
+        "properties": {
+          "found": {
+            "title": "Found",
+            "type": "boolean"
+          },
+          "record": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateTelemetryRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "found"
+        ],
+        "title": "WorkflowRunOrchestrateLatestTelemetryResponse",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateRecoveryActionScore": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "confidence": {
+            "default": 0.5,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "priority": {
+            "default": 50,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "reason"
+        ],
+        "title": "WorkflowRunOrchestrateRecoveryActionScore",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateRecoveryExecuteRequest": {
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "advance_loop_max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Advance Loop Max Steps",
+            "type": "integer"
+          },
+          "auto_advance_decompose": {
+            "default": true,
+            "title": "Auto Advance Decompose",
+            "type": "boolean"
+          },
+          "auto_advance_execute_max_loops": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Advance Execute Max Loops"
+          },
+          "auto_advance_force_refresh_preview": {
+            "default": false,
+            "title": "Auto Advance Force Refresh Preview",
+            "type": "boolean"
+          },
+          "auto_advance_max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Auto Advance Max Steps",
+            "type": "integer"
+          },
+          "confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Token"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "execute": {
+            "default": true,
+            "title": "Execute",
+            "type": "boolean"
+          },
+          "execute_max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Execute Max Loops",
+            "type": "integer"
+          },
+          "expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Modules",
+            "type": "array"
+          },
+          "max_modules": {
+            "default": 6,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Modules",
+            "type": "integer"
+          },
+          "module_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Module Hints",
+            "type": "array"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirements"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateStrategy",
+            "default": "balanced"
+          }
+        },
+        "title": "WorkflowRunOrchestrateRecoveryExecuteRequest",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateRecoveryExecuteResponse": {
+        "properties": {
+          "action_source": {
+            "title": "Action Source",
+            "type": "string"
+          },
+          "action_status": {
+            "title": "Action Status",
+            "type": "string"
+          },
+          "advance_loop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecomposeBootstrapAdvanceLoopResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confirmation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfirmDecomposeBootstrapWorkflowResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecuteWorkflowRunResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_record_before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateTelemetryRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orchestrate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecomposeBootstrapPreviewResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "selected_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Action"
+          }
+        },
+        "required": [
+          "run_id",
+          "action_source",
+          "action_status"
+        ],
+        "title": "WorkflowRunOrchestrateRecoveryExecuteResponse",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateRequest": {
+        "properties": {
+          "auto_advance_decompose": {
+            "default": true,
+            "title": "Auto Advance Decompose",
+            "type": "boolean"
+          },
+          "auto_advance_execute_max_loops": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Advance Execute Max Loops"
+          },
+          "auto_advance_force_refresh_preview": {
+            "default": false,
+            "title": "Auto Advance Force Refresh Preview",
+            "type": "boolean"
+          },
+          "auto_advance_max_steps": {
+            "default": 8,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Auto Advance Max Steps",
+            "type": "integer"
+          },
+          "decompose_confirmation_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decompose Confirmation Token"
+          },
+          "decompose_confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decompose Confirmed By"
+          },
+          "decompose_expected_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decompose Expected Modules",
+            "type": "array"
+          },
+          "decompose_payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateDecomposePayload"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execute": {
+            "default": true,
+            "title": "Execute",
+            "type": "boolean"
+          },
+          "execute_max_loops": {
+            "default": 20,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Execute Max Loops",
+            "type": "integer"
+          },
+          "force_redecompose": {
+            "default": false,
+            "title": "Force Redecompose",
+            "type": "boolean"
+          },
+          "max_modules": {
+            "default": 6,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Modules",
+            "type": "integer"
+          },
+          "module_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Module Hints",
+            "type": "array"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirements"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateStrategy",
+            "default": "speed"
+          }
+        },
+        "title": "WorkflowRunOrchestrateRequest",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateResponse": {
+        "properties": {
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "decision_report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateDecisionReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decompose": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecomposeBootstrapWorkflowResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decomposition_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateDecompositionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecuteWorkflowRunResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orchestration_status": {
+            "title": "Orchestration Status",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status_after": {
+            "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+          },
+          "status_before": {
+            "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateStrategy",
+            "default": "speed"
+          },
+          "telemetry_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateTelemetrySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "run_id",
+          "orchestration_status",
+          "status_before",
+          "status_after"
+        ],
+        "title": "WorkflowRunOrchestrateResponse",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateStrategy": {
+        "enum": [
+          "speed",
+          "balanced",
+          "safe"
+        ],
+        "title": "WorkflowRunOrchestrateStrategy",
+        "type": "string"
+      },
+      "WorkflowRunOrchestrateTelemetryRecord": {
+        "properties": {
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "decision_report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateDecisionReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orchestration_status": {
+            "title": "Orchestration Status",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateStrategy",
+            "default": "speed"
+          },
+          "telemetry_snapshot": {
+            "$ref": "#/components/schemas/WorkflowRunOrchestrateTelemetrySnapshot"
+          }
+        },
+        "required": [
+          "run_id",
+          "orchestration_status",
+          "telemetry_snapshot",
+          "recorded_at"
+        ],
+        "title": "WorkflowRunOrchestrateTelemetryRecord",
+        "type": "object"
+      },
+      "WorkflowRunOrchestrateTelemetrySnapshot": {
+        "properties": {
+          "action_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Action Count",
+            "type": "integer"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "decompose_triggered": {
+            "default": false,
+            "title": "Decompose Triggered",
+            "type": "boolean"
+          },
+          "duration_ms": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "execute_failed_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execute Failed Count"
+          },
+          "execute_remaining_pending_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execute Remaining Pending Count"
+          },
+          "execute_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execute Run Status"
+          },
+          "execute_triggered": {
+            "default": false,
+            "title": "Execute Triggered",
+            "type": "boolean"
+          },
+          "finished_at": {
+            "format": "date-time",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "next_action_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action After"
+          },
+          "next_action_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Before"
+          },
+          "next_action_changed": {
+            "default": false,
+            "title": "Next Action Changed",
+            "type": "boolean"
+          },
+          "pending_confirmation_after": {
+            "default": false,
+            "title": "Pending Confirmation After",
+            "type": "boolean"
+          },
+          "pending_confirmation_before": {
+            "default": false,
+            "title": "Pending Confirmation Before",
+            "type": "boolean"
+          },
+          "pending_confirmation_cleared": {
+            "default": false,
+            "title": "Pending Confirmation Cleared",
+            "type": "boolean"
+          },
+          "preview_ready_after": {
+            "default": false,
+            "title": "Preview Ready After",
+            "type": "boolean"
+          },
+          "preview_ready_before": {
+            "default": false,
+            "title": "Preview Ready Before",
+            "type": "boolean"
+          },
+          "preview_state_changed": {
+            "default": false,
+            "title": "Preview State Changed",
+            "type": "boolean"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "unfinished_workitem_after": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unfinished Workitem After",
+            "type": "integer"
+          },
+          "unfinished_workitem_before": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unfinished Workitem Before",
+            "type": "integer"
+          },
+          "unfinished_workitem_delta": {
+            "default": 0,
+            "title": "Unfinished Workitem Delta",
+            "type": "integer"
+          },
+          "workitem_total_after": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Workitem Total After",
+            "type": "integer"
+          },
+          "workitem_total_before": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Workitem Total Before",
+            "type": "integer"
+          },
+          "workitem_total_delta": {
+            "default": 0,
+            "title": "Workitem Total Delta",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "started_at",
+          "finished_at"
+        ],
+        "title": "WorkflowRunOrchestrateTelemetrySnapshot",
+        "type": "object"
+      },
       "WorkflowRunStatus": {
         "enum": [
           "planning",
@@ -4584,6 +6727,329 @@
         "summary": "Bootstrap Workflow Run"
       }
     },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap": {
+      "post": {
+        "operationId": "decompose_bootstrap_workflow_run_v3_workflows_runs__run_id__decompose_bootstrap_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecomposeBootstrapWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapWorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decompose Bootstrap Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/advance": {
+      "post": {
+        "operationId": "advance_decompose_bootstrap_run_v3_workflows_runs__run_id__decompose_bootstrap_advance_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecomposeBootstrapAdvanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapAdvanceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Advance Decompose Bootstrap Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/advance-loop": {
+      "post": {
+        "operationId": "advance_decompose_bootstrap_run_loop_v3_workflows_runs__run_id__decompose_bootstrap_advance_loop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecomposeBootstrapAdvanceLoopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapAdvanceLoopResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Advance Decompose Bootstrap Run Loop"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm": {
+      "post": {
+        "operationId": "confirm_decompose_bootstrap_workflow_run_v3_workflows_runs__run_id__decompose_bootstrap_confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmDecomposeBootstrapWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmDecomposeBootstrapWorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Decompose Bootstrap Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/pending": {
+      "get": {
+        "operationId": "get_decompose_bootstrap_pending_v3_workflows_runs__run_id__decompose_bootstrap_pending_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapPendingWorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Decompose Bootstrap Pending"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/preview": {
+      "get": {
+        "operationId": "get_decompose_bootstrap_preview_v3_workflows_runs__run_id__decompose_bootstrap_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Decompose Bootstrap Preview"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/decompose-bootstrap/status": {
+      "get": {
+        "operationId": "get_decompose_bootstrap_aggregate_status_v3_workflows_runs__run_id__decompose_bootstrap_status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecomposeBootstrapAggregateStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Decompose Bootstrap Aggregate Status"
+      }
+    },
     "/v3/workflows/runs/{run_id}/execute": {
       "post": {
         "operationId": "execute_workflow_run_v3_workflows_runs__run_id__execute_post",
@@ -4674,6 +7140,143 @@
           }
         },
         "summary": "List Workflow Gate Checks"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/orchestrate": {
+      "post": {
+        "operationId": "orchestrate_workflow_run_v3_workflows_runs__run_id__orchestrate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunOrchestrateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Orchestrate Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/orchestrate/latest": {
+      "get": {
+        "operationId": "get_latest_orchestrate_telemetry_v3_workflows_runs__run_id__orchestrate_latest_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunOrchestrateLatestTelemetryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Latest Orchestrate Telemetry"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/orchestrate/recover": {
+      "post": {
+        "operationId": "execute_orchestrate_recovery_action_v3_workflows_runs__run_id__orchestrate_recover_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowRunOrchestrateRecoveryExecuteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunOrchestrateRecoveryExecuteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Orchestrate Recovery Action"
       }
     },
     "/v3/workflows/runs/{run_id}/tick": {

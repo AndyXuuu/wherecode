@@ -13,9 +13,14 @@ SOAK_SKIP_SERVICE_START="${SOAK_SKIP_SERVICE_START:-false}"
 SOAK_FAIL_ON_FAILED_DELTA="${SOAK_FAIL_ON_FAILED_DELTA:-true}"
 SOAK_MAX_FAILED_RUN_DELTA="${SOAK_MAX_FAILED_RUN_DELTA:-0}"
 REPORT_DIR="${SOAK_REPORT_DIR:-${ROOT_DIR}/docs/ops_reports}"
+SOAK_SAMPLES_PATH="${SOAK_SAMPLES_PATH:-}"
+SOAK_PROBE_LOG_PATH="${SOAK_PROBE_LOG_PATH:-}"
+SOAK_SUMMARY_PATH="${SOAK_SUMMARY_PATH:-}"
 AUTH_TOKEN="${WHERECODE_TOKEN:-change-me}"
 STARTED_CONTROL_CENTER=0
 STARTED_ACTION_LAYER=0
+LOCK_FILE=""
+LOCK_HELD=0
 
 if ! [[ "${SOAK_DURATION_SECONDS}" =~ ^[0-9]+$ ]] || [[ "${SOAK_DURATION_SECONDS}" -lt 1 ]]; then
   echo "SOAK_DURATION_SECONDS must be an integer >= 1"
@@ -39,10 +44,58 @@ if ! [[ "${SOAK_MAX_FAILED_RUN_DELTA}" =~ ^-?[0-9]+$ ]]; then
 fi
 
 mkdir -p "${REPORT_DIR}"
-stamp="$(date -u +"%Y%m%dT%H%M%SZ")"
-samples_path="${REPORT_DIR}/${stamp}-tst2-soak-samples.jsonl"
-probe_log_path="${REPORT_DIR}/${stamp}-tst2-soak-probe.log"
-summary_path="${REPORT_DIR}/${stamp}-tst2-soak-summary.md"
+if [[ -n "${SOAK_SAMPLES_PATH}" ]]; then
+  samples_path="${SOAK_SAMPLES_PATH}"
+else
+  stamp="$(date -u +"%Y%m%dT%H%M%SZ")"
+  samples_path="${REPORT_DIR}/${stamp}-tst2-soak-samples.jsonl"
+fi
+
+base_prefix="${samples_path%-tst2-soak-samples.jsonl}"
+if [[ "${base_prefix}" == "${samples_path}" ]]; then
+  fallback_stamp="$(date -u +"%Y%m%dT%H%M%SZ")"
+  base_prefix="${REPORT_DIR}/${fallback_stamp}"
+fi
+
+if [[ -n "${SOAK_PROBE_LOG_PATH}" ]]; then
+  probe_log_path="${SOAK_PROBE_LOG_PATH}"
+else
+  probe_log_path="${base_prefix}-tst2-soak-probe.log"
+fi
+
+if [[ -n "${SOAK_SUMMARY_PATH}" ]]; then
+  summary_path="${SOAK_SUMMARY_PATH}"
+else
+  summary_path="${base_prefix}-tst2-soak-summary.md"
+fi
+
+mkdir -p "$(dirname "${samples_path}")"
+mkdir -p "$(dirname "${probe_log_path}")"
+mkdir -p "$(dirname "${summary_path}")"
+
+LOCK_FILE="${SOAK_LOCK_FILE:-${samples_path}.lock}"
+
+acquire_samples_lock() {
+  local retries=2
+  while [[ "${retries}" -gt 0 ]]; do
+    if (set -o noclobber; echo "$$" >"${LOCK_FILE}") 2>/dev/null; then
+      LOCK_HELD=1
+      return 0
+    fi
+
+    existing_pid="$(cat "${LOCK_FILE}" 2>/dev/null || true)"
+    if [[ -n "${existing_pid}" ]] && kill -0 "${existing_pid}" >/dev/null 2>&1; then
+      echo "another soak process already owns this samples file: ${samples_path} (pid=${existing_pid})"
+      return 1
+    fi
+
+    rm -f "${LOCK_FILE}" >/dev/null 2>&1 || true
+    retries=$((retries - 1))
+  done
+
+  echo "failed to acquire soak lock: ${LOCK_FILE}"
+  return 1
+}
 
 wait_http_ok() {
   local url="$1"
@@ -72,6 +125,12 @@ service_running() {
 }
 
 cleanup() {
+  if [[ "${LOCK_HELD}" -eq 1 && -n "${LOCK_FILE}" && -f "${LOCK_FILE}" ]]; then
+    lock_pid="$(cat "${LOCK_FILE}" 2>/dev/null || true)"
+    if [[ "${lock_pid}" == "$$" ]]; then
+      rm -f "${LOCK_FILE}" >/dev/null 2>&1 || true
+    fi
+  fi
   if [[ "${STARTED_CONTROL_CENTER}" -eq 1 ]]; then
     bash "${ROOT_DIR}/scripts/stationctl.sh" stop control-center >/dev/null 2>&1 || true
   fi
@@ -81,6 +140,8 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+acquire_samples_lock
 
 if [[ "${SOAK_SKIP_SERVICE_START}" != "true" ]]; then
   if ! service_running "action-layer"; then
@@ -102,34 +163,48 @@ if [[ "${total_rounds}" -lt 1 ]]; then
   total_rounds=1
 fi
 
+existing_rounds=0
+if [[ -f "${samples_path}" ]]; then
+  existing_rounds="$(awk 'NF {count++} END {print count+0}' "${samples_path}")"
+fi
+if ! [[ "${existing_rounds}" =~ ^[0-9]+$ ]]; then
+  existing_rounds=0
+fi
+next_round=$((existing_rounds + 1))
+if [[ "${next_round}" -gt "${total_rounds}" ]]; then
+  next_round="${total_rounds}"
+fi
+
 echo "tst2 soak start: rounds=${total_rounds} interval=${SOAK_INTERVAL_SECONDS}s duration=${SOAK_DURATION_SECONDS}s"
+echo "existing_rounds: ${existing_rounds}"
 echo "samples: ${samples_path}"
 echo "probe_log: ${probe_log_path}"
 echo "summary: ${summary_path}"
 
-for round in $(seq 1 "${total_rounds}"); do
-  sampled_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-  probe_status="skipped"
-  probe_summary=""
+if [[ "${existing_rounds}" -lt "${total_rounds}" ]]; then
+  for round in $(seq "${next_round}" "${total_rounds}"); do
+    sampled_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    probe_status="skipped"
+    probe_summary=""
 
-  if [[ "${SOAK_RUN_PROBE_EACH_ROUND}" == "true" ]]; then
-    if probe_output="$(WHERECODE_TOKEN="${AUTH_TOKEN}" PROBE_STRICT=true bash "${ROOT_DIR}/scripts/v3_parallel_probe.sh" "${CONTROL_URL}" "${SOAK_PROBE_RUN_COUNT}" "${SOAK_PROBE_WORKERS}" 2>&1)"; then
-      probe_status="passed"
-      probe_summary="$(printf '%s\n' "${probe_output}" | tail -n 1)"
-      printf '[%s][round=%s] %s\n' "${sampled_at}" "${round}" "${probe_output}" >>"${probe_log_path}"
-    else
-      probe_status="failed"
-      probe_summary="parallel probe failed"
-      printf '[%s][round=%s][failed] %s\n' "${sampled_at}" "${round}" "${probe_output:-}" >>"${probe_log_path}"
-      echo "round ${round}: parallel probe failed"
-      exit 1
+    if [[ "${SOAK_RUN_PROBE_EACH_ROUND}" == "true" ]]; then
+      if probe_output="$(WHERECODE_TOKEN="${AUTH_TOKEN}" PROBE_STRICT=true bash "${ROOT_DIR}/scripts/v3_parallel_probe.sh" "${CONTROL_URL}" "${SOAK_PROBE_RUN_COUNT}" "${SOAK_PROBE_WORKERS}" 2>&1)"; then
+        probe_status="passed"
+        probe_summary="$(printf '%s\n' "${probe_output}" | tail -n 1)"
+        printf '[%s][round=%s] %s\n' "${sampled_at}" "${round}" "${probe_output}" >>"${probe_log_path}"
+      else
+        probe_status="failed"
+        probe_summary="parallel probe failed"
+        printf '[%s][round=%s][failed] %s\n' "${sampled_at}" "${round}" "${probe_output:-}" >>"${probe_log_path}"
+        echo "round ${round}: parallel probe failed"
+        exit 1
+      fi
     fi
-  fi
 
-  workflow_json="$(curl -fsS "${CONTROL_URL}/metrics/workflows" -H "X-WhereCode-Token: ${AUTH_TOKEN}")"
-  summary_json="$(curl -fsS "${CONTROL_URL}/metrics/summary" -H "X-WhereCode-Token: ${AUTH_TOKEN}")"
+    workflow_json="$(curl -fsS "${CONTROL_URL}/metrics/workflows" -H "X-WhereCode-Token: ${AUTH_TOKEN}")"
+    summary_json="$(curl -fsS "${CONTROL_URL}/metrics/summary" -H "X-WhereCode-Token: ${AUTH_TOKEN}")"
 
-  python3 - "${samples_path}" "${sampled_at}" "${round}" "${probe_status}" "${probe_summary}" "${workflow_json}" "${summary_json}" <<'PY'
+    python3 - "${samples_path}" "${sampled_at}" "${round}" "${probe_status}" "${probe_summary}" "${workflow_json}" "${summary_json}" <<'PY'
 from __future__ import annotations
 
 import json
@@ -167,11 +242,14 @@ with path.open("a", encoding="utf-8") as fh:
     fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
 PY
 
-  echo "round ${round}/${total_rounds} sampled_at=${sampled_at} probe=${probe_status}"
-  if [[ "${round}" -lt "${total_rounds}" ]]; then
-    sleep "${SOAK_INTERVAL_SECONDS}"
-  fi
-done
+    echo "round ${round}/${total_rounds} sampled_at=${sampled_at} probe=${probe_status}"
+    if [[ "${round}" -lt "${total_rounds}" ]]; then
+      sleep "${SOAK_INTERVAL_SECONDS}"
+    fi
+  done
+else
+  echo "tst2 soak resume: target rounds already reached, regenerate summary only"
+fi
 
 python3 - "${samples_path}" "${summary_path}" "${SOAK_DURATION_SECONDS}" "${SOAK_INTERVAL_SECONDS}" "${SOAK_PROBE_RUN_COUNT}" "${SOAK_PROBE_WORKERS}" "${SOAK_MAX_FAILED_RUN_DELTA}" <<'PY'
 from __future__ import annotations

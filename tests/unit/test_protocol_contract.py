@@ -2,11 +2,54 @@ import time
 
 from fastapi.testclient import TestClient
 
+import control_center.main as main_module
 from control_center.main import app
+from control_center.models import ActionExecuteResponse
 
 
 client = TestClient(app)
 FINAL_STATUSES = {"success", "failed", "canceled"}
+
+
+class StubOrchestratePolicyActionLayer:
+    async def execute(self, request):
+        lowered = request.text.lower()
+        if "role: chief-architect" in lowered:
+            return ActionExecuteResponse(
+                status="success",
+                summary="decomposition generated",
+                agent="chief-agent",
+                trace_id="act_cmd_orch_chief",
+                metadata={
+                    "modules": ["news-crawler", "sentiment-analysis"],
+                    "decomposition": {
+                        "requirement_module_map": {
+                            "crawl": ["news-crawler"],
+                            "sentiment": ["sentiment-analysis"],
+                        },
+                        "module_task_packages": {
+                            "news-crawler": [
+                                {"role": "module-dev", "objective": "implement crawler"},
+                                {"role": "doc-manager", "objective": "write crawler docs"},
+                                {"role": "qa-test", "objective": "add crawler tests"},
+                                {"role": "security-review", "objective": "review crawler security"},
+                            ],
+                            "sentiment-analysis": [
+                                {"role": "module-dev", "objective": "implement sentiment parser"},
+                                {"role": "doc-manager", "objective": "write sentiment docs"},
+                                {"role": "qa-test", "objective": "add sentiment tests"},
+                                {"role": "security-review", "objective": "review parser security"},
+                            ],
+                        },
+                    },
+                },
+            )
+        return ActionExecuteResponse(
+            status="success",
+            summary="mock execution completed",
+            agent=request.agent or "coding-agent",
+            trace_id="act_cmd_orch_default",
+        )
 
 
 def wait_for_terminal(command_id: str, timeout: float = 3.0) -> dict:
@@ -159,6 +202,122 @@ def test_auto_agent_routes_test_commands_to_test_agent() -> None:
     assert terminal["metadata"]["routing_reason"] == "keyword_rule"
     assert terminal["metadata"]["routing_keyword"] == "pytest"
     assert terminal["metadata"]["routing_rule_id"] == "rule_test_keywords"
+
+
+def test_command_orchestrate_policy_triggers_workflow_run(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "action_layer", StubOrchestratePolicyActionLayer())
+
+    project = client.post("/projects", json={"name": "cmd-orchestrate-policy"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "cmd-orchestrate-task"},
+    ).json()
+
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={
+            "text": (
+                "/orchestrate build crawl and sentiment pipeline "
+                "--module-hints=crawl,sentiment --max-modules=4 --execute=false"
+            ),
+            "requested_by": "owner",
+        },
+    ).json()
+    terminal = wait_for_terminal(accepted["command_id"])
+    assert terminal["status"] == "success"
+    assert terminal["executor_agent"] == "chief-architect"
+    assert terminal["metadata"]["command_execution_mode"] == "orchestrate_policy"
+    assert terminal["metadata"]["orchestration_status"] == "prepared"
+    workflow_state = terminal["metadata"]["workflow_state_latest"]
+    assert workflow_state["orchestration_status"] == "prepared"
+    assert workflow_state["workflow_run_id"].startswith("wfr_")
+    assert "primary_recovery_action" in workflow_state
+    workflow_run_id = terminal["metadata"]["workflow_run_id"]
+    assert workflow_run_id.startswith("wfr_")
+
+    run_response = client.get(f"/v3/workflows/runs/{workflow_run_id}")
+    assert run_response.status_code == 200
+    run_payload = run_response.json()
+    assert run_payload["task_id"] == task["id"]
+    assert run_payload["project_id"] == project["id"]
+    assert run_payload["metadata"]["task_workflow_state_latest"]["workflow_run_id"] == workflow_run_id
+
+    task_detail = client.get(f"/tasks/{task['id']}")
+    assert task_detail.status_code == 200
+    task_metadata = task_detail.json()["metadata"]
+    assert task_metadata["workflow_run_id_latest"] == workflow_run_id
+    assert task_metadata["workflow_state_latest"]["workflow_run_id"] == workflow_run_id
+    assert task_metadata["workflow_state_latest"]["orchestration_status"] == "prepared"
+
+
+def test_command_orchestrate_policy_blocks_when_requirements_missing() -> None:
+    project = client.post("/projects", json={"name": "cmd-orchestrate-blocked"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "cmd-orchestrate-missing-requirements"},
+    ).json()
+
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={"text": "/orchestrate --execute=false"},
+    ).json()
+    terminal = wait_for_terminal(accepted["command_id"])
+    assert terminal["status"] == "failed"
+    assert terminal["executor_agent"] == "chief-architect"
+    assert "orchestrate status=blocked" in (terminal["error_message"] or "")
+    assert "requirements" in (terminal["error_message"] or "")
+    workflow_state = terminal["metadata"]["workflow_state_latest"]
+    assert workflow_state["orchestration_status"] == "blocked"
+    assert workflow_state["primary_recovery_action"] == "retry_with_decompose_payload"
+    assert workflow_state["workflow_run_id"].startswith("wfr_")
+
+
+def test_command_orchestrate_latest_and_recover_contract(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "action_layer", StubOrchestratePolicyActionLayer())
+
+    project = client.post("/projects", json={"name": "cmd-orchestrate-latest-recover"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "cmd-orchestrate-latest-recover-task"},
+    ).json()
+
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={
+            "text": (
+                "/orchestrate build crawl and sentiment pipeline "
+                "--module-hints=crawl,sentiment --max-modules=4 --execute=false"
+            ),
+            "requested_by": "owner",
+        },
+    ).json()
+    terminal = wait_for_terminal(accepted["command_id"])
+    assert terminal["status"] == "success"
+
+    workflow_run_id = terminal["metadata"]["workflow_run_id"]
+    latest = client.get(f"/v3/workflows/runs/{workflow_run_id}/orchestrate/latest")
+    assert latest.status_code == 200
+    latest_payload = latest.json()
+    assert latest_payload["found"] is True
+    record = latest_payload["record"]
+    assert record["run_id"] == workflow_run_id
+    assert record["orchestration_status"] == "prepared"
+    assert record["telemetry_snapshot"]["action_count"] >= 1
+    assert "primary_recovery_action" in record["decision_report"]["machine"]
+
+    recover = client.post(
+        f"/v3/workflows/runs/{workflow_run_id}/orchestrate/recover",
+        json={
+            "action": "reconfirm_decomposition",
+            "confirmed_by": "owner",
+        },
+    )
+    assert recover.status_code == 200
+    recover_payload = recover.json()
+    assert recover_payload["selected_action"] == "reconfirm_decomposition"
+    assert recover_payload["action_status"] == "executed"
+    assert recover_payload["confirmation"] is not None
+    assert recover_payload["confirmation"]["confirmation_status"] == "approved"
 
 
 def test_approval_contract_status_transition() -> None:

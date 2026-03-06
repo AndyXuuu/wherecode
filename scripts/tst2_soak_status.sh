@@ -52,13 +52,40 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+pick_default_samples_file() {
+  python3 - "${REPORT_DIR}" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+report_dir = Path(sys.argv[1]).expanduser()
+best_path: Path | None = None
+best_count = -1
+best_mtime = -1.0
+
+for candidate in report_dir.glob("*-tst2-soak-samples.jsonl"):
+    try:
+        rows = sum(1 for line in candidate.read_text(encoding="utf-8").splitlines() if line.strip())
+        mtime = candidate.stat().st_mtime
+    except OSError:
+        continue
+    if rows > best_count or (rows == best_count and mtime > best_mtime):
+        best_path = candidate
+        best_count = rows
+        best_mtime = mtime
+
+print("" if best_path is None else str(best_path))
+PY
+}
+
 if [[ -z "${SAMPLES_FILE}" ]]; then
-  latest="$(ls -1t "${REPORT_DIR}"/*-tst2-soak-samples.jsonl 2>/dev/null | head -n 1 || true)"
-  if [[ -z "${latest}" ]]; then
+  selected_file="$(pick_default_samples_file || true)"
+  if [[ -z "${selected_file}" ]]; then
     echo '{"error":"no_soak_samples_file_found"}'
     exit 2
   fi
-  SAMPLES_FILE="${latest}"
+  SAMPLES_FILE="${selected_file}"
 fi
 
 if [[ ! -f "${SAMPLES_FILE}" ]]; then

@@ -20,7 +20,17 @@ Commands:
   start [all|command-center|control-center|action-layer]
   stop [all|command-center|control-center|action-layer]
   status [all|command-center|control-center|action-layer]
-  check
+  soak [start|status|stop|restart] [soak-options]
+  soak-checkpoint [--strict] [--require-daemon-running] [--output <path>]
+  tst2-rehearsal [control_url] [action_url] [--strict]
+  tst2-rehearsal-latest [--path-only] [--strict]
+  tst2-progress [--profile full|local] [--strict]
+  tst2-watch [--profile full|local] [--interval <seconds>] [--max-rounds <n>] [--strict]
+  tst2-autopilot [--profile full|local] [--watch-interval <seconds>] [--watch-max-rounds <n>] [--strict]
+  mb3-dry-run [control_url] [mb3-options]
+  action-llm-check [action_layer_url] [role] [module_key] [text]
+  readme-phase-sync [--dry-run] [--strict]
+  check [quick|dev|release]
   help
 
 Examples:
@@ -29,7 +39,20 @@ Examples:
   bash scripts/stationctl.sh start all
   bash scripts/stationctl.sh status all
   bash scripts/stationctl.sh stop all
+  bash scripts/stationctl.sh soak start
+  bash scripts/stationctl.sh soak status --strict
+  bash scripts/stationctl.sh soak-checkpoint --strict
+  bash scripts/stationctl.sh tst2-rehearsal
+  bash scripts/stationctl.sh tst2-rehearsal-latest
+  bash scripts/stationctl.sh tst2-progress --profile full
+  bash scripts/stationctl.sh tst2-watch --profile full --interval 60 --max-rounds 10
+  bash scripts/stationctl.sh tst2-autopilot --profile full --watch-interval 60 --watch-max-rounds 120
+  bash scripts/stationctl.sh mb3-dry-run
+  bash scripts/stationctl.sh action-llm-check http://127.0.0.1:8100
+  bash scripts/stationctl.sh readme-phase-sync --strict
   bash scripts/stationctl.sh check
+  bash scripts/stationctl.sh check quick
+  bash scripts/stationctl.sh check release
 EOF
 }
 
@@ -192,6 +215,16 @@ start_service() {
 
   local pid="$!"
   echo "${pid}" >"${pidf}"
+  sleep 0.5
+  if ! is_pid_running "${pid}"; then
+    rm -f "${pidf}"
+    echo "${target} failed to start (process exited early)"
+    if [[ -f "${logf}" ]]; then
+      echo "last logs:"
+      tail -n 20 "${logf}" || true
+    fi
+    return 1
+  fi
   echo "${target} started (pid=${pid})"
   echo "log: ${logf}"
 }
@@ -310,6 +343,83 @@ dev_all() {
   exit "${exit_code}"
 }
 
+run_soak() {
+  local soak_action="${1:-status}"
+  shift || true
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/tst2_soak_daemon.sh" "${soak_action}" --dry-run "$@"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/tst2_soak_daemon.sh" "${soak_action}" "$@"
+}
+
+run_soak_checkpoint() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    echo "[dry-run] bash scripts/tst2_soak_checkpoint.sh --output /tmp/tst2-soak-checkpoint-dry-run.md"
+    bash "${ROOT_DIR}/scripts/tst2_soak_checkpoint.sh" --output "/tmp/tst2-soak-checkpoint-dry-run.md"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/tst2_soak_checkpoint.sh" "$@"
+}
+
+run_tst2_rehearsal() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/tst2_t2_release_rehearsal.sh" --dry-run "$@"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/tst2_t2_release_rehearsal.sh" "$@"
+}
+
+run_tst2_rehearsal_latest() {
+  bash "${ROOT_DIR}/scripts/tst2_t2_rehearsal_latest.sh" "$@"
+}
+
+run_tst2_progress() {
+  bash "${ROOT_DIR}/scripts/tst2_progress_report.sh" "$@"
+}
+
+run_tst2_watch() {
+  bash "${ROOT_DIR}/scripts/tst2_ready_watchdog.sh" "$@"
+}
+
+run_tst2_autopilot() {
+  bash "${ROOT_DIR}/scripts/tst2_autopilot.sh" "$@"
+}
+
+run_mb3_dry_run() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh" --dry-run "$@"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh" "$@"
+}
+
+run_action_llm_check() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    echo "[dry-run] bash ${ROOT_DIR}/scripts/action_layer_llm_check.sh $*"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/action_layer_llm_check.sh" "$@"
+}
+
+run_readme_phase_sync() {
+  bash "${ROOT_DIR}/scripts/readme_phase_sync.sh" "$@"
+}
+
+run_check() {
+  local scope="${1:-quick}"
+  case "${scope}" in
+    quick|dev|release)
+      ;;
+    *)
+      echo "unknown check scope: ${scope}"
+      echo "allowed: quick|dev|release"
+      return 1
+      ;;
+  esac
+  run bash "${ROOT_DIR}/scripts/check_all.sh" "${scope}"
+}
+
 main() {
   if [[ "${1:-}" == "--dry-run" ]]; then
     DRY_RUN=1
@@ -317,7 +427,75 @@ main() {
   fi
 
   local command="${1:-help}"
-  local target="${2:-all}"
+  if [[ $# -gt 0 ]]; then
+    shift
+  fi
+
+  if [[ "${command}" == "soak" ]]; then
+    local soak_action="${1:-status}"
+    if [[ "${soak_action}" == --* ]]; then
+      set -- "${soak_action}" "$@"
+      soak_action="status"
+    else
+      if [[ $# -gt 0 ]]; then
+        shift
+      fi
+    fi
+    run_soak "${soak_action}" "$@"
+    return
+  fi
+
+  if [[ "${command}" == "soak-checkpoint" ]]; then
+    run_soak_checkpoint "$@"
+    return
+  fi
+
+  if [[ "${command}" == "tst2-rehearsal" ]]; then
+    run_tst2_rehearsal "$@"
+    return
+  fi
+
+  if [[ "${command}" == "tst2-rehearsal-latest" ]]; then
+    run_tst2_rehearsal_latest "$@"
+    return
+  fi
+
+  if [[ "${command}" == "tst2-progress" ]]; then
+    run_tst2_progress "$@"
+    return
+  fi
+
+  if [[ "${command}" == "tst2-watch" ]]; then
+    run_tst2_watch "$@"
+    return
+  fi
+
+  if [[ "${command}" == "tst2-autopilot" ]]; then
+    run_tst2_autopilot "$@"
+    return
+  fi
+
+  if [[ "${command}" == "mb3-dry-run" ]]; then
+    run_mb3_dry_run "$@"
+    return
+  fi
+
+  if [[ "${command}" == "action-llm-check" ]]; then
+    run_action_llm_check "$@"
+    return
+  fi
+
+  if [[ "${command}" == "readme-phase-sync" ]]; then
+    run_readme_phase_sync "$@"
+    return
+  fi
+
+  if [[ "${command}" == "check" ]]; then
+    run_check "$@"
+    return
+  fi
+
+  local target="${1:-all}"
 
   case "${command}" in
     help|-h|--help)
@@ -375,9 +553,6 @@ main() {
       ;;
     status)
       do_for_target status_service "${target}"
-      ;;
-    check)
-      run bash "${ROOT_DIR}/scripts/check_all.sh"
       ;;
     *)
       echo "unknown command: ${command}"

@@ -11,6 +11,10 @@ from action_layer.services import (
     AgentProfileLoader,
     AgentProfileNotFoundError,
     AgentRegistry,
+    LLMConfigurationError,
+    LLMExecutionError,
+    LLMRoutingConfig,
+    RoutedLLMExecutor,
     UnknownAgentRoleError,
 )
 
@@ -25,22 +29,57 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
     profile_loader = AgentProfileLoader(
         os.getenv("ACTION_LAYER_AGENT_PROFILES_ROOT", "action_layer/agents")
     )
+    try:
+        llm_config = LLMRoutingConfig.from_env()
+        llm_executor = (
+            RoutedLLMExecutor(llm_config)
+            if llm_config.mode == "llm"
+            else None
+        )
+        llm_init_error = None
+    except LLMConfigurationError as exc:
+        llm_config = None
+        llm_executor = None
+        llm_init_error = str(exc)
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/healthz":
+            mode = self._execution_mode()
+            if self._require_llm() and not self._llm_ready():
+                status = "error"
+            else:
+                status = "ok" if self.llm_init_error is None else "degraded"
             self._send_json(
                 HTTPStatus.OK,
-                {"status": "ok", "layer": "action", "transport": "http"},
+                {
+                    "status": status,
+                    "layer": "action",
+                    "transport": "http",
+                    "mode": mode,
+                    "provider": self._provider_name(),
+                    "llm_targets": self._target_names(),
+                    "llm_ready": self._llm_ready(),
+                    "llm_required": self._require_llm(),
+                    "llm_init_error": self.llm_init_error,
+                },
             )
             return
 
         if self.path == "/capabilities":
+            mode = self._execution_mode()
             self._send_json(
                 HTTPStatus.OK,
                 {
                     "agents": sorted(set(self.registry.as_dict().values())),
                     "roles": self.registry.list_roles(),
-                    "status": "stub",
+                    "status": "llm" if mode == "llm" and self._llm_ready() else "stub",
+                    "mode": mode,
+                    "provider": self._provider_name(),
+                    "llm_targets": self._target_names(),
+                    "llm_routes": self._route_summary(),
+                    "llm_ready": self._llm_ready(),
+                    "llm_required": self._require_llm(),
+                    "llm_init_error": self.llm_init_error,
                 },
             )
             return
@@ -96,6 +135,13 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
 
         if not requested_agent:
             requested_agent = "coding-agent"
+        payload["agent"] = requested_agent
+
+        base_metadata: dict[str, object] = {
+            "role": resolved_role,
+            "profile_hash": profile_hash,
+            "execution_mode": self._execution_mode(),
+        }
 
         lowered = text.lower()
         if (
@@ -115,38 +161,137 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
                     "impact": "changes module behavior",
                     "fingerprint": "needs-discussion-module-dev",
                 },
-                "metadata": {
-                    "role": resolved_role,
-                    "profile_hash": profile_hash,
-                },
+                "metadata": base_metadata,
             }
             self._send_json(HTTPStatus.OK, result)
             return
 
+        if self._execution_mode() == "llm" and self._llm_ready():
+            result = self._execute_with_llm(payload, base_metadata)
+        elif self._require_llm():
+            self._send_json(
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                {
+                    "detail": "llm execution is required but not ready",
+                    "mode": self._execution_mode(),
+                    "llm_init_error": self.llm_init_error,
+                },
+            )
+            return
+        else:
+            result = self._execute_mock(text, requested_agent, base_metadata)
+
+        self._send_json(HTTPStatus.OK, result)
+
+    @classmethod
+    def _execution_mode(cls) -> str:
+        if cls.llm_config is None:
+            return "invalid"
+        return cls.llm_config.mode
+
+    @staticmethod
+    def _require_llm() -> bool:
+        return os.getenv("ACTION_LAYER_REQUIRE_LLM", "true").strip().lower() == "true"
+
+    @classmethod
+    def _provider_name(cls) -> str | None:
+        if cls.llm_config is None or cls.llm_config.mode != "llm":
+            return None
+        if cls.llm_executor is None:
+            return None
+        return cls.llm_executor.provider_label()
+
+    @classmethod
+    def _target_names(cls) -> list[str]:
+        if cls.llm_config is None or cls.llm_config.mode != "llm":
+            return []
+        return sorted(cls.llm_config.targets.keys())
+
+    @classmethod
+    def _route_summary(cls) -> dict[str, object]:
+        if cls.llm_config is None or cls.llm_config.mode != "llm":
+            return {}
+        return {
+            "default": cls.llm_config.default_target,
+            "by_role": cls.llm_config.role_routes,
+            "by_module_prefix": cls.llm_config.module_prefix_routes,
+        }
+
+    @classmethod
+    def _llm_ready(cls) -> bool:
+        return cls.llm_executor is not None and cls.llm_init_error is None
+
+    def _execute_with_llm(
+        self,
+        payload: dict[str, object],
+        base_metadata: dict[str, object],
+    ) -> dict[str, object]:
+        if self.llm_executor is None:
+            failed_metadata = dict(base_metadata)
+            failed_metadata["llm_error"] = "llm executor not initialized"
+            return {
+                "status": "failed",
+                "summary": "llm execution unavailable",
+                "agent": str(payload.get("agent", "")).strip() or "coding-agent",
+                "trace_id": f"act_{uuid4().hex[:12]}",
+                "metadata": failed_metadata,
+            }
+
+        try:
+            result = self.llm_executor.execute(payload)
+        except LLMExecutionError as exc:
+            failed_metadata = dict(base_metadata)
+            failed_metadata["llm_error"] = str(exc)
+            return {
+                "status": "failed",
+                "summary": "llm execution failed",
+                "agent": str(payload.get("agent", "")).strip() or "coding-agent",
+                "trace_id": f"act_{uuid4().hex[:12]}",
+                "metadata": failed_metadata,
+            }
+
+        merged_metadata = dict(base_metadata)
+        raw_metadata = result.get("metadata")
+        if isinstance(raw_metadata, dict):
+            merged_metadata.update(raw_metadata)
+        result["metadata"] = merged_metadata
+
+        status = str(result.get("status", "")).strip().lower()
+        if status not in {"success", "failed", "needs_discussion"}:
+            result["status"] = "failed"
+            result["summary"] = "llm response returned invalid status"
+            merged_metadata["llm_error"] = "invalid_status"
+
+        if not isinstance(result.get("summary"), str) or not str(result["summary"]).strip():
+            result["summary"] = "llm execution completed"
+        if not isinstance(result.get("trace_id"), str) or not str(result["trace_id"]).strip():
+            result["trace_id"] = f"act_{uuid4().hex[:12]}"
+        if not isinstance(result.get("agent"), str) or not str(result["agent"]).strip():
+            result["agent"] = str(payload.get("agent", "")).strip() or "coding-agent"
+        return result
+
+    def _execute_mock(
+        self,
+        text: str,
+        requested_agent: str,
+        base_metadata: dict[str, object],
+    ) -> dict[str, object]:
+        lowered = text.lower()
         if "fail" in lowered or "error" in lowered:
-            result = {
+            return {
                 "status": "failed",
                 "summary": "mock execution failed by command content",
                 "agent": requested_agent,
                 "trace_id": f"act_{uuid4().hex[:12]}",
-                "metadata": {
-                    "role": resolved_role,
-                    "profile_hash": profile_hash,
-                },
+                "metadata": base_metadata,
             }
-        else:
-            result = {
-                "status": "success",
-                "summary": "mock execution completed",
-                "agent": requested_agent,
-                "trace_id": f"act_{uuid4().hex[:12]}",
-                "metadata": {
-                    "role": resolved_role,
-                    "profile_hash": profile_hash,
-                },
-            }
-
-        self._send_json(HTTPStatus.OK, result)
+        return {
+            "status": "success",
+            "summary": "mock execution completed",
+            "agent": requested_agent,
+            "trace_id": f"act_{uuid4().hex[:12]}",
+            "metadata": base_metadata,
+        }
 
     def _read_json_body(self) -> dict[str, object] | None:
         content_length = int(self.headers.get("Content-Length", "0"))
@@ -179,6 +324,11 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
+    if ActionLayerHandler._require_llm() and not ActionLayerHandler._llm_ready():
+        detail = ActionLayerHandler.llm_init_error or "llm provider is not configured"
+        print(f"[action-layer] startup blocked: {detail}")
+        raise SystemExit(2)
+
     host = os.getenv("ACTION_LAYER_HOST", "127.0.0.1")
     port = int(os.getenv("ACTION_LAYER_PORT", "8100"))
     server = ThreadingHTTPServer((host, port), ActionLayerHandler)

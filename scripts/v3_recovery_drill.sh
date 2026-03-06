@@ -129,37 +129,56 @@ curl -fsS -X POST "${CONTROL_URL}/v3/workflows/runs/${run_id}/bootstrap" \
   -d '{"modules":["needs-discussion"]}' >/dev/null
 
 echo "[5/8] execute workflow to terminal"
-execute_payload="$(curl -fsS -X POST "${CONTROL_URL}/v3/workflows/runs/${run_id}/execute" \
-  -H "${header_json[0]}" \
-  -H "${header_json[1]}" \
-  -d '{"max_loops":60}')"
-execute_status="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_status"])')"
-
-if [[ "${execute_status}" == "blocked" ]]; then
-  discussion_id="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; p=json.load(sys.stdin); ids=p.get("waiting_discussion_workitem_ids", []); print(ids[0] if ids else "")')"
-  curl -fsS -X POST "${CONTROL_URL}/v3/workflows/workitems/${discussion_id}/discussion/resolve" \
-    -H "${header_json[0]}" \
-    -H "${header_json[1]}" \
-    -d '{"decision":"choose option-a","resolved_by":"chief-architect"}' >/dev/null
+execute_status=""
+execute_payload="{}"
+for _ in $(seq 1 20); do
   execute_payload="$(curl -fsS -X POST "${CONTROL_URL}/v3/workflows/runs/${run_id}/execute" \
     -H "${header_json[0]}" \
     -H "${header_json[1]}" \
-    -d '{"max_loops":60}')"
+    -d '{"max_loops":1}')"
   execute_status="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_status"])')"
-fi
 
-if [[ "${execute_status}" == "waiting_approval" ]]; then
-  approval_id="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; p=json.load(sys.stdin); ids=p.get("waiting_approval_workitem_ids", []); print(ids[0] if ids else "")')"
-  curl -fsS -X POST "${CONTROL_URL}/v3/workflows/workitems/${approval_id}/approve" \
-    -H "${header_json[0]}" \
-    -H "${header_json[1]}" \
-    -d '{"approved_by":"ops-owner"}' >/dev/null
-  execute_payload="$(curl -fsS -X POST "${CONTROL_URL}/v3/workflows/runs/${run_id}/execute" \
-    -H "${header_json[0]}" \
-    -H "${header_json[1]}" \
-    -d '{"max_loops":60}')"
-  execute_status="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_status"])')"
-fi
+  if [[ "${execute_status}" == "succeeded" ]]; then
+    break
+  fi
+
+  if [[ "${execute_status}" == "blocked" ]]; then
+    discussion_ids="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; p=json.load(sys.stdin); [print(i) for i in p.get("waiting_discussion_workitem_ids", [])]')"
+    if [[ -z "${discussion_ids}" ]]; then
+      break
+    fi
+    while IFS= read -r discussion_id; do
+      [[ -z "${discussion_id}" ]] && continue
+      curl -fsS -X POST "${CONTROL_URL}/v3/workflows/workitems/${discussion_id}/discussion/resolve" \
+        -H "${header_json[0]}" \
+        -H "${header_json[1]}" \
+        -d '{"decision":"choose option-a","resolved_by":"chief-architect"}' >/dev/null
+    done <<< "${discussion_ids}"
+    continue
+  fi
+
+  if [[ "${execute_status}" == "waiting_approval" ]]; then
+    approval_ids="$(printf '%s' "${execute_payload}" | python3 -c 'import json,sys; p=json.load(sys.stdin); [print(i) for i in p.get("waiting_approval_workitem_ids", [])]')"
+    if [[ -z "${approval_ids}" ]]; then
+      break
+    fi
+    while IFS= read -r approval_id; do
+      [[ -z "${approval_id}" ]] && continue
+      curl -fsS -X POST "${CONTROL_URL}/v3/workflows/workitems/${approval_id}/approve" \
+        -H "${header_json[0]}" \
+        -H "${header_json[1]}" \
+        -d '{"approved_by":"ops-owner"}' >/dev/null
+    done <<< "${approval_ids}"
+    continue
+  fi
+
+  if [[ "${execute_status}" == "running" ]]; then
+    sleep 1
+    continue
+  fi
+
+  break
+done
 
 if [[ "${execute_status}" != "succeeded" ]]; then
   echo "recovery drill setup failed: run_status=${execute_status}"

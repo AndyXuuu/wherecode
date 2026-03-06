@@ -6,6 +6,10 @@
 3. Run checks.
 4. Update docs.
 
+## Ownership rule
+- AI executes end-to-end delivery.
+- User provides goals/suggestions only.
+
 ## Task logging rule
 - Start: add `started (doing)`.
 - Finish: mark `completed (done)` directly.

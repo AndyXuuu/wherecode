@@ -20,7 +20,7 @@ class ActionLayerClientError(Exception):
 
 
 class ActionLayerClient:
-    def __init__(self, base_url: str, timeout_seconds: float = 3.0) -> None:
+    def __init__(self, base_url: str, timeout_seconds: float = 30.0) -> None:
         self._base_url = base_url.rstrip("/")
         self._timeout_seconds = timeout_seconds
 
@@ -52,4 +52,5 @@ class ActionLayerClient:
                 f"action layer request failed: HTTP {exc.response.status_code}"
             ) from exc
         except httpx.HTTPError as exc:
-            raise ActionLayerClientError(f"action layer unavailable: {exc}") from exc
+            detail = str(exc).strip() or exc.__class__.__name__
+            raise ActionLayerClientError(f"action layer unavailable: {detail}") from exc

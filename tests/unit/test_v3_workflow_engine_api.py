@@ -2,9 +2,20 @@ from fastapi.testclient import TestClient
 
 import control_center.main as main_module
 from control_center.main import app
+from control_center.models import ActionExecuteResponse
 
 
 client = TestClient(app)
+
+
+class StubChiefArchitectActionLayer:
+    def __init__(self, response: ActionExecuteResponse) -> None:
+        self.response = response
+        self.calls = []
+
+    async def execute(self, request):
+        self.calls.append(request)
+        return self.response
 
 
 def test_v3_workflow_engine_bootstrap_and_execute_success() -> None:
@@ -204,3 +215,817 @@ def test_v3_workflow_engine_release_approval_switch() -> None:
         assert second_execute.json()["run_status"] == "succeeded"
     finally:
         main_module.workflow_engine._release_requires_approval = False
+
+
+def test_v3_workflow_decompose_bootstrap_success(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_success", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into market-data, sentiment-crawl",
+            agent="chief-agent",
+            trace_id="act_decompose_001",
+            metadata={
+                "modules": ["market-data", "sentiment-crawl"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["market-data"],
+                        "sentiment": ["sentiment-crawl"],
+                    },
+                    "module_task_packages": {
+                        "market-data": [
+                            {"role": "module-dev", "objective": "implement data ingestion"},
+                            {"role": "doc-manager", "objective": "write module docs"},
+                            {"role": "qa-test", "objective": "add module tests"},
+                            {"role": "security-review", "objective": "run security checks"},
+                        ],
+                        "sentiment-crawl": [
+                            {"role": "module-dev", "objective": "implement sentiment parser"},
+                            {"role": "doc-manager", "objective": "document sentiment flow"},
+                            {"role": "qa-test", "objective": "verify sentiment quality"},
+                            {"role": "security-review", "objective": "review parser safety"},
+                        ],
+                    },
+                    "modules": [
+                        {
+                            "module_key": "market-data",
+                            "coverage_tags": ["crawl"],
+                        },
+                        {
+                            "module_key": "sentiment-crawl",
+                            "coverage_tags": ["sentiment"],
+                        },
+                    ],
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build market sentiment pipeline with crawl and analysis",
+            "max_modules": 6,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["modules"] == ["market-data", "sentiment-crawl"]
+    assert payload["chief_agent"] == "chief-agent"
+    assert payload["workitems"] == []
+    assert payload["confirmation_required"] is True
+    assert payload["confirmation_status"] == "pending"
+    assert isinstance(payload["confirmation_token"], str)
+
+    assert len(stub_action_layer.calls) == 1
+    chief_request = stub_action_layer.calls[0]
+    assert chief_request.role == "chief-architect"
+    assert chief_request.project_id == "proj_decompose_success"
+    assert chief_request.module_key == "workflow_decomposition"
+    assert "software development project module decomposition" in chief_request.text
+
+    run_after = client.get(f"/v3/workflows/runs/{run_id}")
+    assert run_after.status_code == 200
+    chief_metadata = run_after.json()["metadata"]["chief_decomposition"]
+    assert chief_metadata["modules"] == ["market-data", "sentiment-crawl"]
+    assert chief_metadata["required_coverage_tags"] == ["crawl", "sentiment"]
+    assert chief_metadata["missing_coverage_tags"] == []
+    assert chief_metadata["requirement_module_map"] == {
+        "crawl": ["market-data"],
+        "sentiment": ["sentiment-crawl"],
+    }
+    assert chief_metadata["missing_mapping_tags"] == []
+    assert chief_metadata["invalid_mapping_modules"] == {}
+    assert chief_metadata["mapping_explicit"] is True
+    assert chief_metadata["task_package_explicit"] is True
+    assert chief_metadata["missing_task_package_modules"] == []
+    assert chief_metadata["invalid_task_package_roles"] == {}
+    assert chief_metadata["missing_task_package_roles"] == {}
+    assert chief_metadata["confirmation"]["status"] == "pending"
+
+    execute_before_confirm = client.post(
+        f"/v3/workflows/runs/{run_id}/execute",
+        json={"max_loops": 10},
+    )
+    assert execute_before_confirm.status_code == 409
+    assert execute_before_confirm.json()["detail"].startswith(
+        "decomposition confirmation required before execute"
+    )
+
+    confirm = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm",
+        json={
+            "confirmed_by": "owner",
+            "approved": True,
+            "expected_modules": ["market-data", "sentiment-crawl"],
+            "confirmation_token": payload["confirmation_token"],
+        },
+    )
+    assert confirm.status_code == 200
+    confirm_payload = confirm.json()
+    assert confirm_payload["approved"] is True
+    assert confirm_payload["confirmation_status"] == "approved"
+    assert confirm_payload["modules"] == ["market-data", "sentiment-crawl"]
+    assert len(confirm_payload["workitems"]) == 11
+
+
+def test_v3_workflow_decompose_bootstrap_pending_query_lifecycle(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_pending_lifecycle", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    pending_before = client.get(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/pending",
+    )
+    assert pending_before.status_code == 200
+    assert pending_before.json()["has_pending_confirmation"] is False
+    assert pending_before.json()["confirmation_status"] is None
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into market-data, sentiment-crawl",
+            agent="chief-agent",
+            trace_id="act_decompose_011",
+            metadata={
+                "modules": ["market-data", "sentiment-crawl"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["market-data"],
+                        "sentiment": ["sentiment-crawl"],
+                    },
+                    "module_task_packages": {
+                        "market-data": [
+                            {"role": "module-dev", "objective": "implement data ingestion"},
+                            {"role": "doc-manager", "objective": "write module docs"},
+                            {"role": "qa-test", "objective": "add module tests"},
+                            {"role": "security-review", "objective": "run security checks"},
+                        ],
+                        "sentiment-crawl": [
+                            {"role": "module-dev", "objective": "implement sentiment parser"},
+                            {"role": "doc-manager", "objective": "document sentiment flow"},
+                            {"role": "qa-test", "objective": "verify sentiment quality"},
+                            {"role": "security-review", "objective": "review parser safety"},
+                        ],
+                    },
+                    "modules": [
+                        {
+                            "module_key": "market-data",
+                            "coverage_tags": ["crawl"],
+                        },
+                        {
+                            "module_key": "sentiment-crawl",
+                            "coverage_tags": ["sentiment"],
+                        },
+                    ],
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    decompose = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build market sentiment pipeline with crawl and analysis",
+            "max_modules": 6,
+            "module_hints": ["crawl", "sentiment"],
+        },
+    )
+    assert decompose.status_code == 200
+    token = decompose.json()["confirmation_token"]
+
+    pending_after_decompose = client.get(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/pending",
+    )
+    assert pending_after_decompose.status_code == 200
+    pending_payload = pending_after_decompose.json()
+    assert pending_payload["has_pending_confirmation"] is True
+    assert pending_payload["confirmation_status"] == "pending"
+    assert pending_payload["confirmation_token"] == token
+    assert pending_payload["modules"] == ["market-data", "sentiment-crawl"]
+    assert pending_payload["chief_trace_id"] == "act_decompose_011"
+    assert pending_payload["module_hints"] == ["crawl", "sentiment"]
+
+    confirm = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm",
+        json={
+            "confirmed_by": "owner",
+            "approved": True,
+            "expected_modules": ["market-data", "sentiment-crawl"],
+            "confirmation_token": token,
+        },
+    )
+    assert confirm.status_code == 200
+
+    pending_after_approve = client.get(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/pending",
+    )
+    assert pending_after_approve.status_code == 200
+    pending_after_approve_payload = pending_after_approve.json()
+    assert pending_after_approve_payload["has_pending_confirmation"] is False
+    assert pending_after_approve_payload["confirmation_status"] is None
+    assert pending_after_approve_payload["modules"] == []
+
+
+def test_v3_workflow_decompose_bootstrap_pending_query_after_reject(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_pending_after_reject", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_012",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    },
+                    "module_task_packages": {
+                        "news-crawler": [
+                            {"role": "module-dev", "objective": "implement crawler"},
+                            {"role": "doc-manager", "objective": "document crawler"},
+                            {"role": "qa-test", "objective": "test crawler"},
+                            {"role": "security-review", "objective": "review crawler"},
+                        ],
+                        "daily-report": [
+                            {"role": "module-dev", "objective": "implement reporter"},
+                            {"role": "doc-manager", "objective": "document reporter"},
+                            {"role": "qa-test", "objective": "test reporter"},
+                            {"role": "security-review", "objective": "review reporter"},
+                        ],
+                    },
+                    "modules": [
+                        {
+                            "module_key": "news-crawler",
+                            "coverage_tags": ["crawl"],
+                        },
+                        {
+                            "module_key": "daily-report",
+                            "coverage_tags": ["report"],
+                        },
+                    ],
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    decompose = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert decompose.status_code == 200
+    token = decompose.json()["confirmation_token"]
+
+    reject = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm",
+        json={
+            "confirmed_by": "owner",
+            "approved": False,
+            "reason": "need module redesign",
+            "confirmation_token": token,
+        },
+    )
+    assert reject.status_code == 200
+
+    pending_after_reject = client.get(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/pending",
+    )
+    assert pending_after_reject.status_code == 200
+    pending_payload = pending_after_reject.json()
+    assert pending_payload["has_pending_confirmation"] is False
+    assert pending_payload["confirmation_status"] == "rejected"
+    assert pending_payload["confirmation_token"] == token
+    assert pending_payload["reason"] == "need module redesign"
+    assert pending_payload["modules"] == ["news-crawler", "daily-report"]
+    assert pending_payload["confirmed_by"] == "owner"
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_empty_modules(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_empty", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="no split available",
+            agent="chief-agent",
+            trace_id="act_decompose_002",
+            metadata={},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={"requirements": "unknown requirement"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "chief decomposition returned no modules"
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_non_success_status(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "DECOMPOSE_ALLOW_SYNTHETIC_FALLBACK", False)
+
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_failed", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="failed",
+            summary="provider timeout",
+            agent="chief-agent",
+            trace_id="act_decompose_003",
+            metadata={},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={"requirements": "market analysis platform v1"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "chief decomposition failed: status=failed"
+
+
+def test_v3_workflow_decompose_bootstrap_allows_synthetic_fallback_on_non_success(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(main_module, "DECOMPOSE_ALLOW_SYNTHETIC_FALLBACK", True)
+
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_fallback", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="failed",
+            summary="provider timeout",
+            agent="chief-agent",
+            trace_id="act_decompose_003_fallback",
+            metadata={},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["modules"]
+    assert payload["confirmation_required"] is True
+    assert payload["confirmation_status"] == "pending"
+    assert payload["chief_metadata"]["synthetic_fallback"] is True
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_missing_coverage_tags(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_missing_coverage", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler only",
+            agent="chief-agent",
+            trace_id="act_decompose_004",
+            metadata={"modules": ["news-crawler"]},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "chief decomposition missing required coverage tags: report"
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_missing_requirement_module_map(
+    monkeypatch,
+) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_missing_map", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_005",
+            metadata={"modules": ["news-crawler", "daily-report"]},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "chief decomposition missing requirement-module mapping"
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_mapping_unknown_module(
+    monkeypatch,
+) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_invalid_map", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_006",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["ghost-module"],
+                    }
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "chief decomposition requirement-module mapping references unknown modules: "
+        "report=>ghost-module"
+    )
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_missing_module_task_packages(
+    monkeypatch,
+) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_missing_task_packages", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_007",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    }
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "chief decomposition missing module task packages"
+
+
+def test_v3_workflow_decompose_bootstrap_rejects_missing_required_task_roles(
+    monkeypatch,
+) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_missing_task_roles", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_008",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    },
+                    "module_task_packages": {
+                        "news-crawler": [
+                            {"role": "module-dev", "objective": "implement crawler"},
+                        ],
+                        "daily-report": [
+                            {"role": "module-dev", "objective": "implement reporter"},
+                        ],
+                    },
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "chief decomposition module task packages missing required roles: "
+        "daily-report=>doc-manager,qa-test,security-review, "
+        "news-crawler=>doc-manager,qa-test,security-review"
+    )
+
+
+def test_v3_workflow_decompose_bootstrap_confirm_reject_path(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_confirm_reject", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_009",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    },
+                    "module_task_packages": {
+                        "news-crawler": [
+                            {"role": "module-dev", "objective": "implement crawler"},
+                            {"role": "doc-manager", "objective": "document crawler"},
+                            {"role": "qa-test", "objective": "test crawler"},
+                            {"role": "security-review", "objective": "review crawler"},
+                        ],
+                        "daily-report": [
+                            {"role": "module-dev", "objective": "implement reporter"},
+                            {"role": "doc-manager", "objective": "document reporter"},
+                            {"role": "qa-test", "objective": "test reporter"},
+                            {"role": "security-review", "objective": "review reporter"},
+                        ],
+                    },
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    decompose = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert decompose.status_code == 200
+    token = decompose.json()["confirmation_token"]
+
+    reject = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm",
+        json={
+            "confirmed_by": "owner",
+            "approved": False,
+            "reason": "modules need refinement",
+            "confirmation_token": token,
+        },
+    )
+    assert reject.status_code == 200
+    reject_payload = reject.json()
+    assert reject_payload["approved"] is False
+    assert reject_payload["confirmation_status"] == "rejected"
+    assert reject_payload["workitems"] == []
+
+
+def test_v3_workflow_decompose_bootstrap_confirm_rejects_token_mismatch(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_confirm_token", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_decompose_010",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    },
+                    "module_task_packages": {
+                        "news-crawler": [
+                            {"role": "module-dev", "objective": "implement crawler"},
+                            {"role": "doc-manager", "objective": "document crawler"},
+                            {"role": "qa-test", "objective": "test crawler"},
+                            {"role": "security-review", "objective": "review crawler"},
+                        ],
+                        "daily-report": [
+                            {"role": "module-dev", "objective": "implement reporter"},
+                            {"role": "doc-manager", "objective": "document reporter"},
+                            {"role": "qa-test", "objective": "test reporter"},
+                            {"role": "security-review", "objective": "review reporter"},
+                        ],
+                    },
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    decompose = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert decompose.status_code == 200
+
+    confirm = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm",
+        json={
+            "confirmed_by": "owner",
+            "approved": True,
+            "confirmation_token": "decomp_wrongtoken",
+        },
+    )
+    assert confirm.status_code == 409
+    assert confirm.json()["detail"] == "confirmation token mismatch"
+
+
+def test_v3_workflow_orchestrate_recover_blocks_without_action_or_latest() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_orch_recover_none", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    recover = client.post(
+        f"/v3/workflows/runs/{run_id}/orchestrate/recover",
+        json={},
+    )
+    assert recover.status_code == 200
+    payload = recover.json()
+    assert payload["action_source"] == "none"
+    assert payload["selected_action"] is None
+    assert payload["action_status"] == "blocked"
+    assert payload["reason"] == "no recovery action in request or latest decision report"
+
+
+def test_v3_workflow_orchestrate_recover_uses_latest_primary_action(monkeypatch) -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_orch_recover_latest", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    blocked_orchestrate = client.post(
+        f"/v3/workflows/runs/{run_id}/orchestrate",
+        json={
+            "force_redecompose": True,
+            "execute": False,
+        },
+    )
+    assert blocked_orchestrate.status_code == 200
+    blocked_payload = blocked_orchestrate.json()
+    assert blocked_payload["orchestration_status"] == "blocked"
+    assert (
+        blocked_payload["decision_report"]["machine"]["primary_recovery_action"]
+        == "retry_with_decompose_payload"
+    )
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="split into crawler and reporter",
+            agent="chief-agent",
+            trace_id="act_orchestrate_recover_001",
+            metadata={
+                "modules": ["news-crawler", "daily-report"],
+                "decomposition": {
+                    "requirement_module_map": {
+                        "crawl": ["news-crawler"],
+                        "report": ["daily-report"],
+                    },
+                    "module_task_packages": {
+                        "news-crawler": [
+                            {"role": "module-dev", "objective": "implement crawler"},
+                            {"role": "doc-manager", "objective": "document crawler"},
+                            {"role": "qa-test", "objective": "test crawler"},
+                            {"role": "security-review", "objective": "review crawler"},
+                        ],
+                        "daily-report": [
+                            {"role": "module-dev", "objective": "implement reporter"},
+                            {"role": "doc-manager", "objective": "document reporter"},
+                            {"role": "qa-test", "objective": "test reporter"},
+                            {"role": "security-review", "objective": "review reporter"},
+                        ],
+                    },
+                },
+            },
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    recover = client.post(
+        f"/v3/workflows/runs/{run_id}/orchestrate/recover",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+            "execute": False,
+        },
+    )
+    assert recover.status_code == 200
+    payload = recover.json()
+    assert payload["action_source"] == "latest_primary"
+    assert payload["selected_action"] == "retry_with_decompose_payload"
+    assert payload["action_status"] == "executed"
+    assert payload["orchestrate"] is not None
+    assert payload["orchestrate"]["orchestration_status"] == "prepared"

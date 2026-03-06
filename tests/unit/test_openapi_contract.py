@@ -42,6 +42,11 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/v3/workflows/runs/{run_id}/artifacts": {"get"},
         "/v3/workflows/runs/{run_id}/tick": {"post"},
         "/v3/workflows/runs/{run_id}/bootstrap": {"post"},
+        "/v3/workflows/runs/{run_id}/decompose-bootstrap": {"post"},
+        "/v3/workflows/runs/{run_id}/decompose-bootstrap/pending": {"get"},
+        "/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm": {"post"},
+        "/v3/workflows/runs/{run_id}/orchestrate/latest": {"get"},
+        "/v3/workflows/runs/{run_id}/orchestrate/recover": {"post"},
         "/v3/workflows/runs/{run_id}/execute": {"post"},
         "/v3/workflows/workitems/{workitem_id}/start": {"post"},
         "/v3/workflows/workitems/{workitem_id}/approve": {"post"},
@@ -236,6 +241,33 @@ def test_openapi_validation_schema_contract() -> None:
     bootstrap_workflow = schemas["BootstrapWorkflowRequest"]
     assert "modules" in bootstrap_workflow["required"]
 
+    decompose_bootstrap_request = schemas["DecomposeBootstrapWorkflowRequest"]
+    assert "requirements" in decompose_bootstrap_request["required"]
+    assert decompose_bootstrap_request["properties"]["max_modules"].get("default") == 6
+
+    decompose_bootstrap_response = schemas["DecomposeBootstrapWorkflowResponse"]
+    assert "modules" in decompose_bootstrap_response["properties"]
+    assert "workitems" in decompose_bootstrap_response["properties"]
+    assert "chief_trace_id" in decompose_bootstrap_response["properties"]
+    assert "confirmation_required" in decompose_bootstrap_response["properties"]
+    assert "confirmation_status" in decompose_bootstrap_response["properties"]
+    assert "confirmation_token" in decompose_bootstrap_response["properties"]
+
+    confirm_decompose_request = schemas["ConfirmDecomposeBootstrapWorkflowRequest"]
+    assert "confirmed_by" in confirm_decompose_request["required"]
+    assert "approved" in confirm_decompose_request["properties"]
+
+    confirm_decompose_response = schemas["ConfirmDecomposeBootstrapWorkflowResponse"]
+    assert "approved" in confirm_decompose_response["properties"]
+    assert "confirmation_status" in confirm_decompose_response["properties"]
+    assert "workitems" in confirm_decompose_response["properties"]
+
+    pending_decompose_response = schemas["DecomposeBootstrapPendingWorkflowResponse"]
+    assert "has_pending_confirmation" in pending_decompose_response["properties"]
+    assert "confirmation_status" in pending_decompose_response["properties"]
+    assert "modules" in pending_decompose_response["properties"]
+    assert "chief_trace_id" in pending_decompose_response["properties"]
+
     execute_workflow = schemas["ExecuteWorkflowRunRequest"]
     assert execute_workflow["properties"]["max_loops"].get("default") == 20
 
@@ -248,6 +280,24 @@ def test_openapi_validation_schema_contract() -> None:
     resolve_discussion = schemas["ResolveDiscussionRequest"]
     assert "decision" in resolve_discussion["required"]
     assert "resolved_by" in resolve_discussion["required"]
+
+    orchestrate_latest = schemas["WorkflowRunOrchestrateLatestTelemetryResponse"]
+    assert "run_id" in orchestrate_latest["required"]
+    assert "found" in orchestrate_latest["required"]
+    assert "record" in orchestrate_latest["properties"]
+
+    orchestrate_recover_request = schemas["WorkflowRunOrchestrateRecoveryExecuteRequest"]
+    recover_request_props = orchestrate_recover_request["properties"]
+    assert "action" in recover_request_props
+    assert "strategy" in recover_request_props
+    assert "confirmed_by" in recover_request_props
+
+    orchestrate_recover_response = schemas["WorkflowRunOrchestrateRecoveryExecuteResponse"]
+    recover_response_props = orchestrate_recover_response["properties"]
+    assert "action_source" in recover_response_props
+    assert "selected_action" in recover_response_props
+    assert "action_status" in recover_response_props
+    assert "latest_record_before" in recover_response_props
 
     approve_workitem = schemas["ApproveWorkItemRequest"]
     assert "approved_by" in approve_workitem["required"]

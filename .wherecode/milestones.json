@@ -1,22 +1,46 @@
 {
   "version": 1,
-  "milestone": "test-entry",
+  "milestone": "tst2-ready",
   "status": "passed",
   "passed": true,
   "strict": true,
-  "updated_at": "2026-03-03T20:59:13.838174+08:00",
-  "state_file": "/Users/andyxu/Documents/project/wherecode/.wherecode/state.json",
+  "updated_at": "2026-03-06T22:30:17.325137+08:00",
   "checks": {
-    "last_completed_task_at_least_k49_t3": true,
-    "current_sprint_at_least_k50": true,
-    "full_pytest_verified": true
+    "soak_samples_found": true,
+    "soak_samples_reached_minimum": true,
+    "soak_coverage_reached_seconds": true,
+    "soak_failed_run_delta_within_limit": true,
+    "soak_probe_failures_within_limit": true,
+    "rehearsal_summary_found": true,
+    "rehearsal_overall_passed": true,
+    "rehearsal_checkpoint_guard_passed": true
   },
   "required": {
-    "last_completed_task": ">= K49-T3",
-    "current_sprint": ">= K50",
-    "last_verified_command": "control_center/.venv/bin/pytest -q"
+    "tst2_profile": "full",
+    "tst2_min_samples": 288,
+    "tst2_duration_seconds": 86400,
+    "tst2_interval_seconds": 300,
+    "tst2_required_coverage_seconds": 86100,
+    "tst2_max_failed_run_delta": 0,
+    "tst2_max_probe_failed_rounds": 0,
+    "rehearsal_overall_passed": true,
+    "rehearsal_checkpoint_guard_passed": true
   },
-  "next_phase": "TEST-PHASE",
-  "recommended_next_action": "start test sprint TST1",
-  "summary": "milestone passed: ready to enter test phase"
+  "observed": {
+    "soak_samples_file": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/20260304T130928Z-tst2-soak-samples.jsonl",
+    "samples_total": 705,
+    "latest_round": 132,
+    "first_sampled_at": "2026-03-04T13:09:30Z",
+    "last_sampled_at": "2026-03-06T13:20:26Z",
+    "coverage_seconds": 173456,
+    "failed_run_count_delta": 0,
+    "probe_failed_rounds": 0,
+    "rehearsal_summary_file": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/latest_tst2_t2_release_rehearsal.json",
+    "rehearsal_overall_passed": true,
+    "rehearsal_checkpoint_guard_passed": true,
+    "tst2_profile": "full"
+  },
+  "next_phase": "REL1",
+  "recommended_next_action": "promote to REL1 release signoff",
+  "summary": "milestone passed: TST2 readiness reached"
 }

@@ -22,6 +22,7 @@ Updated: 2026-03-06
 | GO2 | 2026-03-12 | stability observation / 稳定性观察 | observation report + issue queue / 观察报告 + 问题队列 | observation checkpoint pass / 观察检查点通过 |
 | GO3 | 2026-03-13 | target-host validation / 目标主机验证 | provider/recovery validation package / provider/recovery 验证包 | target-host validation pass / 目标主机验证通过 |
 | GO4 | 2026-03-14 | provider/recovery remediation / provider/recovery 修复 | remediation report + rerun evidence / 修复报告 + 重跑证据 | provider check + recovery drill pass / provider 检查 + recovery drill 通过 |
+| GO5 | 2026-03-15 | continuous ops checkpoint / 持续运营检查点 | one-command checkpoint bundle + secret gate baseline / 一键检查包 + 密钥门禁基线 | `check_all.sh ops` green / `check_all.sh ops` 通过 |
 
 ## 3) Current Position / 当前状态
 
@@ -35,6 +36,7 @@ Updated: 2026-03-06
 - GO2: done (checkpoint-01 + observation queue completed) / 已完成（检查点 01 + 问题队列已完成）。
 - GO3: done (validation package produced; target-host readiness not ready due provider execution failures) / 已完成（验证包已产出；因 provider 执行失败暂不具备目标主机就绪性）。
 - GO4: done (local codex-config alignment + provider execute path + recovery drill rerun passed) / 已完成（本地 codex-config 对齐 + provider 执行链路 + recovery drill 重跑通过）。
+- GO5: done (one-command ops checkpoint + check entry integration completed) / 已完成（一键运营检查与统一检查入口接入完成）。
 
 ## 4) Run Commands / 执行命令
 
@@ -42,6 +44,7 @@ Updated: 2026-03-06
 bash scripts/check_all.sh quick
 bash scripts/check_backend.sh full
 bash scripts/check_all.sh release
+bash scripts/check_all.sh ops
 bash scripts/v3_milestone_gate.sh --milestone tst2-ready --strict
 bash scripts/stationctl.sh mb3-dry-run
 ```

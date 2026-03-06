@@ -36,13 +36,14 @@ Task log rule / 任务日志规则:
 | GO2 | 2026-03-12 | local stability observation | smoke/recovery observation report ready | done |
 | GO3 | 2026-03-13 | target-host go-live validation | provider/recovery validation package ready | done |
 | GO4 | 2026-03-14 | provider/recovery remediation | provider execute + recovery drill pass | done |
+| GO5 | 2026-03-15 | continuous ops checkpoint | secret gate + ops checkpoint bundle ready | done |
 
-## 4) This Sprint Task Breakdown (GO4) / 本冲刺任务拆解（GO4）
+## 4) This Sprint Task Breakdown (GO5) / 本冲刺任务拆解（GO5）
 
 | ID | Task / 任务 | Owner / 负责人 | Depends / 依赖 | Status / 状态 |
 | --- | --- | --- | --- | --- |
-| GO4-T1 | remediate provider/network access on target host | ops | GO3 | done |
-| GO4-T2 | rerun provider check + recovery drill until pass | qa-test | GO4-T1 | done |
+| GO5-T1 | add one-command ops checkpoint script (secret + provider + recovery) | ops | GO4 | done |
+| GO5-T2 | integrate ops checkpoint into check entry/docs | qa-test | GO5-T1 | done |
 
 ## 5) Expected Output (this week) / 本周预期产出
 
@@ -60,6 +61,7 @@ Task log rule / 任务日志规则:
 
 ## 7) Next Action / 下一步
 
+- Close GO5-T1/T2 and publish one-command ops checkpoint.
 - Keep GO4 validation bundle in routine loop: provider probe + llm check/smoke + recovery drill.
 - Keep release baseline command in loop: `bash scripts/check_all.sh release`.
 - Keep recovery route in loop: `/v3/workflows/runs/{run_id}/orchestrate/recover`.
@@ -136,3 +138,5 @@ Task log rule / 任务日志规则:
 - 2026-03-06 `DOC-2026-03-06-DOCS-FULL-CONSOLIDATION` completed (`done`)
 - 2026-03-06 `DOC-2026-03-06-SECRET-LEAK-GATE` started (`doing`)
 - 2026-03-06 `DOC-2026-03-06-SECRET-LEAK-GATE` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-GO5-OPS-CHECKPOINT` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-GO5-OPS-CHECKPOINT` completed (`done`)

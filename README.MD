@@ -70,6 +70,7 @@ bash scripts/stationctl.sh stop all
 bash scripts/stationctl.sh check
 bash scripts/stationctl.sh check quick
 bash scripts/stationctl.sh check release
+bash scripts/stationctl.sh check ops
 ```
 
 ## 📅 Plan & Milestones (计划与里程碑)
@@ -90,6 +91,7 @@ bash scripts/stationctl.sh check release
 - [x] `GO2` (2026-03-06): stability checkpoint + observation queue completed.
 - [x] `GO3` (2026-03-06): target-host validation package completed (readiness not ready due provider execution failures).
 - [x] `GO4` (2026-03-06): local codex-config alignment + provider execute path + recovery drill rerun passed.
+- [x] `GO5` (2026-03-06): one-command ops checkpoint bundle + check entry integration completed.
 
 ### Milestone Plan (Expected)（里程碑计划（预期））
 
@@ -100,11 +102,12 @@ bash scripts/stationctl.sh check release
 - [x] `GO2` (target: 2026-03-12): stability observation report and issue queue complete.
 - [x] `GO3` (target: 2026-03-13): target-host provider/recovery validation complete.
 - [x] `GO4` (target: 2026-03-14): provider/recovery remediation and rerun pass.
+- [x] `GO5` (target: 2026-03-15): continuous ops checkpoint bundle ready.
 
-### Current Sprint (GO4 Remediation)（当前冲刺）
+### Current Sprint (GO5 Ops Checkpoint)（当前冲刺）
 
-- [x] `GO4-T1`: remediate provider/network access on target host.
-- [x] `GO4-T2`: rerun provider check + recovery drill until pass.
+- [x] `GO5-T1`: add one-command ops checkpoint script.
+- [x] `GO5-T2`: integrate ops checkpoint into check entry/docs.
 
 ---
 

@@ -12,6 +12,7 @@ Scopes:
   quick      backend quick checks (default)
   dev        alias of quick
   release    backend full + command_center + project checks
+  ops        go5 ops checkpoint (default profile quick)
   all        alias of release (legacy)
   backend    backend full tests only
   backend-quick backend quick checks only
@@ -75,6 +76,11 @@ case "${SCOPE}" in
     echo "[3/4] standalone project checks"
     run_project_checks
     echo "[4/4] release baseline done"
+    ;;
+  ops)
+    local_profile="${CHECK_ALL_OPS_PROFILE:-quick}"
+    echo "[ops] go5 ops checkpoint (profile=${local_profile})"
+    bash "${ROOT_DIR}/scripts/go5_ops_checkpoint.sh" "${local_profile}"
     ;;
   backend)
     echo "[backend] full tests"

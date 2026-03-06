@@ -70,6 +70,7 @@ bash scripts/stationctl.sh stop all
 bash scripts/stationctl.sh check
 bash scripts/stationctl.sh check quick
 bash scripts/stationctl.sh check release
+bash scripts/stationctl.sh check ops
 ```
 
 ## 📅 计划与里程碑 (Plan & Milestones)
@@ -90,6 +91,7 @@ bash scripts/stationctl.sh check release
 - [x] `GO2`（2026-03-06）：稳定性检查点 + 观察问题队列已完成。
 - [x] `GO3`（2026-03-06）：目标主机验证包已完成（因 provider 执行失败暂未就绪）。
 - [x] `GO4`（2026-03-06）：本地 codex-config 对齐 + provider 执行链路 + recovery drill 重跑通过。
+- [x] `GO5`（2026-03-06）：一键运营检查包 + 统一检查入口接入完成。
 
 ### 里程碑计划（预期） (Milestone Plan - Expected)
 
@@ -100,11 +102,12 @@ bash scripts/stationctl.sh check release
 - [x] `GO2`（目标：2026-03-12）：稳定性观察报告与问题队列完成。
 - [x] `GO3`（目标：2026-03-13）：目标主机 provider/recovery 验证完成。
 - [x] `GO4`（目标：2026-03-14）：provider/recovery 修复并重跑通过。
+- [x] `GO5`（目标：2026-03-15）：持续运营检查包就绪。
 
-### 当前冲刺（GO4 修复阶段） (Current Sprint)
+### 当前冲刺（GO5 运营检查） (Current Sprint)
 
-- [x] `GO4-T1`：修复目标主机 provider/网络访问问题。
-- [x] `GO4-T2`：重跑 provider 检查 + recovery-drill 直至通过。
+- [x] `GO5-T1`：新增一键运营检查脚本。
+- [x] `GO5-T2`：将运营检查接入统一检查入口与文档。
 
 ---
 

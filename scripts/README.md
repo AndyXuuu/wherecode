@@ -5,7 +5,7 @@
 - 本地开发辅助脚本
 - CI 前置检查脚本
 - 日志清理与数据迁移脚本
-- 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check(quick|dev|release)/soak/soak-checkpoint/tst2-rehearsal/tst2-rehearsal-latest/tst2-progress/tst2-watch/tst2-autopilot/mb3-dry-run/action-llm-check）
+- 子项目统一命令入口（`stationctl.sh`，支持 install/dev/start/stop/status/check(quick|dev|release|ops)/soak/soak-checkpoint/tst2-rehearsal/tst2-rehearsal-latest/tst2-progress/tst2-watch/tst2-autopilot/mb3-dry-run/action-llm-check）
 - v3 持久化恢复演练（`v3_recovery_drill.sh`，自动重启 control-center 并校验 run/gates/artifacts）
 - v3 并发探测脚本（`v3_parallel_probe.sh`，并发创建 run 并统计终态分布）
 - v3 CI 演练入口（`ci_v3_rehearsal.sh`，串联 backend/probe/recovery）
@@ -133,15 +133,18 @@
 - 分层校验脚本：
   - `check_backend.sh`（后端 pytest，支持 `quick|full`，默认 `quick`）
   - `check_command_center.sh`（前端 build）
-  - `check_all.sh`（聚合入口，支持 `quick|dev|release|all|backend|backend-quick|backend-full|llm-check|frontend|projects`）
+  - `check_all.sh`（聚合入口，支持 `quick|dev|release|ops|all|backend|backend-quick|backend-full|llm-check|frontend|projects`）
     - `quick`（默认）：后端快速回归
     - `dev`：`quick` 别名（兼容旧命令）
     - `release`：后端全量 + 前端构建 + 子项目检查
+    - `ops`：GO5 运营检查聚合（默认 quick 档位）
     - `all`：`release` 兼容别名
 - 密钥泄露门禁脚本：
   - `check_secrets.sh`（支持 `--staged|--working-tree|--range|--all-history`）
   - `install_githooks.sh`（安装 `.githooks/pre-commit` 与 `.githooks/pre-push`）
   - 安装后提交前自动扫描 staged 内容，push 前扫描待推送提交范围
+- GO5 运营检查脚本：
+  - `go5_ops_checkpoint.sh`（支持 `quick|full`，输出检查摘要 JSON）
 
 约定：
 - 脚本默认可重复执行（幂等）。

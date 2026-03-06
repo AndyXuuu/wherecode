@@ -30,7 +30,7 @@ Commands:
   mb3-dry-run [control_url] [mb3-options]
   action-llm-check [action_layer_url] [role] [module_key] [text]
   readme-phase-sync [--dry-run] [--strict]
-  check [quick|dev|release]
+  check [quick|dev|release|ops]
   help
 
 Examples:
@@ -53,6 +53,7 @@ Examples:
   bash scripts/stationctl.sh check
   bash scripts/stationctl.sh check quick
   bash scripts/stationctl.sh check release
+  bash scripts/stationctl.sh check ops
 EOF
 }
 
@@ -409,11 +410,11 @@ run_readme_phase_sync() {
 run_check() {
   local scope="${1:-quick}"
   case "${scope}" in
-    quick|dev|release)
+    quick|dev|release|ops)
       ;;
     *)
       echo "unknown check scope: ${scope}"
-      echo "allowed: quick|dev|release"
+      echo "allowed: quick|dev|release|ops"
       return 1
       ;;
   esac

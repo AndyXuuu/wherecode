@@ -15,12 +15,12 @@ Updated: 2026-03-06
 - `full`: backend full regression / 后端完整回归。
 - `release`: release gate (`full + frontend + optional project checks`) / 发布门禁（`full + frontend + 可选 project 检查`）。
 
-## 3) Active Sprint: GO4 / 当前冲刺：GO4
+## 3) Active Sprint: GO5 / 当前冲刺：GO5
 
 | ID | Task / 任务 | Owner / 负责人 | Depends / 依赖 | Status / 状态 | Check Scope / 校验范围 | Trigger / 触发条件 |
 | --- | --- | --- | --- | --- | --- | --- |
-| GO4-T1 | remediate provider/network access on target host / 修复目标主机 provider/网络访问 | ops | GO3 | done | release | `GO3=done` |
-| GO4-T2 | rerun provider check + recovery drill until pass / 重跑 provider 检查 + recovery drill 直至通过 | qa-test | GO4-T1 | done | release | `GO4-T1=done` |
+| GO5-T1 | add one-command ops checkpoint script / 增加一键运营检查脚本 | ops | GO4 | done | release | `GO4=done` |
+| GO5-T2 | integrate ops checkpoint into check entry/docs / 将运营检查接入统一检查入口与文档 | qa-test | GO5-T1 | done | release | `GO5-T1=done` |
 
 ## 4) Release Track / 发布轨道
 
@@ -36,6 +36,7 @@ Updated: 2026-03-06
 | GO2 | stability observation / 稳定性观察 | done | release | `GO1=done` |
 | GO3 | target-host go-live validation / 目标主机上线验证 | done | release | `GO2=done` |
 | GO4 | provider/recovery remediation / provider/recovery 修复 | done | release | `GO3=done` |
+| GO5 | continuous ops checkpoint / 持续运营检查点 | done | release | `GO4=done` |
 
 ## 5) Validation Cadence / 校验节奏
 
@@ -45,8 +46,9 @@ Updated: 2026-03-06
 - Milestone / release gates / 里程碑与发布门禁:
   - `bash scripts/check_backend.sh full`
   - `bash scripts/check_all.sh release`
+  - `bash scripts/check_all.sh ops`
   - `bash scripts/v3_milestone_gate.sh --milestone tst2-ready --strict`
 
 ## 6) Next Action / 下一步
 
-- Keep GO4 validation bundle in periodic checks (`go4_provider_probe` + `action_layer_llm_check` + `action_layer_llm_smoke` + `v3_recovery_drill`) / 将 GO4 验证包纳入周期性检查（`go4_provider_probe` + `action_layer_llm_check` + `action_layer_llm_smoke` + `v3_recovery_drill`）。
+- Keep GO5 checkpoint in routine loop: `check_all ops` / 将 GO5 检查加入日常循环：`check_all ops`。

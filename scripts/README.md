@@ -138,6 +138,10 @@
     - `dev`：`quick` 别名（兼容旧命令）
     - `release`：后端全量 + 前端构建 + 子项目检查
     - `all`：`release` 兼容别名
+- 密钥泄露门禁脚本：
+  - `check_secrets.sh`（支持 `--staged|--working-tree|--range|--all-history`）
+  - `install_githooks.sh`（安装 `.githooks/pre-commit` 与 `.githooks/pre-push`）
+  - 安装后提交前自动扫描 staged 内容，push 前扫描待推送提交范围
 
 约定：
 - 脚本默认可重复执行（幂等）。

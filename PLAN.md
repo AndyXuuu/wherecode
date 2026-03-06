@@ -134,3 +134,5 @@ Task log rule / 任务日志规则:
 - 2026-03-06 `DOC-2026-03-06-GO4-T2-RERUN-VALIDATION-BUNDLE` completed (`done`)
 - 2026-03-06 `DOC-2026-03-06-DOCS-FULL-CONSOLIDATION` started (`doing`)
 - 2026-03-06 `DOC-2026-03-06-DOCS-FULL-CONSOLIDATION` completed (`done`)
+- 2026-03-06 `DOC-2026-03-06-SECRET-LEAK-GATE` started (`doing`)
+- 2026-03-06 `DOC-2026-03-06-SECRET-LEAK-GATE` completed (`done`)

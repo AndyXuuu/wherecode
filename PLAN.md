@@ -45,8 +45,14 @@ Completed task groups are archived in:
 - `bash scripts/check_all.sh v2`
 - `bash scripts/check_all.sh main`
 
+## V3 Planning Entry
+
+- `docs/V3_PROJECT_PLAN.md` (control-plane + external executor architecture)
+
 ## Task Log (Recent)
 
+- 2026-03-12 `DOC-2026-03-12-V3-PLANNING` completed (`done`)
+- 2026-03-12 `DOC-2026-03-12-V3-PLANNING` started (`doing`)
 - 2026-03-12 `DOC-2026-03-12-V2-T82` blocked (`doing`) (blocked: attempt=1, reason=next_action_pending:review_results, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t82/latest.json)
 - 2026-03-12 `DOC-2026-03-12-V2-T84` completed (`done`)
 - 2026-03-12 `DOC-2026-03-12-V2-T84` started (`doing`)

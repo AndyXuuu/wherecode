@@ -81,7 +81,7 @@ if [[ "${PROFILE}" == "full" ]]; then
     step_secret_all_history_ec=$?
   fi
 
-  if run_and_log "release-check" bash "${ROOT_DIR}/scripts/check_all.sh" release; then
+  if run_and_log "release-check" bash "${ROOT_DIR}/scripts/check_all_local.sh" release; then
     step_release_ec=0
   else
     step_release_ec=$?

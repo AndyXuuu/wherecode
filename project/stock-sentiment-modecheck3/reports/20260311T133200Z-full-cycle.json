@@ -1,0 +1,22 @@
+{
+  "captured_at": "2026-03-11T13:30:53.008090+00:00",
+  "mode": "local_rule_engine",
+  "model_dependency": false,
+  "subproject_key": "stock-sentiment-modecheck3",
+  "stamp": "20260311T133200Z",
+  "requirements": "Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance.",
+  "final_status": "succeeded",
+  "workflow_run_id": "local_20260311T133046Z",
+  "autoevolve_report_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck3/reports/20260311T133200Z-autoevolve.json",
+  "code_ready": true,
+  "code_file_count": 13,
+  "missing_code_files": [],
+  "workflow_mode": "dev",
+  "workflow_progress": {
+    "stage_executed": "acceptance",
+    "next_stage": "done",
+    "complete": true,
+    "ops_log_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck3/reports/20260311T133200Z-workflow-ops.jsonl",
+    "state_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck3/reports/workflow_state.json"
+  }
+}

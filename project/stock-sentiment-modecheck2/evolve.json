@@ -1,0 +1,16 @@
+{
+  "project_name_prefix": "stock-sentiment-modecheck2",
+  "task_title": "stock-sentiment-modecheck2 autonomous task",
+  "requirements": "Build a local stock sentiment subproject with crawler sentiment theme industry risk report modules",
+  "module_hints": [
+    "crawl",
+    "sentiment",
+    "theme",
+    "industry",
+    "risk"
+  ],
+  "max_modules": 6,
+  "strategy": "balanced",
+  "requested_by": "go8-full-cycle",
+  "execute": false
+}

@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-03-08T15:46:33.119029+00:00",
+  "run_id": "chk_b5a34fc0960b",
+  "scope": "quick",
+  "status": "success",
+  "requested_by": "api-smoke",
+  "started_at": "2026-03-08T15:46:32.246542+00:00",
+  "finished_at": "2026-03-08T15:46:33.118761+00:00",
+  "exit_code": 0,
+  "log_path": "/Users/andyxu/Documents/project/wherecode/.wherecode/check_runs/chk_b5a34fc0960b.log",
+  "command_text": "bash /Users/andyxu/Documents/project/wherecode/scripts/check_all_local.sh quick",
+  "message": "check run passed",
+  "last_output": "[1/1] backend quick checks\n.................................                                        [100%]\n33 passed in 0.34s\nchecks passed (scope=quick)"
+}

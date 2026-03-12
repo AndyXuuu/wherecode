@@ -1,0 +1,66 @@
+{
+  "captured_at": "2026-03-11T13:38:16.788789+00:00",
+  "version": "v2",
+  "benchmark": {
+    "targets": [
+      "openclaw",
+      "opencode",
+      "oh-my-opencode"
+    ],
+    "aligned_capabilities": [
+      "single_command_entry",
+      "plan_or_build_modes",
+      "autonomous_execution_loop",
+      "structured_run_artifacts",
+      "human_checkpoint_at_milestones"
+    ]
+  },
+  "run": {
+    "stamp": "20260311T134300Z",
+    "subproject_key": "stock-sentiment-nextcmd",
+    "mode": "build",
+    "workflow_mode": "dev",
+    "requested_by": "v2-run",
+    "final_status": "success"
+  },
+  "input": {
+    "requirement_file": "project/requirements/stock-sentiment.md",
+    "requirements": "Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance.",
+    "module_hints": "crawl,sentiment,entity-linking,industry,theme,risk,report",
+    "max_modules": 7,
+    "strategy": "balanced",
+    "execute": false,
+    "force_clean": false,
+    "workflow_mode": "dev"
+  },
+  "outputs": {
+    "full_cycle_status": "in_progress",
+    "workflow_run_id": "local_20260311T133816Z",
+    "full_cycle_report_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-full-cycle.json",
+    "workflow_stage_executed": "standalone",
+    "workflow_next_stage": "acceptance",
+    "workflow_complete": false,
+    "workflow_next_command": "bash /Users/andyxu/Documents/project/wherecode/scripts/go8_subproject_full_cycle.sh stock-sentiment-nextcmd --requirements Build\\ a\\ local\\ runnable\\ stock\\ sentiment\\ analysis\\ project\\ for\\ A-share\\ market.\\ 1.\\ Daily\\ opinion/news\\ collection.\\ 2.\\ Sentiment\\ classification\\ \\(positive/neutral/negative\\).\\ 3.\\ Entity\\ linking\\ to\\ stock\\ codes\\ and\\ names.\\ 4.\\ Industry\\ analysis.\\ 5.\\ Theme/topic\\ analysis.\\ 6.\\ Risk\\ tag\\ extraction.\\ 7.\\ Daily\\ report\\ generation\\ \\(json\\ +\\ markdown\\).\\ -\\ Subproject\\ should\\ run\\ independently.\\ -\\ Subproject\\ should\\ be\\ rebuildable\\ from\\ this\\ requirement.\\ -\\ Main\\ project\\ orchestrates\\ generation/execution/acceptance. --module-hints crawl\\,sentiment\\,entity-linking\\,industry\\,theme\\,risk\\,report --max-modules 7 --strategy balanced --requested-by v2-run --execute false --force-clean false --stamp 20260311T134300Z --workflow-mode dev --state-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/workflow_state.json --ops-log-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-workflow-ops.jsonl --reset-dev-state false",
+    "workflow_ops_log_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-workflow-ops.jsonl",
+    "workflow_state_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/workflow_state.json"
+  },
+  "diagnosis": {
+    "failure_taxonomy": {
+      "code": "success",
+      "stage": "none",
+      "severity": "none",
+      "reason": "run completed successfully"
+    },
+    "retry_hints": [
+      "No retry required. Keep this report as baseline for next runs."
+    ],
+    "next_commands": [
+      "bash scripts/check_all.sh v2",
+      "bash scripts/stationctl.sh v2-replay stock-sentiment-nextcmd --mode plan"
+    ]
+  },
+  "logs": {
+    "plan_output": "",
+    "build_output": "[go8 2/3] run standalone local flow\n[go8][dev] event=command stage=standalone status=start\n[go8][dev] command=bash /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/scripts/run.sh 20260311T134300Z\n..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\nsubproject checks passed: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd\nreport_written=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-seed.json\nlatest_summary=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/latest_seed.json\n..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-autoevolve.json\n{\"run_id\": \"local_20260311T133816Z\", \"final_status\": \"succeeded\", \"mode\": \"local_rule_engine\"}\nsubproject run done: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd\nreports: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports\n[go8][dev] event=command stage=standalone status=success\n[go8][dev] command=bash /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/scripts/run.sh 20260311T134300Z\n[go8][dev] files=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/latest_autoevolve.json\n[go8][dev] event=hint stage=dev status=next_command\n[go8][dev] command=next step command\n[go8][dev] detail=bash /Users/andyxu/Documents/project/wherecode/scripts/go8_subproject_full_cycle.sh stock-sentiment-nextcmd --requirements Build\\ a\\ local\\ runnable\\ stock\\ sentiment\\ analysis\\ project\\ for\\ A-share\\ market.\\ 1.\\ Daily\\ opinion/news\\ collection.\\ 2.\\ Sentiment\\ classification\\ \\(positive/neutral/negative\\).\\ 3.\\ Entity\\ linking\\ to\\ stock\\ codes\\ and\\ names.\\ 4.\\ Industry\\ analysis.\\ 5.\\ Theme/topic\\ analysis.\\ 6.\\ Risk\\ tag\\ extraction.\\ 7.\\ Daily\\ report\\ generation\\ \\(json\\ +\\ markdown\\).\\ -\\ Subproject\\ should\\ run\\ independently.\\ -\\ Subproject\\ should\\ be\\ rebuildable\\ from\\ this\\ requirement.\\ -\\ Main\\ project\\ orchestrates\\ generation/execution/acceptance. --module-hints crawl\\,sentiment\\,entity-linking\\,industry\\,theme\\,risk\\,report --max-modules 7 --strategy balanced --requested-by v2-run --execute false --force-clean false --stamp 20260311T134300Z --workflow-mode dev --state-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/workflow_state.json --ops-log-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-workflow-ops.jsonl --reset-dev-state false\n[go8][dev] event=file_write stage=report status=success\n[go8][dev] command=write full-cycle summary report\n[go8][dev] files=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-full-cycle.json, /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/latest_full_cycle.json\nfull_cycle_report=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-full-cycle.json\nlatest_full_cycle=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/latest_full_cycle.json\nmode=local_rule_engine\nmodel_dependency=false\nworkflow_mode=dev\nworkflow_stage_executed=standalone\nworkflow_next_stage=acceptance\nworkflow_complete=false\nworkflow_state_path=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/workflow_state.json\nworkflow_ops_log_path=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-workflow-ops.jsonl\nworkflow_next_command=bash /Users/andyxu/Documents/project/wherecode/scripts/go8_subproject_full_cycle.sh stock-sentiment-nextcmd --requirements Build\\ a\\ local\\ runnable\\ stock\\ sentiment\\ analysis\\ project\\ for\\ A-share\\ market.\\ 1.\\ Daily\\ opinion/news\\ collection.\\ 2.\\ Sentiment\\ classification\\ \\(positive/neutral/negative\\).\\ 3.\\ Entity\\ linking\\ to\\ stock\\ codes\\ and\\ names.\\ 4.\\ Industry\\ analysis.\\ 5.\\ Theme/topic\\ analysis.\\ 6.\\ Risk\\ tag\\ extraction.\\ 7.\\ Daily\\ report\\ generation\\ \\(json\\ +\\ markdown\\).\\ -\\ Subproject\\ should\\ run\\ independently.\\ -\\ Subproject\\ should\\ be\\ rebuildable\\ from\\ this\\ requirement.\\ -\\ Main\\ project\\ orchestrates\\ generation/execution/acceptance. --module-hints crawl\\,sentiment\\,entity-linking\\,industry\\,theme\\,risk\\,report --max-modules 7 --strategy balanced --requested-by v2-run --execute false --force-clean false --stamp 20260311T134300Z --workflow-mode dev --state-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/workflow_state.json --ops-log-path /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-nextcmd/reports/20260311T134300Z-workflow-ops.jsonl --reset-dev-state false\nfinal_status=in_progress\nworkflow_run_id=local_20260311T133816Z\ncode_ready=true\ncode_file_count=13"
+  }
+}

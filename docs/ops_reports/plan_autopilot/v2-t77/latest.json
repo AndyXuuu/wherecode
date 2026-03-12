@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-03-11T16:37:00.663598+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t77/20260311T163700Z-mb3-dry-run-seed.json",
+  "captured_at": "2026-03-11T16:37:00.663210+00:00",
+  "control_url": "http://127.0.0.1:8000",
+  "project_id": "proj_36de7253c95d",
+  "task_id": "task_3049949e915b",
+  "command_id": "cmd_d3ff25985b05",
+  "terminal_status": "success",
+  "workflow_run_id": "wfr_4218ea881297",
+  "orchestration_status": "executed",
+  "workflow_next_action": "wait_or_unblock_workitems",
+  "primary_recovery_action": "wait_or_unblock_workitems",
+  "latest_found": true,
+  "latest_orchestration_status": "executed",
+  "latest_next_action": "wait_or_unblock_workitems",
+  "command_text": "/orchestrate Execute PLAN task V2-T77: run main/v2 regression check package and publish evidence. Mandatory order: update plan first, implement changes, run checks, update docs. Follow project rules from PLAN.md and agent.md. Do not guess ambiguous requirements; request clarification when blocked. --module-hints=requirements,implementation,testing,documentation --max-modules=6 --strategy=balanced --execute=true --force-redecompose=false --confirmed-by=owner"
+}

@@ -35,19 +35,29 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/metrics/workflows/alert-policy/audits": {"get"},
         "/agent-routing": {"get", "put"},
         "/agent-routing/reload": {"post"},
+        "/agent-rules": {"get"},
+        "/agent-rules/reload": {"post"},
+        "/config/command-orchestrate-policy": {"get"},
+        "/reports/v2/summary": {"get"},
+        "/context/memory/items": {"get", "put", "delete"},
+        "/context/memory/resolve": {"get"},
+        "/context/memory/namespaces/{scope}/items": {"get"},
         "/v3/workflows/runs": {"post"},
         "/v3/workflows/runs/{run_id}": {"get"},
         "/v3/workflows/runs/{run_id}/workitems": {"get", "post"},
         "/v3/workflows/runs/{run_id}/gates": {"get"},
         "/v3/workflows/runs/{run_id}/artifacts": {"get"},
         "/v3/workflows/runs/{run_id}/tick": {"post"},
+        "/v3/workflows/runs/{run_id}/restart": {"post"},
         "/v3/workflows/runs/{run_id}/bootstrap": {"post"},
         "/v3/workflows/runs/{run_id}/decompose-bootstrap": {"post"},
         "/v3/workflows/runs/{run_id}/decompose-bootstrap/pending": {"get"},
+        "/v3/workflows/runs/{run_id}/routing-decisions": {"get"},
         "/v3/workflows/runs/{run_id}/decompose-bootstrap/confirm": {"post"},
         "/v3/workflows/runs/{run_id}/orchestrate/latest": {"get"},
         "/v3/workflows/runs/{run_id}/orchestrate/recover": {"post"},
         "/v3/workflows/runs/{run_id}/execute": {"post"},
+        "/v3/workflows/runs/{run_id}/interrupt": {"post"},
         "/v3/workflows/workitems/{workitem_id}/start": {"post"},
         "/v3/workflows/workitems/{workitem_id}/approve": {"post"},
         "/v3/workflows/workitems/{workitem_id}/complete": {"post"},
@@ -60,6 +70,10 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/commands/{command_id}": {"get"},
         "/commands/{command_id}/approve": {"post"},
         "/projects/{project_id}/snapshot": {"get"},
+        "/ops/checks/scopes": {"get"},
+        "/ops/checks/runs": {"get", "post"},
+        "/ops/checks/runs/{run_id}": {"get"},
+        "/ops/checks/latest": {"get"},
     }
 
     for path, methods in required_path_methods.items():
@@ -82,6 +96,23 @@ def test_openapi_command_acceptance_response_contract() -> None:
     assert {"command_id", "task_id", "project_id", "status", "poll_url"}.issubset(required_fields)
 
 
+def test_openapi_v2_report_summary_query_params_contract() -> None:
+    spec = client.get("/openapi.json").json()
+    get_spec = spec["paths"]["/reports/v2/summary"]["get"]
+    names = {item["name"] for item in get_spec.get("parameters", [])}
+    assert {
+        "subproject",
+        "run_id",
+        "report_id",
+        "report_path",
+        "latest_path",
+        "compact",
+        "max_actions",
+        "min_score",
+        "action_type",
+    }.issubset(names)
+
+
 def test_openapi_validation_schema_contract() -> None:
     spec = client.get("/openapi.json").json()
     schemas = spec["components"]["schemas"]
@@ -100,6 +131,18 @@ def test_openapi_validation_schema_contract() -> None:
 
     action_execute_response = schemas["ActionExecuteResponse"]
     assert "discussion" in action_execute_response["properties"]
+    assert "agent_trace" in action_execute_response["properties"]
+
+    agent_execution_trace = schemas["AgentExecutionTrace"]
+    assert "standard" in agent_execution_trace["properties"]
+    assert "version" in agent_execution_trace["properties"]
+    assert "loop_state" in agent_execution_trace["properties"]
+    assert "steps" in agent_execution_trace["properties"]
+
+    agent_trace_step = schemas["AgentTraceStep"]
+    assert "index" in agent_trace_step["properties"]
+    assert "phase" in agent_trace_step["properties"]
+    assert "content" in agent_trace_step["properties"]
 
     approve_command = schemas["ApproveCommandRequest"]
     assert "approved_by" in approve_command["properties"]
@@ -161,6 +204,35 @@ def test_openapi_validation_schema_contract() -> None:
     verify_policy_registry_export = schemas["VerifyPolicyRegistryExportResponse"]
     assert "generated_at" in verify_policy_registry_export["properties"]
     assert "source" in verify_policy_registry_export["properties"]
+
+    v2_report_summary = schemas["V2ReportSummaryResponse"]
+    assert "report_id" in v2_report_summary["properties"]
+    assert "failure_taxonomy" in v2_report_summary["properties"]
+    assert "compact" in v2_report_summary["properties"]
+    assert "prioritized_actions" in v2_report_summary["properties"]
+    assert "primary_action" in v2_report_summary["properties"]
+    assert "retry_hints" in v2_report_summary["properties"]
+    assert "next_commands" in v2_report_summary["properties"]
+
+    v2_report_compact = schemas["V2ReportCompactSummary"]
+    assert "status_line" in v2_report_compact["properties"]
+    assert "action_required" in v2_report_compact["properties"]
+    assert "alert_priority" in v2_report_compact["properties"]
+    assert "decision" in v2_report_compact["properties"]
+    assert "risk_level" in v2_report_compact["properties"]
+    assert "primary_action_id" in v2_report_compact["properties"]
+
+    v2_report_action = schemas["V2ReportActionSuggestion"]
+    assert "priority" in v2_report_action["properties"]
+    assert "action_id" in v2_report_action["properties"]
+    assert "action_type" in v2_report_action["properties"]
+    assert "command" in v2_report_action["properties"]
+    assert "reason" in v2_report_action["properties"]
+    assert "score" in v2_report_action["properties"]
+    assert "runbook_ref" in v2_report_action["properties"]
+    assert "can_auto_execute" in v2_report_action["properties"]
+    assert "requires_confirmation" in v2_report_action["properties"]
+    assert "estimated_cost" in v2_report_action["properties"]
 
     rollback_metrics_alert_policy_request = schemas["RollbackMetricsAlertPolicyRequest"]
     assert "audit_id" in rollback_metrics_alert_policy_request["required"]
@@ -277,6 +349,30 @@ def test_openapi_validation_schema_contract() -> None:
     assert "waiting_approval_count" in execute_workflow_response["properties"]
     assert "waiting_approval_workitem_ids" in execute_workflow_response["properties"]
 
+    interrupt_workflow = schemas["InterruptWorkflowRunRequest"]
+    assert "skip_non_terminal_workitems" in interrupt_workflow["properties"]
+    assert (
+        interrupt_workflow["properties"]["skip_non_terminal_workitems"].get("default")
+        is True
+    )
+
+    interrupt_workflow_response = schemas["InterruptWorkflowRunResponse"]
+    assert "run_id" in interrupt_workflow_response["required"]
+    assert "previous_status" in interrupt_workflow_response["required"]
+    assert "run_status" in interrupt_workflow_response["required"]
+    assert "interrupt_applied" in interrupt_workflow_response["properties"]
+    assert "skipped_workitem_ids" in interrupt_workflow_response["properties"]
+
+    restart_workflow = schemas["RestartWorkflowRunRequest"]
+    assert "copy_decomposition" in restart_workflow["properties"]
+    assert restart_workflow["properties"]["copy_decomposition"].get("default") is True
+
+    restart_workflow_response = schemas["RestartWorkflowRunResponse"]
+    assert "source_run_id" in restart_workflow_response["required"]
+    assert "restarted_run_id" in restart_workflow_response["required"]
+    assert "restarted_run_status" in restart_workflow_response["required"]
+    assert "copied_decomposition" in restart_workflow_response["properties"]
+
     resolve_discussion = schemas["ResolveDiscussionRequest"]
     assert "decision" in resolve_discussion["required"]
     assert "resolved_by" in resolve_discussion["required"]
@@ -297,7 +393,16 @@ def test_openapi_validation_schema_contract() -> None:
     assert "action_source" in recover_response_props
     assert "selected_action" in recover_response_props
     assert "action_status" in recover_response_props
+    assert "restarted_run_id" in recover_response_props
+    assert "restarted_run_status" in recover_response_props
     assert "latest_record_before" in recover_response_props
 
     approve_workitem = schemas["ApproveWorkItemRequest"]
     assert "approved_by" in approve_workitem["required"]
+
+    orchestrate_policy_config = schemas["CommandOrchestratePolicyConfigResponse"]
+    assert "enabled" in orchestrate_policy_config["required"]
+    assert "prefixes" in orchestrate_policy_config["properties"]
+    assert "default_max_modules" in orchestrate_policy_config["required"]
+    assert "default_strategy" in orchestrate_policy_config["required"]
+    assert "restart_canceled_policy" in orchestrate_policy_config["required"]

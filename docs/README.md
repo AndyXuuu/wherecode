@@ -1,31 +1,16 @@
-# Docs Index
+# Docs (V2)
 
-Updated: 2026-03-06
+This directory keeps only core, current docs.
 
-## Core
-
-- `system_spec.md`: architecture and domain model.
-- `protocol.md`: API/error/auth contract.
-- `runbook.md`: install/start/check/release commands.
-- `troubleshooting.md`: failure diagnosis and recovery.
-- `release_map.md`: milestone roadmap.
-- `v3_task_board.md`: active sprint board.
-- `oncall_checklist.md`: operation checklist.
-
-## Change Log
-
-- `change_reports/README.md`: report rules + quick navigation.
-- `change_reports/MAP.md`: phase map.
-- `change_reports/YYYY-MM-DD-*.md`: one task per report.
-
-## Runtime Evidence
-
-- `ops_reports/INDEX.md`: retained evidence and retention policy.
-- `ops_reports/latest_*.json`: latest pointers.
-- `ops_reports/YYYY-MM-DD-*.md`: manual checkpoints.
-
-## Documentation Rules
-
-- One topic, one source-of-truth.
-- Reports keep only: `Scope`, `Changed Files`, `Validation`.
-- Generated artifacts are disposable after summary is recorded.
+- `ARCHITECTURE_V2.md`: main architecture and boundaries.
+- `OPERATIONS_V2.md`: run commands and operator flow.
+- `STANDARD_AGENT_REACT.md`: normative ReAct agent protocol used by action execution responses.
+- `DELIVERY_TEST_PACKAGE_V2.md`: current delivery-test checklist, evidence, and readiness decision.
+- `V2_PROJECT_PLAN.md`: v2 roadmap, milestones, gates, deliverables.
+- `V2_PROJECT_PLAN.zh-CN.md`: v2 中文规划（路线、里程碑、门禁、交付物）。
+- `PLAN_V2_COMPLETED_MILESTONES.md`: completed milestone archive.
+- `PLAN_V2_COMPLETED_TASKS.md`: completed task-group archive.
+- `../control_center/capabilities/registry.json`: reusable capability registry (Agent/MCP/Skills).
+- `../control_center/capabilities/capability_contract.schema.json`: capability package contract schema.
+- `../control_center/capabilities/dev_routing_matrix.json`: developer specialization route matrix (domain/stack/task/risk).
+- `../control_center/capabilities/protocols/react_trace_v1.schema.json`: machine-readable ReAct trace schema.

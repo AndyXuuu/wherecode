@@ -1,0 +1,181 @@
+{
+  "version": "1",
+  "updated_at": "2026-03-09T00:00:00Z",
+  "default_target": {
+    "role": "module-dev",
+    "capability_id": "builtin.skill.general-dev",
+    "executor": "coding-agent"
+  },
+  "rules": [
+    {
+      "id": "frontend-react-feature",
+      "priority": 10,
+      "match": {
+        "domain": [
+          "frontend"
+        ],
+        "stack": [
+          "react",
+          "nextjs"
+        ],
+        "task_type": [
+          "feature",
+          "refactor"
+        ],
+        "language": [
+          "typescript",
+          "javascript"
+        ]
+      },
+      "target": {
+        "role": "module-dev",
+        "capability_id": "builtin.skill.frontend-react",
+        "executor": "coding-agent"
+      },
+      "handoff_roles": [
+        "qa-test",
+        "doc-manager"
+      ],
+      "required_checks": [
+        "frontend-build",
+        "ui-smoke"
+      ]
+    },
+    {
+      "id": "backend-python-api",
+      "priority": 10,
+      "match": {
+        "domain": [
+          "backend"
+        ],
+        "stack": [
+          "fastapi",
+          "flask",
+          "django"
+        ],
+        "task_type": [
+          "feature",
+          "bugfix",
+          "refactor"
+        ],
+        "language": [
+          "python"
+        ]
+      },
+      "target": {
+        "role": "module-dev",
+        "capability_id": "builtin.skill.backend-python",
+        "executor": "coding-agent"
+      },
+      "handoff_roles": [
+        "qa-test",
+        "doc-manager"
+      ],
+      "required_checks": [
+        "backend-quick"
+      ]
+    },
+    {
+      "id": "backend-go-service",
+      "priority": 12,
+      "match": {
+        "domain": [
+          "backend"
+        ],
+        "stack": [
+          "go",
+          "gin",
+          "fiber"
+        ],
+        "task_type": [
+          "feature",
+          "bugfix",
+          "perf"
+        ],
+        "language": [
+          "go"
+        ]
+      },
+      "target": {
+        "role": "module-dev",
+        "capability_id": "builtin.skill.backend-go",
+        "executor": "coding-agent"
+      },
+      "handoff_roles": [
+        "qa-test",
+        "doc-manager"
+      ],
+      "required_checks": [
+        "backend-quick"
+      ]
+    },
+    {
+      "id": "data-pipeline-python",
+      "priority": 15,
+      "match": {
+        "domain": [
+          "data"
+        ],
+        "stack": [
+          "pandas",
+          "spark",
+          "airflow"
+        ],
+        "task_type": [
+          "feature",
+          "bugfix",
+          "migration"
+        ],
+        "language": [
+          "python",
+          "sql"
+        ]
+      },
+      "target": {
+        "role": "module-dev",
+        "capability_id": "builtin.skill.data-pipeline",
+        "executor": "coding-agent"
+      },
+      "handoff_roles": [
+        "qa-test",
+        "doc-manager"
+      ],
+      "required_checks": [
+        "backend-quick",
+        "projects"
+      ]
+    },
+    {
+      "id": "infra-high-risk",
+      "priority": 5,
+      "match": {
+        "domain": [
+          "infra",
+          "security"
+        ],
+        "task_type": [
+          "migration",
+          "security-hardening"
+        ],
+        "risk": [
+          "high"
+        ]
+      },
+      "target": {
+        "role": "security-review",
+        "capability_id": "builtin.agent.security-hardening",
+        "executor": "review-agent"
+      },
+      "handoff_roles": [
+        "module-dev",
+        "qa-test",
+        "release-manager"
+      ],
+      "required_checks": [
+        "backend-full",
+        "llm-check"
+      ],
+      "requires_human_confirmation": true
+    }
+  ]
+}

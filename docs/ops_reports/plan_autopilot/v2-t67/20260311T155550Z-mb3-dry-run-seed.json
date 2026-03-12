@@ -1,0 +1,16 @@
+{
+  "captured_at": "2026-03-11T15:55:50.848400+00:00",
+  "control_url": "http://127.0.0.1:8000",
+  "project_id": "proj_4ef9dd0e7f4d",
+  "task_id": "task_b4053a6f17b7",
+  "command_id": "cmd_2c6880575029",
+  "terminal_status": "failed",
+  "workflow_run_id": "wfr_065d14b4e991",
+  "orchestration_status": "blocked",
+  "workflow_next_action": "trigger_decompose_bootstrap",
+  "primary_recovery_action": "retry_with_decompose_payload",
+  "latest_found": true,
+  "latest_orchestration_status": "blocked",
+  "latest_next_action": "trigger_decompose_bootstrap",
+  "command_text": "/orchestrate Execute PLAN task V2-T67: implement capability lifecycle minimal APIs (`list/install/enable/disable/uninstall`). Mandatory order: update plan first, implement changes, run checks, update docs. Follow project rules from PLAN.md and agent.md. Do not guess ambiguous requirements; request clarification when blocked. --module-hints=requirements,implementation,testing,documentation --max-modules=6 --strategy=balanced --execute=true --force-redecompose=false --confirmed-by=owner"
+}

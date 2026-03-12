@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import timedelta
+from copy import deepcopy
 
 from control_center.models import (
     Artifact,
@@ -19,6 +19,26 @@ from control_center.models import (
 )
 from control_center.models.hierarchy import now_utc
 from control_center.services.sqlite_state_store import SQLiteStateStore
+from control_center.services.workflow_scheduler_dependencies import (
+    dependencies_satisfied,
+    normalize_dependency_update_ids,
+    select_pending_ready_for_transition,
+    validate_dependency_ids,
+)
+from control_center.services.workflow_scheduler_indexes import (
+    build_artifact_indexes,
+    build_discussion_indexes,
+    build_gate_indexes,
+    build_workitem_indexes,
+)
+from control_center.services.workflow_scheduler_status import (
+    build_scheduler_metrics,
+    derive_run_status,
+)
+from control_center.services.workflow_scheduler_discussion import (
+    mark_needs_discussion as mark_needs_discussion_impl,
+    resolve_discussion as resolve_discussion_impl,
+)
 
 
 class WorkflowScheduler:
@@ -77,41 +97,15 @@ class WorkflowScheduler:
         self._rebuild_indexes()
 
     def _rebuild_indexes(self) -> None:
-        self._run_workitems = defaultdict(list)
-        self._workitem_run = {}
-        self._workitem_discussions = defaultdict(list)
-        self._run_gate_checks = defaultdict(list)
-        self._workitem_gate_checks = defaultdict(list)
-        self._run_artifacts = defaultdict(list)
-        self._workitem_artifacts = defaultdict(list)
-
-        for item in sorted(self._workitems.values(), key=lambda value: value.created_at):
-            self._run_workitems[item.workflow_run_id].append(item.id)
-            self._workitem_run[item.id] = item.workflow_run_id
-
-        for session in sorted(
-            self._discussions.values(),
-            key=lambda value: (value.workitem_id, value.round, value.created_at),
-        ):
-            self._workitem_discussions[session.workitem_id].append(session.id)
-
-        for gate in sorted(
-            self._gate_checks.values(),
-            key=lambda value: (value.workitem_id, value.attempt, value.created_at),
-        ):
-            self._run_gate_checks[gate.workflow_run_id].append(gate.id)
-            self._workitem_gate_checks[gate.workitem_id].append(gate.id)
-
-        for artifact in sorted(self._artifacts.values(), key=lambda value: value.created_at):
-            run_id: str | None = None
-            if artifact.owner_type == ArtifactOwnerType.WORKITEM:
-                workitem_id = artifact.owner_id
-                self._workitem_artifacts[workitem_id].append(artifact.id)
-                run_id = self._workitem_run.get(workitem_id)
-            elif artifact.owner_type == ArtifactOwnerType.WORKFLOW_RUN:
-                run_id = artifact.owner_id
-            if run_id is not None:
-                self._run_artifacts[run_id].append(artifact.id)
+        self._run_workitems, self._workitem_run = build_workitem_indexes(self._workitems)
+        self._workitem_discussions = build_discussion_indexes(self._discussions)
+        self._run_gate_checks, self._workitem_gate_checks = build_gate_indexes(
+            self._gate_checks
+        )
+        self._run_artifacts, self._workitem_artifacts = build_artifact_indexes(
+            self._artifacts,
+            self._workitem_run,
+        )
 
     def _persist_run(self, run: WorkflowRun) -> None:
         if self._state_store is None:
@@ -308,70 +302,53 @@ class WorkflowScheduler:
         return [self._artifacts[item_id] for item_id in self._run_artifacts[run_id]]
 
     def get_metrics(self) -> dict[str, object]:
-        run_status_counts: dict[str, int] = {}
-        for run in self._runs.values():
-            key = run.status.value
-            run_status_counts[key] = run_status_counts.get(key, 0) + 1
-
-        workitem_status_counts: dict[str, int] = {}
-        for item in self._workitems.values():
-            key = item.status.value
-            workitem_status_counts[key] = workitem_status_counts.get(key, 0) + 1
-
-        gate_status_counts: dict[str, int] = {}
-        for gate in self._gate_checks.values():
-            key = gate.status.value
-            gate_status_counts[key] = gate_status_counts.get(key, 0) + 1
-
-        artifact_type_counts: dict[str, int] = {}
-        for artifact in self._artifacts.values():
-            key = artifact.artifact_type.value
-            artifact_type_counts[key] = artifact_type_counts.get(key, 0) + 1
-
-        return {
-            "total_runs": len(self._runs),
-            "run_status_counts": run_status_counts,
-            "total_workitems": len(self._workitems),
-            "workitem_status_counts": workitem_status_counts,
-            "total_gate_checks": len(self._gate_checks),
-            "gate_status_counts": gate_status_counts,
-            "total_artifacts": len(self._artifacts),
-            "artifact_type_counts": artifact_type_counts,
-        }
+        return build_scheduler_metrics(
+            runs=self._runs,
+            workitems=self._workitems,
+            gate_checks=self._gate_checks,
+            artifacts=self._artifacts,
+        )
 
     def tick(self, run_id: str) -> list[WorkItem]:
         run = self.get_run(run_id)
+        if run.status == WorkflowRunStatus.CANCELED:
+            return []
         ready: list[WorkItem] = []
-        for item_id in self._run_workitems[run_id]:
-            item = self._workitems[item_id]
-            if item.status != WorkItemStatus.PENDING:
-                continue
-            if self._dependencies_satisfied(item):
-                if item.requires_approval:
-                    item.status = WorkItemStatus.WAITING_APPROVAL
-                else:
-                    item.status = WorkItemStatus.READY
-                item.updated_at = now_utc()
-                self._persist_workitem(item)
-                if item.status == WorkItemStatus.READY:
-                    ready.append(item)
+        pending_ready = select_pending_ready_for_transition(
+            run_workitem_ids=self._run_workitems[run_id],
+            workitems=self._workitems,
+        )
+        for item in pending_ready:
+            if item.requires_approval:
+                item.status = WorkItemStatus.WAITING_APPROVAL
+            else:
+                item.status = WorkItemStatus.READY
+            item.updated_at = now_utc()
+            self._persist_workitem(item)
+            if item.status == WorkItemStatus.READY:
+                ready.append(item)
         self._refresh_run_status(run)
         return sorted(ready, key=lambda item: (item.priority, item.created_at))
 
     def start_workitem(self, workitem_id: str) -> WorkItem:
         item = self.get_workitem(workitem_id)
+        run = self.get_run(self._workitem_run[workitem_id])
+        if run.status == WorkflowRunStatus.CANCELED:
+            raise ValueError(f"workflow run {run.id} is canceled")
         if item.status != WorkItemStatus.READY:
             raise ValueError(f"workitem {workitem_id} is not ready")
         item.status = WorkItemStatus.RUNNING
         item.started_at = now_utc()
         item.updated_at = now_utc()
         self._persist_workitem(item)
-        run = self.get_run(self._workitem_run[workitem_id])
         self._refresh_run_status(run)
         return item
 
     def complete_workitem(self, workitem_id: str, *, success: bool) -> WorkItem:
         item = self.get_workitem(workitem_id)
+        run = self.get_run(self._workitem_run[workitem_id])
+        if run.status == WorkflowRunStatus.CANCELED:
+            raise ValueError(f"workflow run {run.id} is canceled")
         if item.status not in {WorkItemStatus.RUNNING, WorkItemStatus.READY}:
             raise ValueError(f"workitem {workitem_id} is not running")
         if item.started_at is None:
@@ -380,12 +357,14 @@ class WorkflowScheduler:
         item.finished_at = now_utc()
         item.updated_at = now_utc()
         self._persist_workitem(item)
-        run = self.get_run(self._workitem_run[workitem_id])
         self._refresh_run_status(run)
         return item
 
     def approve_workitem(self, workitem_id: str, *, approved_by: str) -> WorkItem:
         item = self.get_workitem(workitem_id)
+        run = self.get_run(self._workitem_run[workitem_id])
+        if run.status == WorkflowRunStatus.CANCELED:
+            raise ValueError(f"workflow run {run.id} is canceled")
         if not item.requires_approval:
             raise ValueError(f"workitem {workitem_id} does not require approval")
         if item.status != WorkItemStatus.WAITING_APPROVAL:
@@ -394,7 +373,6 @@ class WorkflowScheduler:
         item.updated_at = now_utc()
         item.metadata["approved_by"] = approved_by
         self._persist_workitem(item)
-        run = self.get_run(self._workitem_run[workitem_id])
         self._refresh_run_status(run)
         return item
 
@@ -408,87 +386,15 @@ class WorkflowScheduler:
         impact: str | None = None,
         fingerprint: str | None = None,
     ) -> DiscussionSession:
-        item = self.get_workitem(workitem_id)
-        if item.status not in {WorkItemStatus.RUNNING, WorkItemStatus.READY}:
-            raise ValueError(f"workitem {workitem_id} is not executable for discussion")
-
-        next_round = item.discussion_used + 1
-        if next_round > item.discussion_budget:
-            item.status = WorkItemStatus.FAILED
-            item.updated_at = now_utc()
-            item.metadata["discussion_error"] = "discussion_budget_exhausted"
-            self._persist_workitem(item)
-            exhausted = DiscussionSession(
-                workflow_run_id=item.workflow_run_id,
-                workitem_id=item.id,
-                status=DiscussionStatus.EXHAUSTED,
-                question=question,
-                options=options or [],
-                recommendation=recommendation,
-                impact=impact,
-                round=next_round,
-                budget=item.discussion_budget,
-                fingerprint=fingerprint,
-                opened_by_role=item.role,
-            )
-            self._save_discussion(exhausted)
-            run = self.get_run(self._workitem_run[workitem_id])
-            self._refresh_run_status(run)
-            return exhausted
-
-        fingerprints: list[str] = [
-            value
-            for value in item.metadata.get("discussion_fingerprints", [])
-            if isinstance(value, str)
-        ]
-        if fingerprint and fingerprint in fingerprints:
-            item.status = WorkItemStatus.FAILED
-            item.updated_at = now_utc()
-            item.metadata["discussion_error"] = "discussion_loop_detected"
-            self._persist_workitem(item)
-            exhausted = DiscussionSession(
-                workflow_run_id=item.workflow_run_id,
-                workitem_id=item.id,
-                status=DiscussionStatus.EXHAUSTED,
-                question=question,
-                options=options or [],
-                recommendation=recommendation,
-                impact=impact,
-                round=next_round,
-                budget=item.discussion_budget,
-                fingerprint=fingerprint,
-                opened_by_role=item.role,
-            )
-            self._save_discussion(exhausted)
-            run = self.get_run(self._workitem_run[workitem_id])
-            self._refresh_run_status(run)
-            return exhausted
-
-        item.discussion_used = next_round
-        item.status = WorkItemStatus.NEEDS_DISCUSSION
-        item.updated_at = now_utc()
-        if fingerprint:
-            fingerprints.append(fingerprint)
-        item.metadata["discussion_fingerprints"] = fingerprints
-        self._persist_workitem(item)
-
-        session = DiscussionSession(
-            workflow_run_id=item.workflow_run_id,
-            workitem_id=item.id,
-            status=DiscussionStatus.OPEN,
+        return mark_needs_discussion_impl(
+            self,
+            workitem_id,
             question=question,
-            options=options or [],
+            options=options,
             recommendation=recommendation,
             impact=impact,
-            round=next_round,
-            budget=item.discussion_budget,
             fingerprint=fingerprint,
-            opened_by_role=item.role,
         )
-        self._save_discussion(session)
-        run = self.get_run(self._workitem_run[workitem_id])
-        self._refresh_run_status(run)
-        return session
 
     def resolve_discussion(
         self,
@@ -498,40 +404,13 @@ class WorkflowScheduler:
         resolved_by_role: str,
         discussion_id: str | None = None,
     ) -> DiscussionSession:
-        item = self.get_workitem(workitem_id)
-        if item.status != WorkItemStatus.NEEDS_DISCUSSION:
-            raise ValueError(f"workitem {workitem_id} is not waiting discussion")
-
-        session = self._get_open_discussion(workitem_id, discussion_id)
-        now = now_utc()
-        timeout_at = session.created_at + timedelta(seconds=item.discussion_timeout_seconds)
-        if now > timeout_at:
-            session.status = DiscussionStatus.TIMEOUT
-            session.updated_at = now
-            item.status = WorkItemStatus.FAILED
-            item.updated_at = now
-            item.metadata["discussion_error"] = "discussion_timeout"
-            self._persist_discussion(session)
-            self._persist_workitem(item)
-            run = self.get_run(self._workitem_run[workitem_id])
-            self._refresh_run_status(run)
-            return session
-
-        session.status = DiscussionStatus.RESOLVED
-        session.decision = decision
-        session.resolved_by_role = resolved_by_role
-        session.updated_at = now
-
-        item.status = WorkItemStatus.READY
-        item.updated_at = now
-        item.metadata["discussion_decision"] = decision
-        item.metadata["discussion_resolved_by"] = resolved_by_role
-        item.metadata["discussion_resolved"] = True
-        self._persist_discussion(session)
-        self._persist_workitem(item)
-        run = self.get_run(self._workitem_run[workitem_id])
-        self._refresh_run_status(run)
-        return session
+        return resolve_discussion_impl(
+            self,
+            workitem_id,
+            decision=decision,
+            resolved_by_role=resolved_by_role,
+            discussion_id=discussion_id,
+        )
 
     def update_workitem_dependencies(
         self,
@@ -540,16 +419,17 @@ class WorkflowScheduler:
     ) -> WorkItem:
         item = self.get_workitem(workitem_id)
         run_id = self._workitem_run[workitem_id]
+        run = self.get_run(run_id)
+        if run.status == WorkflowRunStatus.CANCELED:
+            raise ValueError(f"workflow run {run.id} is canceled")
         self._validate_dependencies(run_id, dependency_ids)
-        normalized = [value.strip() for value in dependency_ids if value.strip()]
-        if item.id in normalized:
-            raise ValueError("workitem cannot depend on itself")
-        if len(set(normalized)) != len(normalized):
-            raise ValueError("dependency ids must not contain duplicates")
+        normalized = normalize_dependency_update_ids(
+            workitem_id=item.id,
+            dependency_ids=dependency_ids,
+        )
         item.depends_on = normalized
         item.updated_at = now_utc()
         self._persist_workitem(item)
-        run = self.get_run(run_id)
         self._refresh_run_status(run)
         return item
 
@@ -575,6 +455,100 @@ class WorkflowScheduler:
 
     def list_workitem_ids_by_status(self, run_id: str, status: WorkItemStatus) -> list[str]:
         return [item.id for item in self.list_workitems(run_id) if item.status == status]
+
+    def interrupt_run(
+        self,
+        run_id: str,
+        *,
+        requested_by: str | None = None,
+        reason: str | None = None,
+        skip_non_terminal_workitems: bool = True,
+    ) -> tuple[WorkflowRunStatus, WorkflowRunStatus, bool, list[str]]:
+        run = self.get_run(run_id)
+        previous_status = run.status
+        if run.status in {
+            WorkflowRunStatus.SUCCEEDED,
+            WorkflowRunStatus.FAILED,
+            WorkflowRunStatus.CANCELED,
+        }:
+            return previous_status, run.status, False, []
+
+        skipped_workitem_ids: list[str] = []
+        if skip_non_terminal_workitems:
+            for item in self.list_workitems(run_id):
+                if item.status in {
+                    WorkItemStatus.PENDING,
+                    WorkItemStatus.READY,
+                    WorkItemStatus.RUNNING,
+                    WorkItemStatus.NEEDS_DISCUSSION,
+                    WorkItemStatus.WAITING_APPROVAL,
+                }:
+                    item.status = WorkItemStatus.SKIPPED
+                    if item.started_at is None:
+                        item.started_at = now_utc()
+                    item.finished_at = now_utc()
+                    item.updated_at = now_utc()
+                    item.metadata["skip_reason"] = "workflow_run_interrupted"
+                    if requested_by:
+                        item.metadata["interrupt_requested_by"] = requested_by
+                    if reason:
+                        item.metadata["interrupt_reason"] = reason
+                    self._persist_workitem(item)
+                    skipped_workitem_ids.append(item.id)
+
+        run.status = WorkflowRunStatus.CANCELED
+        run.updated_at = now_utc()
+        run.metadata["interrupt"] = {
+            "requested_by": requested_by,
+            "reason": reason,
+            "applied": True,
+            "skip_non_terminal_workitems": bool(skip_non_terminal_workitems),
+            "skipped_workitem_ids": list(skipped_workitem_ids),
+        }
+        self._persist_run(run)
+        return previous_status, run.status, True, skipped_workitem_ids
+
+    def restart_run(
+        self,
+        run_id: str,
+        *,
+        requested_by: str | None = None,
+        reason: str | None = None,
+        copy_decomposition: bool = True,
+    ) -> tuple[WorkflowRun, bool]:
+        source_run = self.get_run(run_id)
+        if source_run.status not in {
+            WorkflowRunStatus.FAILED,
+            WorkflowRunStatus.SUCCEEDED,
+            WorkflowRunStatus.CANCELED,
+        }:
+            raise ValueError(
+                "restart is only allowed for terminal workflow runs: "
+                "failed/succeeded/canceled"
+            )
+
+        restarted_run = self.create_run(
+            project_id=source_run.project_id,
+            task_id=source_run.task_id,
+            template_id=source_run.template_id,
+            requested_by=requested_by or source_run.requested_by,
+            summary=source_run.summary,
+        )
+        restart_metadata: dict[str, object] = {
+            "source_run_id": source_run.id,
+            "requested_by": requested_by,
+            "reason": reason,
+            "copied_decomposition": False,
+        }
+        if copy_decomposition:
+            chief_decomposition = source_run.metadata.get("chief_decomposition")
+            if isinstance(chief_decomposition, dict):
+                restarted_run.metadata["chief_decomposition"] = deepcopy(chief_decomposition)
+                restart_metadata["copied_decomposition"] = True
+
+        restarted_run.metadata["restart"] = restart_metadata
+        self._persist_run(restarted_run)
+        return restarted_run, bool(restart_metadata["copied_decomposition"])
 
     def _save_discussion(self, session: DiscussionSession) -> None:
         self._discussions[session.id] = session
@@ -604,42 +578,21 @@ class WorkflowScheduler:
         raise ValueError(f"workitem {workitem_id} has no open discussion session")
 
     def _validate_dependencies(self, run_id: str, dependency_ids: list[str]) -> None:
-        for dependency_id in dependency_ids:
-            if dependency_id not in self._workitems:
-                raise ValueError(f"dependency workitem not found: {dependency_id}")
-            dependency_run_id = self._workitem_run.get(dependency_id)
-            if dependency_run_id != run_id:
-                raise ValueError(f"dependency workitem {dependency_id} is in another workflow run")
+        validate_dependency_ids(
+            run_id,
+            dependency_ids,
+            self._workitems,
+            self._workitem_run,
+        )
 
     def _dependencies_satisfied(self, item: WorkItem) -> bool:
-        if not item.depends_on:
-            return True
-        for dependency_id in item.depends_on:
-            dependency = self._workitems.get(dependency_id)
-            if dependency is None:
-                return False
-            if dependency.status not in {WorkItemStatus.SUCCEEDED, WorkItemStatus.SKIPPED}:
-                return False
-        return True
+        return dependencies_satisfied(item, self._workitems)
 
     def _refresh_run_status(self, run: WorkflowRun) -> None:
-        items = self.list_workitems(run.id)
-        if not items:
-            run.status = WorkflowRunStatus.PLANNING
-            run.updated_at = now_utc()
+        if run.status == WorkflowRunStatus.CANCELED:
             self._persist_run(run)
             return
-
-        statuses = {item.status for item in items}
-        if WorkItemStatus.FAILED in statuses:
-            run.status = WorkflowRunStatus.FAILED
-        elif WorkItemStatus.NEEDS_DISCUSSION in statuses:
-            run.status = WorkflowRunStatus.BLOCKED
-        elif WorkItemStatus.WAITING_APPROVAL in statuses:
-            run.status = WorkflowRunStatus.WAITING_APPROVAL
-        elif statuses.issubset({WorkItemStatus.SUCCEEDED, WorkItemStatus.SKIPPED}):
-            run.status = WorkflowRunStatus.SUCCEEDED
-        else:
-            run.status = WorkflowRunStatus.RUNNING
+        items = self.list_workitems(run.id)
+        run.status = derive_run_status(items)
         run.updated_at = now_utc()
         self._persist_run(run)

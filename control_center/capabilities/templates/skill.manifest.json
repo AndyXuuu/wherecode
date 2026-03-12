@@ -1,0 +1,65 @@
+{
+  "id": "builtin.skill.example",
+  "type": "skill",
+  "version": "0.1.0",
+  "owner": "wherecode",
+  "status": "draft",
+  "entry": {
+    "kind": "skill_bundle",
+    "path": "$CODEX_HOME/skills/example-skill/SKILL.md"
+  },
+  "runtime": {
+    "engine": "codex-skill",
+    "max_timeout_seconds": 15
+  },
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "goal"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "steps",
+      "artifacts"
+    ]
+  },
+  "error_contract": {
+    "codes": [
+      "missing_skill",
+      "invalid_skill_format",
+      "execution_failed"
+    ],
+    "retryable_codes": [
+      "execution_failed"
+    ]
+  },
+  "permission_contract": {
+    "filesystem": "readonly_skill_scope",
+    "network": "restricted",
+    "env": [],
+    "tools": [
+      "exec_command"
+    ]
+  },
+  "cost_budget": {
+    "max_tokens": 900,
+    "max_calls": 3
+  },
+  "observability": {
+    "events": [
+      "skill.load",
+      "skill.execute",
+      "skill.error"
+    ],
+    "metrics": [
+      "latency_ms",
+      "token_usage"
+    ]
+  },
+  "compatibility": {
+    "wherecode_min": "2.0.0",
+    "platform": "single-host"
+  }
+}

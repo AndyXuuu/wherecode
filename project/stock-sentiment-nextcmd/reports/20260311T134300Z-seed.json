@@ -1,0 +1,16 @@
+{
+  "captured_at": "2026-03-11T13:38:16.393879+00:00",
+  "mode": "local_rule_engine",
+  "status": "seeded",
+  "project_name_prefix": "stock-sentiment-nextcmd",
+  "requirements": "Build local stock sentiment project",
+  "module_hints": [
+    "crawl",
+    "sentiment",
+    "theme",
+    "industry",
+    "risk"
+  ],
+  "max_modules": 6,
+  "strategy": "balanced"
+}

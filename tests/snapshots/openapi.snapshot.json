@@ -89,6 +89,16 @@
             "title": "Agent",
             "type": "string"
           },
+          "agent_trace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentExecutionTrace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "discussion": {
             "anyOf": [
               {
@@ -149,6 +159,44 @@
         "title": "ActionLayerHealthResponse",
         "type": "object"
       },
+      "AgentExecutionTrace": {
+        "properties": {
+          "final_decision": {
+            "default": "",
+            "title": "Final Decision",
+            "type": "string"
+          },
+          "loop_state": {
+            "default": "",
+            "title": "Loop State",
+            "type": "string"
+          },
+          "standard": {
+            "default": "ReAct",
+            "title": "Standard",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/AgentTraceStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "version": {
+            "default": "1.0",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "title": "AgentExecutionTrace",
+        "type": "object"
+      },
       "AgentRoutingConfigResponse": {
         "properties": {
           "default_agent": {
@@ -188,6 +236,135 @@
           "default_agent"
         ],
         "title": "AgentRoutingConfigUpdateRequest",
+        "type": "object"
+      },
+      "AgentRuleEntry": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "executor": {
+            "title": "Executor",
+            "type": "string"
+          },
+          "profile_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Path"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "role",
+          "executor",
+          "scope"
+        ],
+        "title": "AgentRuleEntry",
+        "type": "object"
+      },
+      "AgentRulesRegistryResponse": {
+        "properties": {
+          "scopes": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/AgentRuleEntry"
+              },
+              "type": "array"
+            },
+            "title": "Scopes",
+            "type": "object"
+          },
+          "source_path": {
+            "title": "Source Path",
+            "type": "string"
+          },
+          "total_roles": {
+            "minimum": 0.0,
+            "title": "Total Roles",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "source_path",
+          "total_roles"
+        ],
+        "title": "AgentRulesRegistryResponse",
+        "type": "object"
+      },
+      "AgentTraceStep": {
+        "properties": {
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "index": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Index",
+            "type": "integer"
+          },
+          "phase": {
+            "default": "",
+            "title": "Phase",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "tool": {
+            "default": "",
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "title": "AgentTraceStep",
         "type": "object"
       },
       "ApproveCommandRequest": {
@@ -517,6 +694,43 @@
         "title": "CommandAcceptedResponse",
         "type": "object"
       },
+      "CommandOrchestratePolicyConfigResponse": {
+        "properties": {
+          "default_max_modules": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Default Max Modules",
+            "type": "integer"
+          },
+          "default_strategy": {
+            "title": "Default Strategy",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "prefixes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Prefixes",
+            "type": "array"
+          },
+          "restart_canceled_policy": {
+            "title": "Restart Canceled Policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "default_max_modules",
+          "default_strategy",
+          "restart_canceled_policy"
+        ],
+        "title": "CommandOrchestratePolicyConfigResponse",
+        "type": "object"
+      },
       "CommandSource": {
         "enum": [
           "user",
@@ -662,6 +876,228 @@
           "confirmed_by"
         ],
         "title": "ConfirmDecomposeBootstrapWorkflowResponse",
+        "type": "object"
+      },
+      "ContextMemoryDeleteResponse": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "namespace_id": {
+            "title": "Namespace Id",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "shared",
+              "project",
+              "run"
+            ],
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted",
+          "scope",
+          "namespace_id",
+          "key",
+          "deleted_at"
+        ],
+        "title": "ContextMemoryDeleteResponse",
+        "type": "object"
+      },
+      "ContextMemoryItemResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "namespace_id": {
+            "title": "Namespace Id",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "scope": {
+            "enum": [
+              "shared",
+              "project",
+              "run"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "title": "Updated By",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scope",
+          "namespace_id",
+          "key",
+          "created_at",
+          "updated_at",
+          "updated_by",
+          "version"
+        ],
+        "title": "ContextMemoryItemResponse",
+        "type": "object"
+      },
+      "ContextMemoryResolveResponse": {
+        "properties": {
+          "resolved_at": {
+            "format": "date-time",
+            "title": "Resolved At",
+            "type": "string"
+          },
+          "scope_chain": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scope Chain",
+            "type": "array"
+          },
+          "source_namespaces": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Source Namespaces",
+            "type": "object"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {},
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "resolved_at"
+        ],
+        "title": "ContextMemoryResolveResponse",
+        "type": "object"
+      },
+      "ContextMemoryUpsertRequest": {
+        "properties": {
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "scope": {
+            "enum": [
+              "shared",
+              "project",
+              "run"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "updated_by": {
+            "minLength": 1,
+            "title": "Updated By",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "scope",
+          "key",
+          "updated_by"
+        ],
+        "title": "ContextMemoryUpsertRequest",
         "type": "object"
       },
       "CreateCommandRequest": {
@@ -2298,6 +2734,83 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "InterruptWorkflowRunRequest": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "skip_non_terminal_workitems": {
+            "default": true,
+            "title": "Skip Non Terminal Workitems",
+            "type": "boolean"
+          }
+        },
+        "title": "InterruptWorkflowRunRequest",
+        "type": "object"
+      },
+      "InterruptWorkflowRunResponse": {
+        "properties": {
+          "interrupt_applied": {
+            "default": false,
+            "title": "Interrupt Applied",
+            "type": "boolean"
+          },
+          "previous_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "skipped_workitem_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skipped Workitem Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "previous_status",
+          "run_status"
+        ],
+        "title": "InterruptWorkflowRunResponse",
+        "type": "object"
+      },
       "MetricsAlertPolicy": {
         "properties": {
           "blocked_run_count_gte": {
@@ -3161,6 +3674,66 @@
         "title": "ResolveDiscussionRequest",
         "type": "object"
       },
+      "RestartWorkflowRunRequest": {
+        "properties": {
+          "copy_decomposition": {
+            "default": true,
+            "title": "Copy Decomposition",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          }
+        },
+        "title": "RestartWorkflowRunRequest",
+        "type": "object"
+      },
+      "RestartWorkflowRunResponse": {
+        "properties": {
+          "copied_decomposition": {
+            "default": false,
+            "title": "Copied Decomposition",
+            "type": "boolean"
+          },
+          "restarted_run_id": {
+            "title": "Restarted Run Id",
+            "type": "string"
+          },
+          "restarted_run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "source_run_id": {
+            "title": "Source Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_run_id",
+          "restarted_run_id",
+          "restarted_run_status"
+        ],
+        "title": "RestartWorkflowRunResponse",
+        "type": "object"
+      },
       "RollbackApprovalResponse": {
         "properties": {
           "approved_by": {
@@ -3635,6 +4208,223 @@
         ],
         "title": "TaskStatus",
         "type": "string"
+      },
+      "V2ReportActionSuggestion": {
+        "properties": {
+          "action_id": {
+            "default": "",
+            "title": "Action Id",
+            "type": "string"
+          },
+          "action_type": {
+            "default": "",
+            "title": "Action Type",
+            "type": "string"
+          },
+          "can_auto_execute": {
+            "default": false,
+            "title": "Can Auto Execute",
+            "type": "boolean"
+          },
+          "command": {
+            "default": "",
+            "title": "Command",
+            "type": "string"
+          },
+          "estimated_cost": {
+            "default": "",
+            "title": "Estimated Cost",
+            "type": "string"
+          },
+          "priority": {
+            "default": 1,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "requires_confirmation": {
+            "default": true,
+            "title": "Requires Confirmation",
+            "type": "boolean"
+          },
+          "runbook_ref": {
+            "default": "",
+            "title": "Runbook Ref",
+            "type": "string"
+          },
+          "score": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "title": "V2ReportActionSuggestion",
+        "type": "object"
+      },
+      "V2ReportCompactSummary": {
+        "properties": {
+          "action_required": {
+            "default": false,
+            "title": "Action Required",
+            "type": "boolean"
+          },
+          "alert_priority": {
+            "default": "",
+            "title": "Alert Priority",
+            "type": "string"
+          },
+          "decision": {
+            "default": "",
+            "title": "Decision",
+            "type": "string"
+          },
+          "primary_action_id": {
+            "default": "",
+            "title": "Primary Action Id",
+            "type": "string"
+          },
+          "risk_level": {
+            "default": "",
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "status_line": {
+            "default": "",
+            "title": "Status Line",
+            "type": "string"
+          },
+          "top_next_command": {
+            "default": "",
+            "title": "Top Next Command",
+            "type": "string"
+          },
+          "top_retry_hint": {
+            "default": "",
+            "title": "Top Retry Hint",
+            "type": "string"
+          }
+        },
+        "title": "V2ReportCompactSummary",
+        "type": "object"
+      },
+      "V2ReportFailureTaxonomy": {
+        "properties": {
+          "code": {
+            "default": "",
+            "title": "Code",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "severity": {
+            "default": "",
+            "title": "Severity",
+            "type": "string"
+          },
+          "stage": {
+            "default": "",
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "title": "V2ReportFailureTaxonomy",
+        "type": "object"
+      },
+      "V2ReportSummaryResponse": {
+        "properties": {
+          "captured_at": {
+            "default": "",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "compact": {
+            "$ref": "#/components/schemas/V2ReportCompactSummary"
+          },
+          "failure_taxonomy": {
+            "$ref": "#/components/schemas/V2ReportFailureTaxonomy"
+          },
+          "final_status": {
+            "default": "",
+            "title": "Final Status",
+            "type": "string"
+          },
+          "latest_pointer": {
+            "default": "",
+            "title": "Latest Pointer",
+            "type": "string"
+          },
+          "mode": {
+            "default": "",
+            "title": "Mode",
+            "type": "string"
+          },
+          "next_commands": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Commands",
+            "type": "array"
+          },
+          "primary_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/V2ReportActionSuggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prioritized_actions": {
+            "items": {
+              "$ref": "#/components/schemas/V2ReportActionSuggestion"
+            },
+            "title": "Prioritized Actions",
+            "type": "array"
+          },
+          "report_id": {
+            "default": "",
+            "title": "Report Id",
+            "type": "string"
+          },
+          "report_path": {
+            "title": "Report Path",
+            "type": "string"
+          },
+          "retry_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Retry Hints",
+            "type": "array"
+          },
+          "source_input": {
+            "title": "Source Input",
+            "type": "string"
+          },
+          "subproject_key": {
+            "default": "",
+            "title": "Subproject Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_input",
+          "report_path"
+        ],
+        "title": "V2ReportSummaryResponse",
+        "type": "object"
       },
       "ValidationError": {
         "properties": {
@@ -4820,6 +5610,27 @@
             ],
             "title": "Reason"
           },
+          "restarted_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restarted Run Id"
+          },
+          "restarted_run_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkflowRunStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "run_id": {
             "title": "Run Id",
             "type": "string"
@@ -5318,6 +6129,138 @@
         "title": "WorkflowRunOrchestrateTelemetrySnapshot",
         "type": "object"
       },
+      "WorkflowRunRoutingDecision": {
+        "properties": {
+          "capability_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capability Id"
+          },
+          "executor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executor"
+          },
+          "handoff_roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Handoff Roles",
+            "type": "array"
+          },
+          "module_key": {
+            "title": "Module Key",
+            "type": "string"
+          },
+          "required_checks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Checks",
+            "type": "array"
+          },
+          "requires_human_confirmation": {
+            "default": false,
+            "title": "Requires Human Confirmation",
+            "type": "boolean"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "signals": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Signals",
+            "type": "object"
+          },
+          "target_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Role"
+          }
+        },
+        "required": [
+          "module_key"
+        ],
+        "title": "WorkflowRunRoutingDecision",
+        "type": "object"
+      },
+      "WorkflowRunRoutingDecisionsResponse": {
+        "properties": {
+          "confirmation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmation Status"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRunRoutingDecision"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "has_routing_decisions": {
+            "default": false,
+            "title": "Has Routing Decisions",
+            "type": "boolean"
+          },
+          "module_count": {
+            "default": 0,
+            "title": "Module Count",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "source": {
+            "default": "none",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "WorkflowRunRoutingDecisionsResponse",
+        "type": "object"
+      },
       "WorkflowRunStatus": {
         "enum": [
           "planning",
@@ -5467,6 +6410,42 @@
         "summary": "Reload Agent Routing"
       }
     },
+    "/agent-rules": {
+      "get": {
+        "operationId": "get_agent_rules_agent_rules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRulesRegistryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Agent Rules"
+      }
+    },
+    "/agent-rules/reload": {
+      "post": {
+        "operationId": "reload_agent_rules_agent_rules_reload_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRulesRegistryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Reload Agent Rules"
+      }
+    },
     "/commands/{command_id}": {
       "get": {
         "operationId": "get_command_commands__command_id__get",
@@ -5553,6 +6532,426 @@
           }
         },
         "summary": "Approve Command"
+      }
+    },
+    "/config/command-orchestrate-policy": {
+      "get": {
+        "operationId": "get_command_orchestrate_policy_config_config_command_orchestrate_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandOrchestratePolicyConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Command Orchestrate Policy Config"
+      }
+    },
+    "/context/memory/items": {
+      "delete": {
+        "operationId": "delete_context_memory_item_context_memory_items_delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "enum": [
+                "shared",
+                "project",
+                "run"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "deleted_by",
+            "required": false,
+            "schema": {
+              "default": "system",
+              "title": "Deleted By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextMemoryDeleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Context Memory Item"
+      },
+      "get": {
+        "operationId": "get_context_memory_item_context_memory_items_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "enum": [
+                "shared",
+                "project",
+                "run"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextMemoryItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Context Memory Item"
+      },
+      "put": {
+        "operationId": "upsert_context_memory_item_context_memory_items_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextMemoryUpsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextMemoryItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upsert Context Memory Item"
+      }
+    },
+    "/context/memory/namespaces/{scope}/items": {
+      "get": {
+        "operationId": "list_context_memory_namespace_items_context_memory_namespaces__scope__items_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "enum": [
+                "shared",
+                "project",
+                "run"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "prefix",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Prefix"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContextMemoryItemResponse"
+                  },
+                  "title": "Response List Context Memory Namespace Items Context Memory Namespaces  Scope  Items Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Context Memory Namespace Items"
+      }
+    },
+    "/context/memory/resolve": {
+      "get": {
+        "operationId": "resolve_context_memory_context_memory_resolve_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Keys"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextMemoryResolveResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Context Memory"
       }
     },
     "/healthz": {
@@ -6238,6 +7637,229 @@
         "summary": "Export Metrics Verify Policy Registry"
       }
     },
+    "/ops/checks/latest": {
+      "get": {
+        "operationId": "get_latest_ops_check_run_ops_checks_latest_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Latest Ops Check Run Ops Checks Latest Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Latest Ops Check Run"
+      }
+    },
+    "/ops/checks/runs": {
+      "get": {
+        "operationId": "list_ops_check_runs_ops_checks_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Ops Check Runs Ops Checks Runs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Ops Check Runs"
+      },
+      "post": {
+        "operationId": "create_ops_check_run_ops_checks_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Ops Check Run Ops Checks Runs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Ops Check Run"
+      }
+    },
+    "/ops/checks/runs/{run_id}": {
+      "get": {
+        "operationId": "get_ops_check_run_ops_checks_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Ops Check Run Ops Checks Runs  Run Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ops Check Run"
+      }
+    },
+    "/ops/checks/scopes": {
+      "get": {
+        "operationId": "list_ops_check_scopes_ops_checks_scopes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Ops Check Scopes Ops Checks Scopes Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Ops Check Scopes"
+      }
+    },
     "/projects": {
       "get": {
         "operationId": "list_projects_projects_get",
@@ -6423,6 +8045,156 @@
           }
         },
         "summary": "Create Task"
+      }
+    },
+    "/reports/v2/summary": {
+      "get": {
+        "operationId": "get_v2_report_summary_reports_v2_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subproject",
+            "required": false,
+            "schema": {
+              "default": "stock-sentiment",
+              "title": "Subproject",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "report_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Report Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "report_path",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Report Path"
+            }
+          },
+          {
+            "in": "query",
+            "name": "latest_path",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Latest Path"
+            }
+          },
+          {
+            "in": "query",
+            "name": "compact",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Compact",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_actions",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "title": "Max Actions",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_score",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Min Score",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ReportSummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get V2 Report Summary"
       }
     },
     "/tasks/{task_id}": {
@@ -7142,6 +8914,55 @@
         "summary": "List Workflow Gate Checks"
       }
     },
+    "/v3/workflows/runs/{run_id}/interrupt": {
+      "post": {
+        "operationId": "interrupt_workflow_run_v3_workflows_runs__run_id__interrupt_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InterruptWorkflowRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterruptWorkflowRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Interrupt Workflow Run"
+      }
+    },
     "/v3/workflows/runs/{run_id}/orchestrate": {
       "post": {
         "operationId": "orchestrate_workflow_run_v3_workflows_runs__run_id__orchestrate_post",
@@ -7277,6 +9098,94 @@
           }
         },
         "summary": "Execute Orchestrate Recovery Action"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/restart": {
+      "post": {
+        "operationId": "restart_workflow_run_v3_workflows_runs__run_id__restart_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestartWorkflowRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestartWorkflowRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restart Workflow Run"
+      }
+    },
+    "/v3/workflows/runs/{run_id}/routing-decisions": {
+      "get": {
+        "operationId": "get_workflow_run_routing_decisions_v3_workflows_runs__run_id__routing_decisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunRoutingDecisionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Workflow Run Routing Decisions"
       }
     },
     "/v3/workflows/runs/{run_id}/tick": {

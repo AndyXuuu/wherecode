@@ -20,6 +20,11 @@ from action_layer.services.llm_executor import (
     OpenAICompatibleLLMExecutor,
     RoutedLLMExecutor,
 )
+from action_layer.services.runtime_execution import ActionRuntimeExecutionService
+from action_layer.services.agent_rules_registry_loader import (
+    load_agent_registry_mapping_from_file,
+    build_registry_mapping_with_fallback,
+)
 
 __all__ = [
     "AgentRegistry",
@@ -36,4 +41,7 @@ __all__ = [
     "OpenAICompatibleLLMExecutor",
     "OllamaLLMExecutor",
     "RoutedLLMExecutor",
+    "ActionRuntimeExecutionService",
+    "load_agent_registry_mapping_from_file",
+    "build_registry_mapping_with_fallback",
 ]

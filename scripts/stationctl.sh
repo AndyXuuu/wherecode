@@ -28,9 +28,18 @@ Commands:
   tst2-watch [--profile full|local] [--interval <seconds>] [--max-rounds <n>] [--strict]
   tst2-autopilot [--profile full|local] [--watch-interval <seconds>] [--watch-max-rounds <n>] [--strict]
   mb3-dry-run [control_url] [mb3-options]
+  main-orchestrate [control_url] [main-options]
+  plan-autopilot [autopilot-options]
+  orchestrate-policy [control_url]
+  v2-run [subproject_key] [v2-options]
+  v2-replay [subproject_key] [replay-options]
+  v2-report [subproject_key] [report-options]
+  subproject-generate [subproject_key] [--requirements <text>] [generate-options]
+  subproject-evolve [subproject_key] [stamp]
+  subproject-full-cycle [subproject_key] [--requirements <text>] [full-cycle-options]
   action-llm-check [action_layer_url] [role] [module_key] [text]
   readme-phase-sync [--dry-run] [--strict]
-  check [quick|dev|release|ops]
+  check [quick|dev|release|ops|evolve|main|v2]
   help
 
 Examples:
@@ -48,12 +57,32 @@ Examples:
   bash scripts/stationctl.sh tst2-watch --profile full --interval 60 --max-rounds 10
   bash scripts/stationctl.sh tst2-autopilot --profile full --watch-interval 60 --watch-max-rounds 120
   bash scripts/stationctl.sh mb3-dry-run
+  bash scripts/stationctl.sh main-orchestrate
+  bash scripts/stationctl.sh plan-autopilot
+  bash scripts/stationctl.sh plan-autopilot --max-tasks 3
+  bash scripts/stationctl.sh plan-autopilot --max-retries 0 --retry-interval 10
+  bash scripts/stationctl.sh orchestrate-policy
+  bash scripts/stationctl.sh v2-run stock-sentiment
+  bash scripts/stationctl.sh v2-replay stock-sentiment
+  bash scripts/stationctl.sh v2-replay --source-report docs/v2_reports/20260310T154715Z-stock-sentiment-v2-run.json --mode plan
+  bash scripts/stationctl.sh v2-report stock-sentiment
+  bash scripts/stationctl.sh v2-report stock-sentiment --compact
+  bash scripts/stationctl.sh v2-report --report-id 20260310T163704Z-stock-sentiment-v2-run
+  bash scripts/stationctl.sh v2-report --run-id wfr_20260310_example
+  bash scripts/stationctl.sh v2-report stock-sentiment --api --control-url http://127.0.0.1:8000
+  bash scripts/stationctl.sh v2-report --report docs/v2_reports/20260310T154715Z-stock-sentiment-v2-run.json
+  bash scripts/stationctl.sh subproject-generate stock-sentiment --requirements "build stock sentiment pipeline"
+  bash scripts/stationctl.sh subproject-evolve stock-sentiment
+  bash scripts/stationctl.sh subproject-full-cycle stock-sentiment --requirements "build stock sentiment pipeline"
   bash scripts/stationctl.sh action-llm-check http://127.0.0.1:8100
   bash scripts/stationctl.sh readme-phase-sync --strict
   bash scripts/stationctl.sh check
   bash scripts/stationctl.sh check quick
   bash scripts/stationctl.sh check release
   bash scripts/stationctl.sh check ops
+  bash scripts/stationctl.sh check evolve
+  bash scripts/stationctl.sh check main
+  bash scripts/stationctl.sh check v2
 EOF
 }
 
@@ -395,6 +424,117 @@ run_mb3_dry_run() {
   bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh" "$@"
 }
 
+run_main_orchestrate() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/main_orchestrate.sh" --dry-run "$@"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/main_orchestrate.sh" "$@"
+}
+
+run_plan_autopilot() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/plan_autopilot.sh" --dry-run "$@"
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/plan_autopilot.sh" "$@"
+}
+
+run_orchestrate_policy() {
+  local control_url="${1:-http://127.0.0.1:8000}"
+  local token="${WHERECODE_TOKEN:-change-me}"
+  local endpoint="${control_url%/}/config/command-orchestrate-policy"
+
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    echo "[dry-run] GET ${endpoint}"
+    return 0
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl not found. Install curl first."
+    return 1
+  fi
+
+  local body_file
+  body_file="$(mktemp)"
+  local http_code
+  http_code="$(
+    curl -sS -o "${body_file}" -w "%{http_code}" \
+      -H "X-WhereCode-Token: ${token}" \
+      "${endpoint}"
+  )"
+  if [[ "${http_code}" != "200" ]]; then
+    echo "failed to query orchestrate policy config (http ${http_code})"
+    cat "${body_file}"
+    rm -f "${body_file}"
+    return 1
+  fi
+
+  local python_bin=""
+  if [[ -x "${CONTROL_VENV_PYTHON}" ]]; then
+    python_bin="${CONTROL_VENV_PYTHON}"
+  elif command -v python3 >/dev/null 2>&1; then
+    python_bin="$(command -v python3)"
+  fi
+
+  if [[ -n "${python_bin}" ]]; then
+    "${python_bin}" - "${body_file}" <<'PY'
+import json
+import pathlib
+import sys
+
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+prefixes = payload.get("prefixes", [])
+print("command_orchestrate_policy")
+print(f"  enabled: {payload.get('enabled')}")
+print(f"  default_strategy: {payload.get('default_strategy')}")
+print(f"  default_max_modules: {payload.get('default_max_modules')}")
+print(f"  restart_canceled_policy: {payload.get('restart_canceled_policy')}")
+print(f"  prefixes: {', '.join(prefixes)}")
+PY
+  else
+    cat "${body_file}"
+  fi
+
+  rm -f "${body_file}"
+}
+
+run_v2() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/v2_run.sh" "$@" --mode plan
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/v2_run.sh" "$@"
+}
+
+run_v2_replay() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/v2_replay.sh" "$@" --dry-run
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/v2_replay.sh" "$@"
+}
+
+run_v2_report() {
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    bash "${ROOT_DIR}/scripts/v2_report_summary.sh" "$@" --dry-run
+    return 0
+  fi
+  bash "${ROOT_DIR}/scripts/v2_report_summary.sh" "$@"
+}
+
+run_subproject_evolve() {
+  bash "${ROOT_DIR}/scripts/go6_subproject_autoevolve.sh" "$@"
+}
+
+run_subproject_generate() {
+  bash "${ROOT_DIR}/scripts/go7_subproject_generate.sh" "$@"
+}
+
+run_subproject_full_cycle() {
+  bash "${ROOT_DIR}/scripts/go8_subproject_full_cycle.sh" "$@"
+}
+
 run_action_llm_check() {
   if [[ "${DRY_RUN}" -eq 1 ]]; then
     echo "[dry-run] bash ${ROOT_DIR}/scripts/action_layer_llm_check.sh $*"
@@ -410,11 +550,11 @@ run_readme_phase_sync() {
 run_check() {
   local scope="${1:-quick}"
   case "${scope}" in
-    quick|dev|release|ops)
+    quick|dev|release|ops|evolve|main|v2)
       ;;
     *)
       echo "unknown check scope: ${scope}"
-      echo "allowed: quick|dev|release|ops"
+      echo "allowed: quick|dev|release|ops|evolve|main|v2"
       return 1
       ;;
   esac
@@ -478,6 +618,51 @@ main() {
 
   if [[ "${command}" == "mb3-dry-run" ]]; then
     run_mb3_dry_run "$@"
+    return
+  fi
+
+  if [[ "${command}" == "main-orchestrate" ]]; then
+    run_main_orchestrate "$@"
+    return
+  fi
+
+  if [[ "${command}" == "plan-autopilot" ]]; then
+    run_plan_autopilot "$@"
+    return
+  fi
+
+  if [[ "${command}" == "orchestrate-policy" ]]; then
+    run_orchestrate_policy "$@"
+    return
+  fi
+
+  if [[ "${command}" == "v2-run" ]]; then
+    run_v2 "$@"
+    return
+  fi
+
+  if [[ "${command}" == "v2-replay" ]]; then
+    run_v2_replay "$@"
+    return
+  fi
+
+  if [[ "${command}" == "v2-report" ]]; then
+    run_v2_report "$@"
+    return
+  fi
+
+  if [[ "${command}" == "subproject-evolve" ]]; then
+    run_subproject_evolve "$@"
+    return
+  fi
+
+  if [[ "${command}" == "subproject-generate" ]]; then
+    run_subproject_generate "$@"
+    return
+  fi
+
+  if [[ "${command}" == "subproject-full-cycle" ]]; then
+    run_subproject_full_cycle "$@"
     return
   fi
 

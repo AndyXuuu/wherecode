@@ -46,6 +46,9 @@ class AgentProfileNotFoundError(FileNotFoundError):
 
 
 class AgentProfileLoader:
+    _STANDARD_PROFILE_FILE = "AGENTS.md"
+    _LEGACY_PROFILE_FILE = "agent.md"
+
     def __init__(self, profiles_root: str = "action_layer/agents") -> None:
         self._profiles_root = Path(profiles_root).resolve()
         self._audit_events: list[AgentProfileAuditEvent] = []
@@ -59,12 +62,22 @@ class AgentProfileLoader:
             raise ValueError("role must be a non-empty string")
         return normalized
 
-    def _allowed_profile_path(self, role: str) -> Path:
-        return (self._profiles_root / role / "agent.md").resolve()
+    def _allowed_profile_paths(self, role: str) -> tuple[Path, ...]:
+        role_root = (self._profiles_root / role).resolve()
+        return (
+            (role_root / self._STANDARD_PROFILE_FILE).resolve(),
+            (role_root / self._LEGACY_PROFILE_FILE).resolve(),
+        )
+
+    def _default_profile_path(self, role: str) -> Path:
+        for candidate in self._allowed_profile_paths(role):
+            if candidate.is_file():
+                return candidate
+        return self._allowed_profile_paths(role)[0]
 
     def _resolve_requested_path(self, role: str, requested_path: str | None) -> Path:
         if requested_path is None:
-            return self._allowed_profile_path(role)
+            return self._default_profile_path(role)
 
         requested = Path(requested_path)
         if not requested.is_absolute():
@@ -112,11 +125,12 @@ class AgentProfileLoader:
 
     def load(self, role: str, requested_path: str | None = None) -> AgentProfile:
         normalized_role = self._normalize_role(role)
-        allowed = self._allowed_profile_path(normalized_role)
-        requested = requested_path if requested_path is not None else str(allowed)
+        allowed_paths = self._allowed_profile_paths(normalized_role)
+        default_allowed = self._default_profile_path(normalized_role)
+        requested = requested_path if requested_path is not None else str(default_allowed)
         resolved = self._resolve_requested_path(normalized_role, requested_path)
 
-        if resolved != allowed:
+        if resolved not in allowed_paths:
             self._record_event(
                 action="deny",
                 role=normalized_role,
@@ -127,31 +141,31 @@ class AgentProfileLoader:
             raise AgentProfileAccessError(
                 role=normalized_role,
                 requested_path=requested,
-                allowed_path=str(allowed),
+                allowed_path=" | ".join(str(path) for path in allowed_paths),
             )
 
-        if not allowed.is_file():
+        if not resolved.is_file():
             self._record_event(
                 action="missing",
                 role=normalized_role,
                 requested_path=requested,
-                resolved_path=allowed,
+                resolved_path=resolved,
                 reason="profile_file_not_found",
             )
-            raise AgentProfileNotFoundError(role=normalized_role, expected_path=str(allowed))
+            raise AgentProfileNotFoundError(role=normalized_role, expected_path=str(resolved))
 
-        content = allowed.read_text(encoding="utf-8")
+        content = resolved.read_text(encoding="utf-8")
         profile_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         self._record_event(
             action="allow",
             role=normalized_role,
             requested_path=requested,
-            resolved_path=allowed,
+            resolved_path=resolved,
             reason="role_scoped_profile",
         )
         return AgentProfile(
             role=normalized_role,
-            path=str(allowed),
+            path=str(resolved),
             profile_hash=profile_hash,
             content=content,
         )

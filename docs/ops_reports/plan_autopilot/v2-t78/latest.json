@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-03-11T16:38:19.681384+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t78/20260311T163819Z-mb3-dry-run-seed.json",
+  "captured_at": "2026-03-11T16:38:19.680928+00:00",
+  "control_url": "http://127.0.0.1:8000",
+  "project_id": "proj_6e120566cbfd",
+  "task_id": "task_0345770ef261",
+  "command_id": "cmd_36388a88613b",
+  "terminal_status": "success",
+  "workflow_run_id": "wfr_d8ad57081fcb",
+  "orchestration_status": "executed",
+  "workflow_next_action": "wait_or_unblock_workitems",
+  "primary_recovery_action": "wait_or_unblock_workitems",
+  "latest_found": true,
+  "latest_orchestration_status": "executed",
+  "latest_next_action": "wait_or_unblock_workitems",
+  "command_text": "/orchestrate Execute PLAN task V2-T78: finalize docs for architecture/operations/acceptance evidence. Mandatory order: update plan first, implement changes, run checks, update docs. Follow project rules from PLAN.md and agent.md. Do not guess ambiguous requirements; request clarification when blocked. --module-hints=requirements,implementation,testing,documentation --max-modules=6 --strategy=balanced --execute=true --force-redecompose=false --confirmed-by=owner"
+}

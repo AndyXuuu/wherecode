@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-03-11T16:40:43.994653+00:00",
+  "run_id": "chk_aa46cb589d4b",
+  "scope": "v2",
+  "status": "success",
+  "requested_by": "check-all",
+  "started_at": "2026-03-11T16:40:42.766684+00:00",
+  "finished_at": "2026-03-11T16:40:43.994549+00:00",
+  "exit_code": 0,
+  "log_path": "/Users/andyxu/Documents/project/wherecode/.wherecode/check_runs/chk_aa46cb589d4b.log",
+  "command_text": "bash /Users/andyxu/Documents/project/wherecode/scripts/check_all_local.sh v2",
+  "message": "check run passed",
+  "last_output": "[1/5] backend quick checks\n[1/1] backend quick checks\n.......................................                                  [100%]\n39 passed in 0.45s\n[2/5] capability contract checks\n[capability-contract-check] ok\n[3/5] developer routing matrix checks\n[dev-routing-matrix-check] ok\n[4/5] v2 requirement-driven pipeline dry-run (subproject=stock-sentiment)\nv2_report=/Users/andyxu/Documents/project/wherecode/docs/v2_reports/20260311T164043Z-stock-sentiment-v2-run.json\nv2_latest=/Users/andyxu/Documents/project/wherecode/docs/v2_reports/latest_stock-sentiment_v2_run.json\nmode=plan\nworkflow_mode=test\nsubproject=stock-sentiment\nstatus=success\n[5/5] v2 report/status gate checks\nv2_gate=pass\nlatest_report=/Users/andyxu/Documents/project/wherecode/docs/v2_reports/latest_stock-sentiment_v2_run.json\nreport=/Users/andyxu/Documents/project/wherecode/docs/v2_reports/20260311T164043Z-stock-sentiment-v2-run.json\nsubproject=stock-sentiment\nmode=plan\nfinal_status=success\nv2_gate checks passed\nchecks passed (scope=v2)"
+}

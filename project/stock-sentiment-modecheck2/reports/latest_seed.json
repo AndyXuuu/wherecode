@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-03-11T13:28:58.747766+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck2/reports/20260311T133100Z-seed.json",
+  "captured_at": "2026-03-11T13:28:58.747358+00:00",
+  "mode": "local_rule_engine",
+  "status": "seeded",
+  "project_name_prefix": "stock-sentiment-modecheck2",
+  "requirements": "Build a local stock sentiment subproject with crawler sentiment theme industry risk report modules",
+  "module_hints": [
+    "crawl",
+    "sentiment",
+    "theme",
+    "industry",
+    "risk"
+  ],
+  "max_modules": 6,
+  "strategy": "balanced"
+}

@@ -1,0 +1,68 @@
+{
+  "id": "builtin.agent.example",
+  "type": "agent",
+  "version": "0.1.0",
+  "owner": "wherecode",
+  "status": "draft",
+  "entry": {
+    "kind": "agent_profile",
+    "path": "action_layer/agents/example/AGENTS.md"
+  },
+  "runtime": {
+    "engine": "action-layer",
+    "max_timeout_seconds": 30
+  },
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "module_key",
+      "task"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "status",
+      "summary"
+    ]
+  },
+  "error_contract": {
+    "codes": [
+      "invalid_input",
+      "execution_failed",
+      "timeout"
+    ],
+    "retryable_codes": [
+      "timeout"
+    ]
+  },
+  "permission_contract": {
+    "filesystem": "scoped",
+    "network": "restricted",
+    "env": [
+      "ACTION_LAYER_*"
+    ],
+    "tools": [
+      "exec_command"
+    ]
+  },
+  "cost_budget": {
+    "max_tokens": 1200,
+    "max_calls": 4
+  },
+  "observability": {
+    "events": [
+      "agent.start",
+      "agent.finish",
+      "agent.error"
+    ],
+    "metrics": [
+      "latency_ms",
+      "token_usage"
+    ]
+  },
+  "compatibility": {
+    "wherecode_min": "2.0.0",
+    "platform": "single-host"
+  }
+}

@@ -272,6 +272,30 @@ def test_command_orchestrate_policy_blocks_when_requirements_missing() -> None:
     assert workflow_state["workflow_run_id"].startswith("wfr_")
 
 
+def test_command_orchestrate_policy_requires_clarification_for_ambiguous_requirements() -> None:
+    project = client.post("/projects", json={"name": "cmd-orchestrate-clarification"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "cmd-orchestrate-clarification-task"},
+    ).json()
+
+    accepted = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={
+            "text": (
+                "/orchestrate implement tbd crawler and todo rules "
+                "--module-hints=crawl --execute=false"
+            ),
+        },
+    ).json()
+    terminal = wait_for_terminal(accepted["command_id"])
+    assert terminal["status"] == "failed"
+    assert "clarification required before orchestrate" in (terminal["error_message"] or "")
+    assert terminal["metadata"]["orchestration_status"] == "needs_clarification"
+    assert terminal["metadata"]["clarification_required"] is True
+    assert "tbd" in terminal["metadata"]["clarification_markers"]
+
+
 def test_command_orchestrate_latest_and_recover_contract(monkeypatch) -> None:
     monkeypatch.setattr(main_module, "action_layer", StubOrchestratePolicyActionLayer())
 
@@ -320,6 +344,139 @@ def test_command_orchestrate_latest_and_recover_contract(monkeypatch) -> None:
     assert recover_payload["confirmation"]["confirmation_status"] == "approved"
 
 
+def test_command_orchestrate_policy_restart_latest_canceled(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "action_layer", StubOrchestratePolicyActionLayer())
+
+    project = client.post("/projects", json={"name": "cmd-orch-restart-latest"}).json()
+    task = client.post(
+        f"/projects/{project['id']}/tasks",
+        json={"title": "cmd-orch-restart-latest-task"},
+    ).json()
+
+    first = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={
+            "text": (
+                "/orchestrate build crawl and sentiment pipeline "
+                "--module-hints=crawl,sentiment --max-modules=4 --execute=false"
+            ),
+            "requested_by": "owner",
+        },
+    ).json()
+    first_terminal = wait_for_terminal(first["command_id"])
+    assert first_terminal["status"] == "success"
+    first_run_id = first_terminal["metadata"]["workflow_run_id"]
+
+    interrupt = client.post(
+        f"/v3/workflows/runs/{first_run_id}/interrupt",
+        json={"requested_by": "owner", "reason": "manual stop before restart"},
+    )
+    assert interrupt.status_code == 200
+    assert interrupt.json()["run_status"] == "canceled"
+
+    second = client.post(
+        f"/tasks/{task['id']}/commands",
+        json={
+            "text": "/orchestrate --restart-latest-canceled=true --execute=false",
+            "requested_by": "owner",
+        },
+    ).json()
+    second_terminal = wait_for_terminal(second["command_id"])
+    assert second_terminal["status"] == "success"
+    assert second_terminal["metadata"]["orchestration_status"] in {"noop", "prepared"}
+    second_run_id = second_terminal["metadata"]["workflow_run_id"]
+    assert second_run_id.startswith("wfr_")
+    assert second_run_id != first_run_id
+    assert (
+        second_terminal["metadata"]["orchestration_restart_source_run_id"]
+        == first_run_id
+    )
+
+    state = second_terminal["metadata"]["workflow_state_latest"]
+    assert state["workflow_run_id"] == second_run_id
+    assert state["restart_source_run_id"] == first_run_id
+    assert state["restart_applied"] is True
+
+    second_run = client.get(f"/v3/workflows/runs/{second_run_id}")
+    assert second_run.status_code == 200
+    second_run_payload = second_run.json()
+    assert second_run_payload["metadata"]["restart"]["source_run_id"] == first_run_id
+
+    task_detail = client.get(f"/tasks/{task['id']}")
+    assert task_detail.status_code == 200
+    task_metadata = task_detail.json()["metadata"]
+    assert task_metadata["workflow_run_id_latest"] == second_run_id
+    assert task_metadata["workflow_run_restart_source"] == first_run_id
+    assert task_metadata["workflow_run_restart_applied"] is True
+
+
+def test_command_orchestrate_policy_auto_restart_when_no_requirements(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "action_layer", StubOrchestratePolicyActionLayer())
+    original_policy = main_module.command_orchestration_policy_service._restart_canceled_policy
+    main_module.command_orchestration_policy_service._restart_canceled_policy = (
+        "auto_if_no_requirements"
+    )
+    try:
+        project = client.post(
+            "/projects", json={"name": "cmd-orch-auto-restart-canceled"}
+        ).json()
+        task = client.post(
+            f"/projects/{project['id']}/tasks",
+            json={"title": "cmd-orch-auto-restart-canceled-task"},
+        ).json()
+
+        first = client.post(
+            f"/tasks/{task['id']}/commands",
+            json={
+                "text": (
+                    "/orchestrate build crawl and sentiment pipeline "
+                    "--module-hints=crawl,sentiment --max-modules=4 --execute=false"
+                ),
+                "requested_by": "owner",
+            },
+        ).json()
+        first_terminal = wait_for_terminal(first["command_id"])
+        assert first_terminal["status"] == "success"
+        first_run_id = first_terminal["metadata"]["workflow_run_id"]
+
+        interrupt = client.post(
+            f"/v3/workflows/runs/{first_run_id}/interrupt",
+            json={"requested_by": "owner", "reason": "manual stop before auto restart"},
+        )
+        assert interrupt.status_code == 200
+        assert interrupt.json()["run_status"] == "canceled"
+
+        second = client.post(
+            f"/tasks/{task['id']}/commands",
+            json={
+                "text": "/orchestrate --execute=false",
+                "requested_by": "owner",
+            },
+        ).json()
+        second_terminal = wait_for_terminal(second["command_id"])
+        assert second_terminal["status"] == "success"
+        second_run_id = second_terminal["metadata"]["workflow_run_id"]
+        assert second_run_id != first_run_id
+        assert (
+            second_terminal["metadata"]["orchestration_restart_source_run_id"]
+            == first_run_id
+        )
+        assert second_terminal["metadata"]["orchestration_restart_mode"] == (
+            "auto_if_no_requirements"
+        )
+        assert second_terminal["metadata"]["orchestration_restart_requested"] is True
+
+        workflow_state = second_terminal["metadata"]["workflow_state_latest"]
+        assert workflow_state["restart_source_run_id"] == first_run_id
+        assert workflow_state["restart_applied"] is True
+        assert workflow_state["restart_mode"] == "auto_if_no_requirements"
+        assert workflow_state["restart_requested"] is True
+    finally:
+        main_module.command_orchestration_policy_service._restart_canceled_policy = (
+            original_policy
+        )
+
+
 def test_approval_contract_status_transition() -> None:
     project = client.post("/projects", json={"name": "approval-contract"}).json()
     project_id = project["id"]
@@ -359,6 +516,68 @@ def test_reload_agent_routing_contract() -> None:
     assert len(payload["rules"]) >= 1
     first_rule = payload["rules"][0]
     assert {"id", "agent", "priority", "enabled", "keywords"}.issubset(first_rule.keys())
+
+
+def test_command_orchestrate_policy_config_contract() -> None:
+    response = client.get("/config/command-orchestrate-policy")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "enabled" in payload
+    assert "prefixes" in payload
+    assert "default_max_modules" in payload
+    assert "default_strategy" in payload
+    assert "restart_canceled_policy" in payload
+    assert isinstance(payload["prefixes"], list)
+    assert payload["restart_canceled_policy"] in {
+        "off",
+        "auto_if_no_requirements",
+        "always",
+    }
+
+
+def test_v2_report_summary_contract() -> None:
+    response = client.get("/reports/v2/summary", params={"subproject": "stock-sentiment"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert "source_input" in payload
+    assert "report_path" in payload
+    assert "report_id" in payload
+    assert "subproject_key" in payload
+    assert "mode" in payload
+    assert "final_status" in payload
+    assert "failure_taxonomy" in payload
+    assert "compact" in payload
+    assert "prioritized_actions" in payload
+    assert "primary_action" in payload
+    assert "retry_hints" in payload
+    assert "next_commands" in payload
+    taxonomy = payload["failure_taxonomy"]
+    assert {"code", "stage", "severity", "reason"}.issubset(taxonomy.keys())
+    compact = payload["compact"]
+    assert {
+        "status_line",
+        "action_required",
+        "alert_priority",
+        "decision",
+        "risk_level",
+        "primary_action_id",
+    }.issubset(compact.keys())
+    assert isinstance(payload["retry_hints"], list)
+    assert isinstance(payload["next_commands"], list)
+    assert isinstance(payload["prioritized_actions"], list)
+    if payload["prioritized_actions"]:
+        action = payload["prioritized_actions"][0]
+        assert {
+            "action_id",
+            "action_type",
+            "command",
+            "reason",
+            "score",
+            "runbook_ref",
+            "can_auto_execute",
+            "requires_confirmation",
+            "estimated_cost",
+        }.issubset(action.keys())
 
 
 def test_get_and_update_agent_routing_contract() -> None:

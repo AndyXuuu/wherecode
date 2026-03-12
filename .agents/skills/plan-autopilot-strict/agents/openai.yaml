@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Autopilot Strict"
+  short_description: "Gate mode: one repair attempt, stop or skip."
+  default_prompt: "Use $plan-autopilot-strict to run strict gate autopilot with one repair attempt."

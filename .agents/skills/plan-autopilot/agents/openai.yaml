@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Autopilot"
+  short_description: "Run PLAN.md tasks continuously via stationctl."
+  default_prompt: "Use $plan-autopilot to execute current sprint tasks until completion."

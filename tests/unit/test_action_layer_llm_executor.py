@@ -150,6 +150,51 @@ def test_openai_executor_calls_chat_completions_and_parses_json() -> None:
     assert result["discussion"]["options"] == ["a", "b", "c"]
 
 
+def test_openai_executor_parses_agent_trace_contract() -> None:
+    def fake_post(url, headers, payload, timeout_seconds):  # noqa: ANN001
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {
+                                "status": "success",
+                                "summary": "done",
+                                "agent_trace": {
+                                    "standard": "ReAct",
+                                    "version": "1.0",
+                                    "loop_state": "final",
+                                    "steps": [
+                                        {"phase": "plan", "content": "analyze"},
+                                        {"phase": "act", "content": "execute"},
+                                    ],
+                                    "final_decision": "success",
+                                },
+                            }
+                        )
+                    }
+                }
+            ]
+        }
+
+    config = LLMProviderConfig(
+        target="openai",
+        provider="openai-compatible",
+        base_url="https://api.openai.com",
+        model="gpt-4.1-mini",
+        api_key="sk-test",
+        timeout_seconds=10.0,
+        temperature=0.2,
+        max_tokens=256,
+        system_prompt="return json",
+    )
+    executor = OpenAICompatibleLLMExecutor(config, http_post=fake_post)
+    result = executor.execute({"text": "implement", "agent": "coding-agent"})
+    assert result["status"] == "success"
+    assert result["agent_trace"]["standard"] == "ReAct"
+    assert result["agent_trace"]["steps"][0]["phase"] == "plan"
+
+
 def test_openai_executor_calls_responses_and_parses_output_text() -> None:
     captured: dict[str, object] = {}
 

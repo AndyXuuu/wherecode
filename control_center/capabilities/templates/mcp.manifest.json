@@ -1,0 +1,65 @@
+{
+  "id": "builtin.mcp.example",
+  "type": "mcp",
+  "version": "0.1.0",
+  "owner": "wherecode",
+  "status": "draft",
+  "entry": {
+    "kind": "mcp_server",
+    "path": "mcp://example-server"
+  },
+  "runtime": {
+    "engine": "control-center",
+    "max_timeout_seconds": 20
+  },
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "operation",
+      "payload"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "status",
+      "data"
+    ]
+  },
+  "error_contract": {
+    "codes": [
+      "invalid_operation",
+      "upstream_unavailable",
+      "permission_denied"
+    ],
+    "retryable_codes": [
+      "upstream_unavailable"
+    ]
+  },
+  "permission_contract": {
+    "filesystem": "none",
+    "network": "allowlist",
+    "env": [],
+    "tools": [
+      "mcp"
+    ]
+  },
+  "cost_budget": {
+    "max_calls": 8
+  },
+  "observability": {
+    "events": [
+      "mcp.request",
+      "mcp.response",
+      "mcp.error"
+    ],
+    "metrics": [
+      "latency_ms",
+      "error_rate"
+    ]
+  },
+  "compatibility": {
+    "wherecode_min": "2.0.0",
+    "platform": "single-host"
+  }
+}

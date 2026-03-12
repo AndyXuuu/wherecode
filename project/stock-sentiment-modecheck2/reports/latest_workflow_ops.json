@@ -1,0 +1,16 @@
+{
+  "updated_at": "2026-03-11T13:28:59.058348+00:00",
+  "ops_log_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck2/reports/20260311T133100Z-workflow-ops.jsonl",
+  "last_event": {
+    "captured_at": "2026-03-11T13:28:59.058005+00:00",
+    "event": "file_write",
+    "stage": "report",
+    "status": "success",
+    "command": "write full-cycle summary report",
+    "detail": "",
+    "artifacts": [
+      "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck2/reports/20260311T133100Z-full-cycle.json",
+      "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-modecheck2/reports/latest_full_cycle.json"
+    ]
+  }
+}

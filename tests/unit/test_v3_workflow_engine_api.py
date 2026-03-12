@@ -217,6 +217,142 @@ def test_v3_workflow_engine_release_approval_switch() -> None:
         main_module.workflow_engine._release_requires_approval = False
 
 
+def test_v3_workflow_run_interrupt_cancels_execution() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_interrupt_api", "requested_by": "andy"},
+    ).json()
+    run_id = run["id"]
+
+    bootstrap = client.post(
+        f"/v3/workflows/runs/{run_id}/bootstrap",
+        json={"modules": ["auth"]},
+    )
+    assert bootstrap.status_code == 200
+
+    interrupt = client.post(
+        f"/v3/workflows/runs/{run_id}/interrupt",
+        json={
+            "requested_by": "owner",
+            "reason": "manual stop for reprioritization",
+            "skip_non_terminal_workitems": True,
+        },
+    )
+    assert interrupt.status_code == 200
+    interrupt_payload = interrupt.json()
+    assert interrupt_payload["previous_status"] == "running"
+    assert interrupt_payload["run_status"] == "canceled"
+    assert interrupt_payload["interrupt_applied"] is True
+    assert len(interrupt_payload["skipped_workitem_ids"]) >= 1
+
+    run_after_interrupt = client.get(f"/v3/workflows/runs/{run_id}")
+    assert run_after_interrupt.status_code == 200
+    assert run_after_interrupt.json()["status"] == "canceled"
+
+    execute_after_interrupt = client.post(
+        f"/v3/workflows/runs/{run_id}/execute",
+        json={"max_loops": 20},
+    )
+    assert execute_after_interrupt.status_code == 200
+    execute_payload = execute_after_interrupt.json()
+    assert execute_payload["run_status"] == "canceled"
+    assert execute_payload["executed_count"] == 0
+    assert execute_payload["failed_count"] == 0
+
+    interrupt_again = client.post(
+        f"/v3/workflows/runs/{run_id}/interrupt",
+        json={"reason": "second stop"},
+    )
+    assert interrupt_again.status_code == 200
+    assert interrupt_again.json()["interrupt_applied"] is False
+    assert interrupt_again.json()["run_status"] == "canceled"
+
+
+def test_v3_workflow_run_restart_after_interrupt() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_restart_api", "requested_by": "andy"},
+    ).json()
+    run_id = run["id"]
+
+    bootstrap = client.post(
+        f"/v3/workflows/runs/{run_id}/bootstrap",
+        json={"modules": ["auth"]},
+    )
+    assert bootstrap.status_code == 200
+
+    interrupt = client.post(
+        f"/v3/workflows/runs/{run_id}/interrupt",
+        json={"requested_by": "owner", "reason": "stop for restart"},
+    )
+    assert interrupt.status_code == 200
+    assert interrupt.json()["run_status"] == "canceled"
+
+    restart = client.post(
+        f"/v3/workflows/runs/{run_id}/restart",
+        json={"requested_by": "owner", "reason": "continue", "copy_decomposition": True},
+    )
+    assert restart.status_code == 200
+    restart_payload = restart.json()
+    assert restart_payload["source_run_id"] == run_id
+    restarted_run_id = restart_payload["restarted_run_id"]
+    assert restarted_run_id.startswith("wfr_")
+    assert restarted_run_id != run_id
+    assert restart_payload["restarted_run_status"] == "running"
+
+    restarted_run = client.get(f"/v3/workflows/runs/{restarted_run_id}")
+    assert restarted_run.status_code == 200
+    assert restarted_run.json()["status"] == "running"
+    assert restarted_run.json()["metadata"]["restart"]["source_run_id"] == run_id
+
+
+def test_v3_orchestrate_recover_restarts_canceled_run() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_orch_restart", "requested_by": "andy"},
+    ).json()
+    run_id = run["id"]
+
+    bootstrap = client.post(
+        f"/v3/workflows/runs/{run_id}/bootstrap",
+        json={"modules": ["auth"]},
+    )
+    assert bootstrap.status_code == 200
+    interrupt = client.post(
+        f"/v3/workflows/runs/{run_id}/interrupt",
+        json={"requested_by": "owner", "reason": "manual stop"},
+    )
+    assert interrupt.status_code == 200
+
+    orchestrate = client.post(
+        f"/v3/workflows/runs/{run_id}/orchestrate",
+        json={"strategy": "balanced", "execute": True},
+    )
+    assert orchestrate.status_code == 200
+    orchestrate_payload = orchestrate.json()
+    assert orchestrate_payload["orchestration_status"] == "blocked"
+    assert "workflow run is canceled" in (orchestrate_payload["reason"] or "")
+    machine = orchestrate_payload["decision_report"]["machine"]
+    assert machine["primary_recovery_action"] == "restart_workflow_run"
+
+    recover = client.post(
+        f"/v3/workflows/runs/{run_id}/orchestrate/recover",
+        json={"requested_by": "owner"},
+    )
+    assert recover.status_code == 200
+    recover_payload = recover.json()
+    assert recover_payload["selected_action"] == "restart_workflow_run"
+    assert recover_payload["action_status"] == "executed"
+    restarted_run_id = recover_payload["restarted_run_id"]
+    assert isinstance(restarted_run_id, str)
+    assert restarted_run_id.startswith("wfr_")
+    assert recover_payload["restarted_run_status"] == "running"
+
+    restarted_run = client.get(f"/v3/workflows/runs/{restarted_run_id}")
+    assert restarted_run.status_code == 200
+    assert restarted_run.json()["metadata"]["restart"]["source_run_id"] == run_id
+
+
 def test_v3_workflow_decompose_bootstrap_success(monkeypatch) -> None:
     run = client.post(
         "/v3/workflows/runs",
@@ -307,7 +443,32 @@ def test_v3_workflow_decompose_bootstrap_success(monkeypatch) -> None:
     assert chief_metadata["missing_task_package_modules"] == []
     assert chief_metadata["invalid_task_package_roles"] == {}
     assert chief_metadata["missing_task_package_roles"] == {}
+    assert "module_routing_decisions" in chief_metadata
+    routing_market = chief_metadata["module_routing_decisions"]["market-data"]
+    assert routing_market["target"]["role"] == "module-dev"
+    assert routing_market["target"]["capability_id"] == "builtin.skill.data-pipeline"
+    assert routing_market["target"]["executor"] == "coding-agent"
     assert chief_metadata["confirmation"]["status"] == "pending"
+
+    routing_pending = client.get(
+        f"/v3/workflows/runs/{run_id}/routing-decisions",
+    )
+    assert routing_pending.status_code == 200
+    routing_pending_payload = routing_pending.json()
+    assert routing_pending_payload["run_id"] == run_id
+    assert routing_pending_payload["source"] == "pending"
+    assert routing_pending_payload["has_routing_decisions"] is True
+    assert routing_pending_payload["module_count"] == 2
+    routing_pending_modules = {
+        item["module_key"]: item for item in routing_pending_payload["decisions"]
+    }
+    assert routing_pending_modules["market-data"]["rule_id"] == "data-pipeline-python"
+    assert routing_pending_modules["market-data"]["capability_id"] == "builtin.skill.data-pipeline"
+    assert routing_pending_modules["market-data"]["executor"] == "coding-agent"
+    assert routing_pending_modules["market-data"]["required_checks"] == [
+        "backend-quick",
+        "projects",
+    ]
 
     execute_before_confirm = client.post(
         f"/v3/workflows/runs/{run_id}/execute",
@@ -333,6 +494,33 @@ def test_v3_workflow_decompose_bootstrap_success(monkeypatch) -> None:
     assert confirm_payload["confirmation_status"] == "approved"
     assert confirm_payload["modules"] == ["market-data", "sentiment-crawl"]
     assert len(confirm_payload["workitems"]) == 11
+    module_dev_items = [
+        item
+        for item in confirm_payload["workitems"]
+        if item["module_key"] == "market-data" and item["role"] == "module-dev"
+    ]
+    assert len(module_dev_items) == 1
+    module_dev_meta = module_dev_items[0]["metadata"]
+    assert module_dev_meta["task_routing_capability_id"] == "builtin.skill.data-pipeline"
+    assert module_dev_meta["task_routing_executor"] == "coding-agent"
+    assert module_dev_meta["task_routing_rule_id"] == "data-pipeline-python"
+
+    qa_items = [
+        item
+        for item in confirm_payload["workitems"]
+        if item["module_key"] == "market-data" and item["role"] == "qa-test"
+    ]
+    assert len(qa_items) == 1
+    qa_meta = qa_items[0]["metadata"]
+    assert qa_meta["task_routing_required_checks"] == ["backend-quick", "projects"]
+
+    routing_after_confirm = client.get(
+        f"/v3/workflows/runs/{run_id}/routing-decisions",
+    )
+    assert routing_after_confirm.status_code == 200
+    routing_after_confirm_payload = routing_after_confirm.json()
+    assert routing_after_confirm_payload["source"] == "chief"
+    assert routing_after_confirm_payload["confirmation_status"] == "approved"
 
 
 def test_v3_workflow_decompose_bootstrap_pending_query_lifecycle(monkeypatch) -> None:
@@ -522,6 +710,8 @@ def test_v3_workflow_decompose_bootstrap_pending_query_after_reject(monkeypatch)
 
 
 def test_v3_workflow_decompose_bootstrap_rejects_empty_modules(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "DECOMPOSE_ALLOW_SYNTHETIC_FALLBACK", False)
+
     run = client.post(
         "/v3/workflows/runs",
         json={"project_id": "proj_decompose_empty", "requested_by": "owner"},
@@ -545,6 +735,48 @@ def test_v3_workflow_decompose_bootstrap_rejects_empty_modules(monkeypatch) -> N
     )
     assert response.status_code == 422
     assert response.json()["detail"] == "chief decomposition returned no modules"
+
+
+def test_v3_workflow_decompose_bootstrap_allows_synthetic_fallback_on_empty_modules(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(main_module, "DECOMPOSE_ALLOW_SYNTHETIC_FALLBACK", True)
+
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_decompose_empty_fallback", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+
+    stub_action_layer = StubChiefArchitectActionLayer(
+        ActionExecuteResponse(
+            status="success",
+            summary="no split available",
+            agent="chief-agent",
+            trace_id="act_decompose_002_fallback",
+            metadata={},
+        )
+    )
+    monkeypatch.setattr(main_module, "action_layer", stub_action_layer)
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/decompose-bootstrap",
+        json={
+            "requirements": "build crawl and daily report pipeline",
+            "module_hints": ["crawl", "report"],
+            "max_modules": 4,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["modules"]
+    assert payload["confirmation_required"] is True
+    assert payload["confirmation_status"] == "pending"
+    assert payload["chief_metadata"]["synthetic_fallback"] is True
+    assert (
+        payload["chief_metadata"]["synthetic_fallback_reason"]
+        == "chief decomposition returned no modules"
+    )
 
 
 def test_v3_workflow_decompose_bootstrap_rejects_non_success_status(monkeypatch) -> None:

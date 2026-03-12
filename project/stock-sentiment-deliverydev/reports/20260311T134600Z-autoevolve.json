@@ -1,0 +1,23 @@
+{
+  "captured_at": "2026-03-11T13:41:28.145237+00:00",
+  "mode": "local_rule_engine",
+  "run_id": "local_20260311T134128Z",
+  "final_status": "succeeded",
+  "sample_result": {
+    "sentiment_label": "positive",
+    "sentiment_score": 3.0,
+    "value_level": "high",
+    "industries": [],
+    "themes": [
+      "semiconductor"
+    ],
+    "risk_summary": "no obvious short-term risk keywords",
+    "evidence": [
+      "positive_hits=4",
+      "negative_hits=1",
+      "themes=semiconductor",
+      "industries=none",
+      "risks=none"
+    ]
+  }
+}

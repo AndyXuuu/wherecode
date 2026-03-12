@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-03-09T14:29:01.299375+00:00",
+  "version": "v2",
+  "benchmark": {
+    "targets": [
+      "openclaw",
+      "opencode",
+      "oh-my-opencode"
+    ],
+    "aligned_capabilities": [
+      "single_command_entry",
+      "plan_or_build_modes",
+      "autonomous_execution_loop",
+      "structured_run_artifacts",
+      "human_checkpoint_at_milestones"
+    ]
+  },
+  "run": {
+    "stamp": "20260309T142901Z",
+    "subproject_key": "stock-sentiment",
+    "mode": "plan",
+    "requested_by": "v2-run",
+    "final_status": "success"
+  },
+  "input": {
+    "requirement_file": "/Users/andyxu/Documents/project/wherecode/project/requirements/stock-sentiment.md",
+    "requirements": "Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance.",
+    "module_hints": "crawl,sentiment,entity-linking,industry,theme,risk,report",
+    "max_modules": 7,
+    "strategy": "balanced",
+    "execute": true,
+    "force_clean": true
+  },
+  "outputs": {
+    "full_cycle_status": "",
+    "workflow_run_id": "",
+    "full_cycle_report_path": ""
+  },
+  "logs": {
+    "plan_output": "[dry-run] control_url=http://127.0.0.1:8000\n[dry-run] project_name=main-orchestrate-20260309142901\n[dry-run] task_title=main project orchestration task\n[dry-run] command_text=/orchestrate Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance. --module-hints=requirements,decomposition,implementation,documentation,testing,release --max-modules=6 --strategy=balanced --execute=false --force-redecompose=false --confirmed-by=owner\n[dry-run] requested_by=main-orchestrate",
+    "build_output": ""
+  }
+}

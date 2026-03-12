@@ -1,0 +1,68 @@
+{
+  "updated_at": "2026-03-11T13:40:54.397603+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/docs/v2_reports/20260311T134500Z-stock-sentiment-deliverycheck-v2-run.json",
+  "captured_at": "2026-03-11T13:40:54.397189+00:00",
+  "version": "v2",
+  "benchmark": {
+    "targets": [
+      "openclaw",
+      "opencode",
+      "oh-my-opencode"
+    ],
+    "aligned_capabilities": [
+      "single_command_entry",
+      "plan_or_build_modes",
+      "autonomous_execution_loop",
+      "structured_run_artifacts",
+      "human_checkpoint_at_milestones"
+    ]
+  },
+  "run": {
+    "stamp": "20260311T134500Z",
+    "subproject_key": "stock-sentiment-deliverycheck",
+    "mode": "build",
+    "workflow_mode": "test",
+    "requested_by": "v2-run",
+    "final_status": "success"
+  },
+  "input": {
+    "requirement_file": "project/requirements/stock-sentiment.md",
+    "requirements": "Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance.",
+    "module_hints": "crawl,sentiment,entity-linking,industry,theme,risk,report",
+    "max_modules": 7,
+    "strategy": "balanced",
+    "execute": false,
+    "force_clean": true,
+    "workflow_mode": "test"
+  },
+  "outputs": {
+    "full_cycle_status": "succeeded",
+    "workflow_run_id": "local_20260311T134054Z",
+    "full_cycle_report_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-full-cycle.json",
+    "workflow_stage_executed": "acceptance",
+    "workflow_next_stage": "done",
+    "workflow_complete": true,
+    "workflow_next_command": "",
+    "workflow_ops_log_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-workflow-ops.jsonl",
+    "workflow_state_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/workflow_state.json"
+  },
+  "diagnosis": {
+    "failure_taxonomy": {
+      "code": "success",
+      "stage": "none",
+      "severity": "none",
+      "reason": "run completed successfully"
+    },
+    "retry_hints": [
+      "No retry required. Keep this report as baseline for next runs."
+    ],
+    "next_commands": [
+      "bash scripts/check_all.sh v2",
+      "bash scripts/stationctl.sh v2-replay stock-sentiment-deliverycheck --mode plan"
+    ]
+  },
+  "logs": {
+    "plan_output": "",
+    "build_output": "[go8 1/3] generate requirement-driven subproject\n[go8][test] event=command stage=generate status=start\n[go8][test] command=bash /Users/andyxu/Documents/project/wherecode/scripts/stationctl.sh subproject-generate stock-sentiment-deliverycheck --requirements <normalized> --module-hints crawl,sentiment,entity-linking,industry,theme,risk,report --max-modules 7 --strategy balanced --requested-by v2-run --execute false\nsubproject generated: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck\ncode scaffold ready: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/backend + /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/frontend\nmode: local_rule_engine\n[go8][test] event=command stage=generate status=success\n[go8][test] command=bash /Users/andyxu/Documents/project/wherecode/scripts/stationctl.sh subproject-generate stock-sentiment-deliverycheck --requirements <normalized> --module-hints crawl,sentiment,entity-linking,industry,theme,risk,report --max-modules 7 --strategy balanced --requested-by v2-run --execute false\n[go8][test] files=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/README.md, /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/evolve.json, /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/scripts/run.sh\n[go8 2/3] run standalone local flow\n[go8][test] event=command stage=standalone status=start\n[go8][test] command=bash /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/scripts/run.sh 20260311T134500Z\n..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\nsubproject checks passed: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck\nreport_written=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-seed.json\nlatest_summary=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/latest_seed.json\n..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-autoevolve.json\n{\"run_id\": \"local_20260311T134054Z\", \"final_status\": \"succeeded\", \"mode\": \"local_rule_engine\"}\nsubproject run done: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck\nreports: /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports\n[go8][test] event=command stage=standalone status=success\n[go8][test] command=bash /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/scripts/run.sh 20260311T134500Z\n[go8][test] files=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/latest_autoevolve.json\n[go8 3/3] write acceptance report\n[go8][test] event=file_write stage=report status=success\n[go8][test] command=write full-cycle summary report\n[go8][test] files=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-full-cycle.json, /Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/latest_full_cycle.json\nfull_cycle_report=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-full-cycle.json\nlatest_full_cycle=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/latest_full_cycle.json\nmode=local_rule_engine\nmodel_dependency=false\nworkflow_mode=test\nworkflow_stage_executed=acceptance\nworkflow_next_stage=done\nworkflow_complete=true\nworkflow_state_path=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/workflow_state.json\nworkflow_ops_log_path=/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-workflow-ops.jsonl\nfinal_status=succeeded\nworkflow_run_id=local_20260311T134054Z\ncode_ready=true\ncode_file_count=13"
+  }
+}

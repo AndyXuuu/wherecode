@@ -1,0 +1,16 @@
+{
+  "project_name_prefix": "stock-sentiment-nextcmd",
+  "task_title": "stock-sentiment-nextcmd autonomous task",
+  "requirements": "Build local stock sentiment project",
+  "module_hints": [
+    "crawl",
+    "sentiment",
+    "theme",
+    "industry",
+    "risk"
+  ],
+  "max_modules": 6,
+  "strategy": "balanced",
+  "requested_by": "go8-full-cycle",
+  "execute": false
+}

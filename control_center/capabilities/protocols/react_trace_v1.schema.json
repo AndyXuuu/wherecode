@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wherecode://protocols/react_trace/v1",
+  "title": "WhereCode ReAct Trace Protocol v1",
+  "type": "object",
+  "required": [
+    "standard",
+    "version",
+    "loop_state",
+    "steps",
+    "final_decision",
+    "truncated"
+  ],
+  "properties": {
+    "standard": {
+      "type": "string",
+      "const": "ReAct"
+    },
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "loop_state": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "acting",
+        "observing",
+        "needs_discussion",
+        "final"
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/AgentTraceStep"
+      }
+    },
+    "final_decision": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "needs_discussion"
+      ]
+    },
+    "truncated": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "AgentTraceStep": {
+      "type": "object",
+      "required": [
+        "index",
+        "phase",
+        "content"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "plan",
+            "act",
+            "observe",
+            "final"
+          ]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "tool": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error",
+            "needs_discussion",
+            "skipped"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AgentStandardMetadata": {
+      "type": "object",
+      "required": [
+        "protocol",
+        "version",
+        "trace_schema"
+      ],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "const": "ReAct"
+        },
+        "version": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "trace_schema": {
+          "type": "string",
+          "const": "wherecode://protocols/react_trace/v1"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -12,7 +12,7 @@ Usage:
 
 Scopes:
   quick     core workflow/unit checks for daily iteration (default)
-  full      full backend pytest suite
+  full      full main-backend pytest suite (`tests/` only)
 EOF
 }
 
@@ -34,7 +34,7 @@ run_quick() {
 }
 
 run_full() {
-  "${BACKEND_PYTHON}" -m pytest -q
+  "${BACKEND_PYTHON}" -m pytest -q tests
 }
 
 case "${SCOPE}" in

@@ -2,119 +2,170 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONTROL_URL="${CHECK_ALL_CONTROL_URL:-${WHERECODE_CONTROL_URL:-http://127.0.0.1:8000}}"
+TOKEN="${CHECK_ALL_TOKEN:-${WHERECODE_TOKEN:-change-me}}"
+REQUESTED_BY="${CHECK_ALL_REQUESTED_BY:-check-all}"
+WAIT_TIMEOUT_SECONDS="${CHECK_ALL_WAIT_TIMEOUT_SECONDS:-3600}"
+ASYNC_MODE="false"
+JSON_OUTPUT="false"
+FORCE_LOCAL="${CHECK_ALL_FORCE_LOCAL:-false}"
 
 usage() {
-  cat <<'EOF'
+  cat <<'EOF_USAGE'
 Usage:
-  bash scripts/check_all.sh [scope]
+  bash scripts/check_all.sh [scope] [options]
 
 Scopes:
-  quick      backend quick checks (default)
-  dev        alias of quick
-  release    backend full + command_center + project checks
-  ops        go5 ops checkpoint (default profile quick)
-  all        alias of release (legacy)
-  backend    backend full tests only
-  backend-quick backend quick checks only
-  backend-full  backend full tests only
-  llm-check  action-layer llm check only
-  frontend   command_center build only
-  projects   standalone project checks only
-EOF
+  quick|dev|release|ops|evolve|main|v2|all|backend|backend-quick|backend-full|llm-check|frontend|projects
+
+Options:
+  --async                     create check run and return immediately
+  --timeout <seconds>         wait timeout for sync mode (default: 3600)
+  --control-url <url>         control center url
+  --token <token>             auth token (X-WhereCode-Token)
+  --requested-by <name>       requester label
+  --json                      print raw API response
+  --local                     force local direct execution (check_all_local.sh)
+  -h, --help
+
+Examples:
+  bash scripts/check_all.sh v2
+  bash scripts/check_all.sh release --async
+  bash scripts/check_all.sh main --control-url http://127.0.0.1:8000
+EOF_USAGE
 }
 
-run_project_checks() {
-  local project_dir="${ROOT_DIR}/project"
-  local found=0
-  if [[ ! -d "${project_dir}" ]]; then
-    echo "[projects] no project directory, skip"
-    return
-  fi
-  while IFS= read -r check_script; do
-    found=1
-    local rel_path="${check_script#${ROOT_DIR}/}"
-    echo "[projects] ${rel_path}"
-    bash "${check_script}"
-  done < <(find "${project_dir}" -mindepth 2 -maxdepth 4 -type f -path "*/scripts/check.sh" | sort)
-  if [[ "${found}" -eq 0 ]]; then
-    echo "[projects] no scripts/check.sh found, skip"
-  fi
-}
+scope="quick"
+scope_set="false"
 
-run_llm_check_gate() {
-  local action_layer_url="${CHECK_ALL_ACTION_LAYER_URL:-http://127.0.0.1:8100}"
-  local role="${CHECK_ALL_LLM_ROLE:-module-dev}"
-  local module_key="${CHECK_ALL_LLM_MODULE_KEY:-check_all/llm_check}"
-  local text="${CHECK_ALL_LLM_TEXT:-run check_all llm check and return short summary}"
-  bash "${ROOT_DIR}/scripts/action_layer_llm_check.sh" \
-    "${action_layer_url}" \
-    "${role}" \
-    "${module_key}" \
-    "${text}"
-}
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --async)
+      ASYNC_MODE="true"
+      ;;
+    --timeout)
+      WAIT_TIMEOUT_SECONDS="${2:-}"
+      shift
+      ;;
+    --control-url)
+      CONTROL_URL="${2:-}"
+      shift
+      ;;
+    --token)
+      TOKEN="${2:-}"
+      shift
+      ;;
+    --requested-by)
+      REQUESTED_BY="${2:-}"
+      shift
+      ;;
+    --json)
+      JSON_OUTPUT="true"
+      ;;
+    --local)
+      FORCE_LOCAL="true"
+      ;;
+    -h|--help|help)
+      usage
+      exit 0
+      ;;
+    -* )
+      echo "unknown option: $1"
+      usage
+      exit 1
+      ;;
+    *)
+      if [[ "${scope_set}" == "true" ]]; then
+        echo "unexpected argument: $1"
+        usage
+        exit 1
+      fi
+      scope="$1"
+      scope_set="true"
+      ;;
+  esac
+  shift
+done
 
-run_quick_checks() {
-  echo "[1/1] backend quick checks"
-  bash "${ROOT_DIR}/scripts/check_backend.sh" quick
-}
+if [[ "${FORCE_LOCAL}" == "true" ]]; then
+  bash "${ROOT_DIR}/scripts/check_all_local.sh" "${scope}"
+  exit $?
+fi
 
-run_backend_full_checks() {
-  echo "[1/1] backend full tests"
-  bash "${ROOT_DIR}/scripts/check_backend.sh" full
-}
+wait_seconds="${WAIT_TIMEOUT_SECONDS}"
+if [[ "${ASYNC_MODE}" == "true" ]]; then
+  wait_seconds="0"
+fi
 
-SCOPE="${1:-quick}"
-case "${SCOPE}" in
-  quick|dev)
-    run_quick_checks
-    ;;
-  release|all)
-    echo "[1/4] backend full baseline"
-    run_backend_full_checks
-    echo "[2/4] command-center build (pnpm)"
-    bash "${ROOT_DIR}/scripts/check_command_center.sh"
-    echo "[3/4] standalone project checks"
-    run_project_checks
-    echo "[4/4] release baseline done"
-    ;;
-  ops)
-    local_profile="${CHECK_ALL_OPS_PROFILE:-quick}"
-    echo "[ops] go5 ops checkpoint (profile=${local_profile})"
-    bash "${ROOT_DIR}/scripts/go5_ops_checkpoint.sh" "${local_profile}"
-    ;;
-  backend)
-    echo "[backend] full tests"
-    bash "${ROOT_DIR}/scripts/check_backend.sh" full
-    ;;
-  backend-quick)
-    echo "[backend-quick] quick checks"
-    bash "${ROOT_DIR}/scripts/check_backend.sh" quick
-    ;;
-  backend-full)
-    echo "[backend-full] full tests"
-    bash "${ROOT_DIR}/scripts/check_backend.sh" full
-    ;;
-  llm-check)
-    echo "[llm-check] action-layer llm check"
-    run_llm_check_gate
-    ;;
-  frontend)
-    echo "[frontend] command center build (pnpm)"
-    bash "${ROOT_DIR}/scripts/check_command_center.sh"
-    ;;
-  projects)
-    echo "[projects] standalone project checks"
-    run_project_checks
-    ;;
-  -h|--help|help)
-    usage
-    exit 0
-    ;;
-  *)
-    echo "unknown scope: ${SCOPE}"
-    usage
-    exit 1
-    ;;
-esac
+payload="$({
+  python3 - "${scope}" "${REQUESTED_BY}" "${wait_seconds}" <<'PY'
+import json
+import sys
 
-echo "checks passed (scope=${SCOPE})"
+scope = sys.argv[1].strip()
+requested_by = sys.argv[2].strip() or "check-all"
+wait_seconds = int(sys.argv[3])
+print(
+    json.dumps(
+        {
+            "scope": scope,
+            "requested_by": requested_by,
+            "wait_seconds": wait_seconds,
+        },
+        ensure_ascii=False,
+    )
+)
+PY
+})"
+
+response="$(curl -fsS -X POST "${CONTROL_URL}/ops/checks/runs" \
+  -H "Content-Type: application/json" \
+  -H "X-WhereCode-Token: ${TOKEN}" \
+  -d "${payload}")"
+
+if [[ "${JSON_OUTPUT}" == "true" ]]; then
+  printf '%s\n' "${response}"
+fi
+
+parsed="$({
+  python3 - <<'PY' "${response}"
+import json
+import sys
+
+payload = json.loads(sys.argv[1])
+print(str(payload.get("run_id") or ""))
+print(str(payload.get("scope") or ""))
+print(str(payload.get("status") or ""))
+print(str(payload.get("message") or ""))
+print(str(payload.get("log_path") or ""))
+print(str(payload.get("report_path") or ""))
+print(str(payload.get("started_at") or ""))
+print(str(payload.get("finished_at") or ""))
+PY
+})"
+
+run_id="$(echo "${parsed}" | sed -n '1p')"
+run_scope="$(echo "${parsed}" | sed -n '2p')"
+run_status="$(echo "${parsed}" | sed -n '3p')"
+run_message="$(echo "${parsed}" | sed -n '4p')"
+run_log_path="$(echo "${parsed}" | sed -n '5p')"
+run_report_path="$(echo "${parsed}" | sed -n '6p')"
+run_started_at="$(echo "${parsed}" | sed -n '7p')"
+run_finished_at="$(echo "${parsed}" | sed -n '8p')"
+
+echo "check_run_id=${run_id}"
+echo "scope=${run_scope}"
+echo "status=${run_status}"
+[[ -n "${run_message}" ]] && echo "message=${run_message}"
+[[ -n "${run_started_at}" ]] && echo "started_at=${run_started_at}"
+[[ -n "${run_finished_at}" ]] && echo "finished_at=${run_finished_at}"
+[[ -n "${run_log_path}" ]] && echo "log_path=${run_log_path}"
+[[ -n "${run_report_path}" ]] && echo "report_path=${run_report_path}"
+
+if [[ "${ASYNC_MODE}" == "true" ]]; then
+  exit 0
+fi
+
+if [[ "${run_status}" != "success" ]]; then
+  exit 1
+fi

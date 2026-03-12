@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wherecode.local/schemas/capability_contract.schema.json",
+  "title": "WhereCode Capability Contract",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "version",
+    "owner",
+    "status",
+    "entry",
+    "runtime",
+    "input_schema",
+    "output_schema",
+    "error_contract",
+    "permission_contract",
+    "cost_budget",
+    "observability",
+    "compatibility"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "agent",
+        "mcp",
+        "skill"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "disabled"
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "engine"
+      ],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "error_contract": {
+      "type": "object"
+    },
+    "permission_contract": {
+      "type": "object"
+    },
+    "cost_budget": {
+      "type": "object"
+    },
+    "observability": {
+      "type": "object"
+    },
+    "compatibility": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

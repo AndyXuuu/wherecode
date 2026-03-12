@@ -65,6 +65,11 @@ def test_bootstrap_creates_expected_workitems() -> None:
     roles = [item.role for item in result.workitems]
     assert roles.count("module-dev") == 2
     assert roles[-3:] == ["integration-test", "acceptance", "release-manager"]
+    global_items = [item for item in result.workitems if item.module_key == "global"]
+    assert len(global_items) == 3
+    for item in global_items:
+        assert item.metadata.get("task_source") == "chief_decomposition"
+        assert item.metadata.get("task_objective") == f"execute {item.role} stage for global"
 
 
 def test_execute_until_blocked_succeeds_for_all_workitems() -> None:
@@ -164,3 +169,17 @@ def test_release_requires_approval_blocks_then_resumes() -> None:
     assert "acceptance_report" in artifact_types
     assert "release_note" in artifact_types
     assert "rollback_plan" in artifact_types
+
+
+def test_execute_until_blocked_returns_canceled_after_interrupt() -> None:
+    scheduler = WorkflowScheduler()
+    engine = WorkflowEngine(scheduler=scheduler, action_executor=_ok_executor)
+    run = scheduler.create_run(project_id="proj_interrupt")
+    engine.bootstrap_standard_pipeline(run.id, ["auth"])
+
+    scheduler.interrupt_run(run.id, requested_by="owner", reason="manual stop")
+
+    response = asyncio.run(engine.execute_until_blocked(run.id, max_loops=20))
+    assert response.run_status == "canceled"
+    assert response.executed_count == 0
+    assert response.failed_count == 0

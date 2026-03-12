@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-03-08T15:47:57.416215+00:00",
+  "run_id": "chk_ec7bf2cf4156",
+  "scope": "quick",
+  "status": "success",
+  "requested_by": "test",
+  "started_at": "2026-03-08T15:47:56.450340+00:00",
+  "finished_at": "2026-03-08T15:47:57.415911+00:00",
+  "exit_code": 0,
+  "log_path": "/Users/andyxu/Documents/project/wherecode/.wherecode/check_runs/chk_ec7bf2cf4156.log",
+  "command_text": "bash /Users/andyxu/Documents/project/wherecode/scripts/check_all_local.sh quick",
+  "message": "check run passed",
+  "last_output": "[1/1] backend quick checks\n.................................                                        [100%]\n33 passed in 0.39s\nchecks passed (scope=quick)"
+}

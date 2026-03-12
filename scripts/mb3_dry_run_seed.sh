@@ -7,7 +7,7 @@ AUTH_TOKEN="${WHERECODE_TOKEN:-change-me}"
 
 PROJECT_NAME="${MB3_DRY_RUN_PROJECT_NAME:-mb3-stock-sentiment-$(date -u +%Y%m%d%H%M%S)}"
 TASK_TITLE="${MB3_DRY_RUN_TASK_TITLE:-mb3 stock sentiment dry-run task}"
-REQUIREMENTS="${MB3_DRY_RUN_REQUIREMENTS:-build stock sentiment pipeline with opinion crawl, sentiment scoring, theme and industry analysis, and risk summary output}"
+REQUIREMENTS="${MB3_DRY_RUN_REQUIREMENTS:-build stock sentiment pipeline with opinion crawl, sentiment scoring, AI value assessment, industry analysis, theme analysis, and risk summary output}"
 MODULE_HINTS="${MB3_DRY_RUN_MODULE_HINTS:-crawl,sentiment,theme,industry,risk}"
 MAX_MODULES="${MB3_DRY_RUN_MAX_MODULES:-6}"
 STRATEGY="${MB3_DRY_RUN_STRATEGY:-balanced}"

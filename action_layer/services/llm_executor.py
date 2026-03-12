@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import json
 import os
-import time
 from dataclasses import dataclass
 from typing import Callable
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
-from uuid import uuid4
+
+from action_layer.services.llm_executor_exceptions import (
+    LLMConfigurationError,
+    LLMExecutionError,
+)
+from action_layer.services.llm_executor_runtime_helpers import (
+    default_http_post as _default_http_post,
+    extract_message_content as _extract_message_content,
+    extract_ollama_content as _extract_ollama_content,
+    extract_responses_content as _extract_responses_content,
+    format_prompt_payload as _format_prompt_payload,
+    parse_llm_text_response as _parse_llm_text_response,
+    select_route_target as _select_route_target,
+    validate_route_targets as _validate_route_targets,
+)
 
 
 SUPPORTED_STATUSES = {"success", "failed", "needs_discussion"}
@@ -19,17 +30,9 @@ DEFAULT_SYSTEM_PROMPT = (
     "Return strict JSON object only with keys: "
     "status (success|failed|needs_discussion), summary (string), "
     "discussion (optional object with question/options/recommendation/impact/fingerprint), "
-    "metadata (optional object)."
+    "metadata (optional object), "
+    "agent_trace (optional object with standard/version/loop_state/steps/final_decision/truncated)."
 )
-
-
-class LLMConfigurationError(ValueError):
-    pass
-
-
-class LLMExecutionError(RuntimeError):
-    pass
-
 
 @dataclass(frozen=True, slots=True)
 class LLMProviderConfig:
@@ -88,9 +91,15 @@ class LLMRoutingConfig:
 
         role_routes = _load_route_mapping("ACTION_LAYER_LLM_ROUTE_BY_ROLE_JSON")
         module_routes = _load_route_mapping("ACTION_LAYER_LLM_ROUTE_BY_MODULE_PREFIX_JSON")
-        _validate_route_targets(role_routes, targets, "ACTION_LAYER_LLM_ROUTE_BY_ROLE_JSON")
         _validate_route_targets(
-            module_routes, targets, "ACTION_LAYER_LLM_ROUTE_BY_MODULE_PREFIX_JSON"
+            role_routes,
+            targets,
+            source="ACTION_LAYER_LLM_ROUTE_BY_ROLE_JSON",
+        )
+        _validate_route_targets(
+            module_routes,
+            targets,
+            source="ACTION_LAYER_LLM_ROUTE_BY_MODULE_PREFIX_JSON",
         )
 
         return cls(
@@ -258,7 +267,7 @@ def _load_targets_from_env() -> dict[str, LLMProviderConfig]:
         "base_url": base_url,
         "model": model,
         "api_key": os.getenv("ACTION_LAYER_LLM_API_KEY"),
-        "timeout_seconds": os.getenv("ACTION_LAYER_LLM_TIMEOUT_SECONDS", "30"),
+        "timeout_seconds": os.getenv("ACTION_LAYER_LLM_TIMEOUT_SECONDS", "120"),
         "temperature": os.getenv("ACTION_LAYER_LLM_TEMPERATURE", "0.2"),
         "max_tokens": os.getenv("ACTION_LAYER_LLM_MAX_TOKENS", "800"),
         "system_prompt": os.getenv("ACTION_LAYER_LLM_SYSTEM_PROMPT", DEFAULT_SYSTEM_PROMPT),
@@ -285,261 +294,6 @@ def _load_route_mapping(env_name: str) -> dict[str, str]:
             raise LLMConfigurationError(f"{env_name} contains empty key/target")
         output[normalized_key] = normalized_target
     return output
-
-
-def _validate_route_targets(
-    routes: dict[str, str],
-    targets: dict[str, LLMProviderConfig],
-    source: str,
-) -> None:
-    for route_key, target in routes.items():
-        if target not in targets:
-            raise LLMConfigurationError(
-                f"{source} route={route_key} references unknown target={target}"
-            )
-
-
-def _default_http_post(
-    url: str,
-    headers: dict[str, str],
-    payload: dict[str, object],
-    timeout_seconds: float,
-) -> dict[str, object]:
-    body_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    effective_headers = dict(headers)
-    has_user_agent = any(str(key).lower() == "user-agent" for key in effective_headers)
-    if not has_user_agent:
-        effective_headers["User-Agent"] = os.getenv(
-            "ACTION_LAYER_LLM_USER_AGENT",
-            "wherecode-action-layer/0.1",
-        ).strip() or "wherecode-action-layer/0.1"
-    try:
-        max_retries = int(os.getenv("ACTION_LAYER_LLM_MAX_RETRIES", "2"))
-    except ValueError:
-        max_retries = 2
-    if max_retries < 0:
-        max_retries = 0
-    try:
-        retry_delay = float(os.getenv("ACTION_LAYER_LLM_RETRY_DELAY_SECONDS", "0.6"))
-    except ValueError:
-        retry_delay = 0.6
-    if retry_delay < 0:
-        retry_delay = 0.0
-
-    response_body = ""
-    for attempt in range(max_retries + 1):
-        request = Request(url=url, data=body_bytes, headers=effective_headers, method="POST")
-        try:
-            with urlopen(request, timeout=timeout_seconds) as response:
-                response_body = response.read().decode("utf-8")
-                break
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="ignore").strip()
-            can_retry = exc.code >= 500 and attempt < max_retries
-            if can_retry:
-                time.sleep(retry_delay)
-                continue
-            raise LLMExecutionError(
-                f"llm provider request failed: HTTP {exc.code} {detail}".strip()
-            ) from exc
-        except URLError as exc:
-            can_retry = attempt < max_retries
-            if can_retry:
-                time.sleep(retry_delay)
-                continue
-            raise LLMExecutionError(f"llm provider unavailable: {exc}") from exc
-
-    try:
-        response_json = json.loads(response_body)
-    except json.JSONDecodeError as exc:
-        raise LLMExecutionError("llm provider returned invalid json response") from exc
-
-    if not isinstance(response_json, dict):
-        raise LLMExecutionError("llm provider returned unexpected response object")
-    return response_json
-
-
-def _extract_message_content(chat_response: dict[str, object]) -> str:
-    choices = chat_response.get("choices")
-    if not isinstance(choices, list) or not choices:
-        raise LLMExecutionError("llm provider response missing choices")
-    first = choices[0]
-    if not isinstance(first, dict):
-        raise LLMExecutionError("llm provider response malformed choice")
-
-    message = first.get("message")
-    if not isinstance(message, dict):
-        raise LLMExecutionError("llm provider response missing message")
-
-    content = message.get("content")
-    if isinstance(content, str):
-        return content.strip()
-    if isinstance(content, list):
-        parts: list[str] = []
-        for item in content:
-            if isinstance(item, dict):
-                text = item.get("text")
-                if isinstance(text, str) and text.strip():
-                    parts.append(text.strip())
-        if parts:
-            return "\n".join(parts).strip()
-    raise LLMExecutionError("llm provider message content is empty")
-
-
-def _extract_responses_content(response_payload: dict[str, object]) -> str:
-    output_text = response_payload.get("output_text")
-    if isinstance(output_text, str) and output_text.strip():
-        return output_text.strip()
-
-    output_items = response_payload.get("output")
-    if not isinstance(output_items, list):
-        raise LLMExecutionError("responses api output is missing")
-    parts: list[str] = []
-    for item in output_items:
-        if not isinstance(item, dict):
-            continue
-        content_items = item.get("content")
-        if not isinstance(content_items, list):
-            continue
-        for content in content_items:
-            if not isinstance(content, dict):
-                continue
-            text = content.get("text")
-            if isinstance(text, str) and text.strip():
-                parts.append(text.strip())
-    if parts:
-        return "\n".join(parts).strip()
-
-    raise LLMExecutionError("responses api content is empty")
-
-
-def _extract_ollama_content(response_payload: dict[str, object]) -> str:
-    message = response_payload.get("message")
-    if isinstance(message, dict):
-        content = message.get("content")
-        if isinstance(content, str) and content.strip():
-            return content.strip()
-    response_text = response_payload.get("response")
-    if isinstance(response_text, str) and response_text.strip():
-        return response_text.strip()
-    raise LLMExecutionError("ollama response content is empty")
-
-
-def _extract_json_object(text: str) -> dict[str, object] | None:
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        parsed = None
-    if isinstance(parsed, dict):
-        return parsed
-
-    start = text.find("{")
-    end = text.rfind("}")
-    if start < 0 or end <= start:
-        return None
-    snippet = text[start : end + 1]
-    try:
-        parsed = json.loads(snippet)
-    except json.JSONDecodeError:
-        return None
-    if isinstance(parsed, dict):
-        return parsed
-    return None
-
-
-def _sanitize_discussion(value: object) -> dict[str, object] | None:
-    if not isinstance(value, dict):
-        return None
-
-    question = value.get("question")
-    if not isinstance(question, str) or not question.strip():
-        return None
-
-    raw_options = value.get("options")
-    options: list[str] = []
-    if isinstance(raw_options, list):
-        for item in raw_options:
-            if isinstance(item, str) and item.strip():
-                options.append(item.strip())
-            if len(options) >= 3:
-                break
-
-    output: dict[str, object] = {
-        "question": question.strip(),
-        "options": options,
-    }
-
-    recommendation = value.get("recommendation")
-    if isinstance(recommendation, str) and recommendation.strip():
-        output["recommendation"] = recommendation.strip()
-    impact = value.get("impact")
-    if isinstance(impact, str) and impact.strip():
-        output["impact"] = impact.strip()
-    fingerprint = value.get("fingerprint")
-    if isinstance(fingerprint, str) and fingerprint.strip():
-        output["fingerprint"] = fingerprint.strip()
-    return output
-
-
-def _format_prompt_payload(payload: dict[str, object], fallback_agent: str) -> dict[str, object]:
-    agent = str(payload.get("agent", "")).strip() or fallback_agent
-    return {
-        "text": str(payload.get("text", "")).strip(),
-        "role": payload.get("role"),
-        "module_key": payload.get("module_key"),
-        "requested_by": payload.get("requested_by"),
-        "task_id": payload.get("task_id"),
-        "project_id": payload.get("project_id"),
-        "agent": agent,
-    }
-
-
-def _parse_llm_text_response(
-    assistant_text: str,
-    *,
-    provider_config: LLMProviderConfig,
-    endpoint: str,
-    agent: str,
-    route_target: str,
-) -> dict[str, object]:
-    parsed = _extract_json_object(assistant_text)
-    metadata: dict[str, object] = {
-        "llm_target": route_target,
-        "llm_provider": provider_config.provider,
-        "llm_model": provider_config.model,
-        "llm_endpoint": endpoint,
-    }
-
-    discussion: dict[str, object] | None = None
-    if isinstance(parsed, dict):
-        status = str(parsed.get("status", "success")).strip().lower() or "success"
-        if status not in SUPPORTED_STATUSES:
-            status = "success"
-
-        summary = parsed.get("summary")
-        if not isinstance(summary, str) or not summary.strip():
-            summary = assistant_text[:280].strip() or "execution completed"
-
-        parsed_metadata = parsed.get("metadata")
-        if isinstance(parsed_metadata, dict):
-            metadata.update(parsed_metadata)
-
-        discussion = _sanitize_discussion(parsed.get("discussion"))
-    else:
-        status = "success"
-        summary = assistant_text[:280].strip() or "execution completed"
-        metadata["llm_parse_fallback"] = True
-
-    result: dict[str, object] = {
-        "status": status,
-        "summary": summary,
-        "agent": agent,
-        "trace_id": f"act_{uuid4().hex[:12]}",
-        "metadata": metadata,
-    }
-    if discussion is not None and status == "needs_discussion":
-        result["discussion"] = discussion
-    return result
 
 
 class OpenAICompatibleLLMExecutor:
@@ -614,7 +368,9 @@ class OpenAICompatibleLLMExecutor:
         )
         result = _parse_llm_text_response(
             assistant_text,
-            provider_config=self._config,
+            supported_statuses=SUPPORTED_STATUSES,
+            provider=self._config.provider,
+            model=self._config.model,
             endpoint=endpoint,
             agent=agent,
             route_target=self._config.target,
@@ -669,7 +425,9 @@ class OllamaLLMExecutor:
         assistant_text = _extract_ollama_content(response_payload)
         return _parse_llm_text_response(
             assistant_text,
-            provider_config=self._config,
+            supported_statuses=SUPPORTED_STATUSES,
+            provider=self._config.provider,
+            model=self._config.model,
             endpoint=endpoint,
             agent=agent,
             route_target=self._config.target,
@@ -730,16 +488,9 @@ class RoutedLLMExecutor:
         return result
 
     def _select_target(self, payload: dict[str, object]) -> tuple[str, str]:
-        module_key = str(payload.get("module_key", "")).strip().lower()
-        if module_key:
-            for prefix, target in self._config.module_prefix_routes.items():
-                if module_key.startswith(prefix):
-                    return target, f"module_prefix:{prefix}"
-
-        role = str(payload.get("role", "")).strip().lower()
-        if role and role in self._config.role_routes:
-            return self._config.role_routes[role], f"role:{role}"
-
-        if not self._config.default_target:
-            raise LLMExecutionError("default llm target is not configured")
-        return self._config.default_target, "default"
+        return _select_route_target(
+            payload,
+            module_prefix_routes=self._config.module_prefix_routes,
+            role_routes=self._config.role_routes,
+            default_target=self._config.default_target,
+        )

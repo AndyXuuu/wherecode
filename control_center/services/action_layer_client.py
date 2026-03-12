@@ -39,14 +39,22 @@ class ActionLayerClient:
         json: dict[str, object] | None = None,
     ) -> dict[str, object]:
         url = f"{self._base_url}{path}"
+        timeout = httpx.Timeout(
+            timeout=self._timeout_seconds,
+            connect=min(self._timeout_seconds, 10.0),
+        )
         try:
-            async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.request(method, url, json=json)
                 response.raise_for_status()
                 payload = response.json()
                 if not isinstance(payload, dict):
                     raise ActionLayerClientError("action layer returned unexpected response")
                 return payload
+        except httpx.ReadTimeout as exc:
+            raise ActionLayerClientError(
+                f"action layer unavailable: ReadTimeout after {self._timeout_seconds:.1f}s"
+            ) from exc
         except httpx.HTTPStatusError as exc:
             raise ActionLayerClientError(
                 f"action layer request failed: HTTP {exc.response.status_code}"

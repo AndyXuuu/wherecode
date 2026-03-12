@@ -1,0 +1,20 @@
+{
+  "updated_at": "2026-03-11T13:40:54.013267+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/project/stock-sentiment-deliverycheck/reports/20260311T134500Z-seed.json",
+  "captured_at": "2026-03-11T13:40:54.012922+00:00",
+  "mode": "local_rule_engine",
+  "status": "seeded",
+  "project_name_prefix": "stock-sentiment-deliverycheck",
+  "requirements": "Build a local runnable stock sentiment analysis project for A-share market. 1. Daily opinion/news collection. 2. Sentiment classification (positive/neutral/negative). 3. Entity linking to stock codes and names. 4. Industry analysis. 5. Theme/topic analysis. 6. Risk tag extraction. 7. Daily report generation (json + markdown). - Subproject should run independently. - Subproject should be rebuildable from this requirement. - Main project orchestrates generation/execution/acceptance.",
+  "module_hints": [
+    "crawl",
+    "sentiment",
+    "entity-linking",
+    "industry",
+    "theme",
+    "risk",
+    "report"
+  ],
+  "max_modules": 7,
+  "strategy": "balanced"
+}

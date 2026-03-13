@@ -1,6 +1,6 @@
 # WhereCode V3 Project Plan
 
-Updated: 2026-03-12
+Updated: 2026-03-13
 
 ## 1. Goal
 
@@ -21,9 +21,9 @@ Build V3 as a control plane for autonomous software delivery:
   - acceptance/done gate
   - report/evidence API
 - Execution Plane (External engines):
-  - OpenCode adapter
-  - OhMyOpenCode adapter
-  - optional fallback adapter (local codex-compatible)
+  - Single OpenCode adapter
+  - Strategy routing: `native|ohmy`
+  - role policy source: `.agents/policies/role_routing.v3.json`
 - Artifact Plane:
   - run state
   - stage artifacts
@@ -51,32 +51,35 @@ Each stage must produce artifacts; otherwise next stage is blocked.
 
 | ID | Target | Scope | Exit Gate |
 | --- | --- | --- | --- |
-| V3-M1 | Week 1 | control-plane contract freeze | APIs/schemas for run state, stage artifacts, done gate locked |
-| V3-M2 | Week 2 | OpenCode/OhMy adapters | both adapters callable by role routing with unified result schema |
-| V3-M3 | Week 3 | clarification-first + no-guess | ambiguous requirement must enter `clarifying`; unresolved blocks implement |
-| V3-M4 | Week 4 | SDD runtime loop | full SDD stage chain runnable with artifact gates |
-| V3-M5 | Week 5 | acceptance gate hardening | done requires evidence package + required checks pass |
-| V3-M6 | Week 6 | remote visibility | mobile/API can query run timeline, stage status, artifacts, and reports |
+| V3-M1 | Week 1 | overlap de-dup baseline | overlap audit published; duplicated execution scope marked delegated |
+| V3-M2 | Week 2 | adapter-first integration | single OpenCode adapter callable from control-plane with unified result schema and `native|ohmy` strategy |
+| V3-M3 | Week 3 | clarification gate | unresolved ambiguity forces `clarifying/awaiting_clarification` and blocks implementation |
+| V3-M4 | Week 4 | SDD gate chain | full `intent -> spec -> design -> tasks -> implement -> verify -> accept` chain enforced by artifacts |
+| V3-M5 | Week 5 | acceptance evidence gate | terminal done requires evidence package completeness + required checks |
+| V3-M6 | Week 6 | remote timeline API | device-agnostic API returns run timeline, artifacts, report, and next action |
 
 ## 4. V3 Backlog (Priority)
 
-1. Define V3 run contract:
+1. De-dup execution responsibilities:
+   - keep execution runtime in OpenCode/OhMy
+   - shrink action-layer into adapter gateway only
+2. Define V3 run contract:
    - add `requirement_status`, `clarification_rounds`, `assumption_used`
    - add stage-level artifact checklist
-2. Implement external executor adapters:
-   - `executor/opencode`
-   - `executor/ohmyopencode`
-3. Implement proactive clarification service:
+3. Implement external executor adapters:
+   - `executor/opencode` only
+   - strategy profiles: `native|ohmy`
+4. Implement proactive clarification service:
    - ambiguity detector
    - ask/answer loop limits
    - block policy when unresolved
-4. Implement SDD orchestrator:
+5. Implement SDD orchestrator:
    - fixed stage transitions
    - transition guard + recovery hint
-5. Harden done gate:
+6. Harden done gate:
    - no `review_results` as terminal done signal
    - require explicit terminal stage + evidence completeness
-6. Add acceptance APIs:
+7. Add acceptance APIs:
    - `/v3/runs/{id}/timeline`
    - `/v3/runs/{id}/artifacts`
    - `/v3/runs/{id}/report`
@@ -93,4 +96,9 @@ Each stage must produce artifacts; otherwise next stage is blocked.
 
 - Single-host deployment first (no distributed scheduler in V3 baseline).
 - No role permission matrix expansion in V3 baseline.
-- Keep compatibility with existing `stationctl` commands; add V3 commands incrementally.
+- Hard cut V3 main path: remove V2 execution entry commands from `stationctl`.
+
+## 7. Engineering Layout Reference
+
+- `docs/V3_ENGINEERING_LAYOUT.md`
+- `docs/V3_OVERLAP_AUDIT.md`

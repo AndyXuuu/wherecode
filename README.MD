@@ -1,26 +1,37 @@
-# WhereCode: Cross-Space AI Collaboration Command Center
+# WhereCode: AI Engineering Control Plane (V3)
 
 > Fuel the machine: this project is AI-built. To support high-quality output and MCP boundary exploration, sponsor tokens or API credits.
 > Contact: [andy1770@proton.me](mailto:andy1770@proton.me)
 
-WhereCode is a personal developer workflow architecture. It moves intent input to mobile devices, keeps the PC as execution hub, and coordinates multiple AI collaborators.
+WhereCode is a control plane for autonomous software delivery.
+It orchestrates requirements, stage gates, role routing, evidence, and reports.
+Execution is delegated to external engines (OpenCode / OhMyOpenCode) through stable adapters.
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
-## V2 Snapshot
+## V3 Snapshot
+
+- Single adapter execution plane: `opencode` with dual strategy routing (`native|ohmy`).
+- Hard-cut V3 command surface in `stationctl` (no `v2-*`/`subproject-*` execution entries).
+- Clarification + SDD + acceptance gates in workflow runtime:
+  - `requirement_status`
+  - `clarification_rounds`
+  - `assumption_used`
+- Remote visibility APIs:
+  - `GET /v3/runs/{id}/timeline`
+  - `GET /v3/runs/{id}/artifacts`
+  - `GET /v3/runs/{id}/report`
 
 ## AI Ownership
 
 - AI executes end-to-end delivery.
 - User provides goals/suggestions only.
 
-## V2 Positioning
+## Positioning
 
-V2 aligns to OpenClaw / OpenCode / Oh My OpenCode style operation:
-- one command starts the run
-- plan/build modes
-- autonomous loop with structured artifacts
-- milestone checkpoint before release decision
+- Main project owns orchestration and acceptance gates.
+- External executors own code-generation/edit execution.
+- User provides goal/suggestion only; AI executes end-to-end.
 
 ## Architecture
 
@@ -31,17 +42,24 @@ V2 aligns to OpenClaw / OpenCode / Oh My OpenCode style operation:
 - Main brain: decompose, schedule, gate, recover, persist.
 
 3. `action_layer/`
-- Execution provider/runtime.
+- Thin execution gateway (request normalization + forwarding).
 
 4. `project/<key>/`
 - Rebuildable subproject workspace.
 - Requirement file is source of truth.
 
+5. `external/executors/`
+- Local checkout workspace for OpenCode / OhMyOpenCode upstream updates.
+- External source is isolated from control-plane code.
+
+6. `.agents/`
+- Role rules, reusable skills, routing/context policies, MCP configs.
+- Canonical role profile path: `.agents/roles/<role>/AGENTS.md`.
+
 Detailed docs:
-- `docs/ARCHITECTURE_V2.md`
-- `docs/OPERATIONS_V2.md`
-- `docs/V2_PROJECT_PLAN.md`
-- `docs/V2_PROJECT_PLAN.zh-CN.md`
+- `docs/V3_PROJECT_PLAN.md`
+- `docs/V3_ENGINEERING_LAYOUT.md`
+- `docs/STANDARD_AGENT_REACT.md`
 
 ## Core Commands
 
@@ -51,18 +69,6 @@ bash scripts/stationctl.sh main-orchestrate
 bash scripts/stationctl.sh plan-autopilot
 bash scripts/stationctl.sh plan-autopilot --max-tasks 3
 bash scripts/check_all.sh main
-
-# v2 requirement-driven path
-bash scripts/stationctl.sh v2-run stock-sentiment
-bash scripts/stationctl.sh v2-run stock-sentiment --mode plan
-bash scripts/stationctl.sh v2-run stock-sentiment --mode build --workflow-mode test
-bash scripts/stationctl.sh v2-run stock-sentiment --mode build --workflow-mode dev --reset-dev-state true
-bash scripts/stationctl.sh v2-run stock-sentiment --mode build --workflow-mode dev
-bash scripts/check_all.sh v2
-
-# unified check api (remote progress)
-bash scripts/check_all.sh v2 --async
-curl "http://127.0.0.1:8000/ops/checks/latest?scope=v2" -H "X-WhereCode-Token: change-me"
 ```
 
 Codex app slash entry:
@@ -75,7 +81,6 @@ Codex app slash entry:
 ## Requirement Input
 
 - Canonical: `project/requirements/stock-sentiment.md`
-- Runtime snapshot: `project/stock-sentiment/REQUIREMENTS.md`
 
 ## Reusable Capability Packaging
 

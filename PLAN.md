@@ -29,6 +29,7 @@ Updated: 2026-03-13
 
 | ID | Task | Owner | Depends | Status |
 | --- | --- | --- | --- | --- |
+| V3-T22 | split remaining workspace changes into module-based commits (`control/executor`, `scripts/tests`, `docs/layout`) | chief-architect | V3-T21 | doing |
 | V3-T17 | milestone closeout M2 adapter-first integration gate (single adapter dual strategy + routing contract) | chief-architect | V3-T16 | done |
 | V3-T18 | milestone closeout M3 clarification-first gate (ambiguous input -> clarifying, unresolved blocks implement) | chief-architect | V3-T17 | done |
 | V3-T19 | milestone closeout M4 SDD stage chain gate (ordered stage transitions + artifact block) | chief-architect | V3-T18 | done |
@@ -60,6 +61,7 @@ Updated: 2026-03-13
 
 ## Task Log (Recent)
 
+- 2026-03-13 `DOC-2026-03-13-V3-T22-COMMIT-SPLIT` started (`doing`)
 - 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` completed (`done`) (evidence: `main-orchestrate` success, `check_all main` success, run=`chk_1d6fbdb972dc`)
 - 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` resumed (`doing`) (unblock retry started)
 - 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` blocked (`blocked`) (attempt=2, reason=control center not reachable at `127.0.0.1:8000` for `main-orchestrate` and remote `check_all main`; local fallback `check_all main --local` passed)

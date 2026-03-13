@@ -1,1 +1,0 @@
-"""Stock sentiment backend package."""

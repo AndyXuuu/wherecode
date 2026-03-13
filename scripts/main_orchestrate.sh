@@ -27,4 +27,8 @@ for arg in "$@"; do
   fi
 done
 
-bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh" "${normalized_args[@]}"
+if ((${#normalized_args[@]} > 0)); then
+  bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh" "${normalized_args[@]}"
+else
+  bash "${ROOT_DIR}/scripts/mb3_dry_run_seed.sh"
+fi

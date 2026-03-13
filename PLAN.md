@@ -1,6 +1,6 @@
-# WhereCode PLAN V2
+# WhereCode PLAN V3
 
-Updated: 2026-03-12
+Updated: 2026-03-13
 
 ## Workflow DNA
 
@@ -16,104 +16,79 @@ Updated: 2026-03-12
 
 ## Milestones (Current)
 
-| ID | Target Date | Scope | Exit Gate | Status |
+| ID | Target | Scope | Exit Gate | Status |
 | --- | --- | --- | --- | --- |
-| V2-M9 | 2026-03-11 | role/context/memory foundation | role rules + context isolation + memory namespace design published and runnable baseline | done |
-| V2-M11 | 2026-03-12 | capability runtime baseline (Agent/MCP) | capability lifecycle minimal APIs + one real MCP capability invoke passed | planned |
-| V2-M12 | 2026-03-13 | orchestration resilience | interrupt/restart/resume/failure taxonomy loop verified with persisted state | planned |
-| V2-M13 | 2026-03-14 | remote visibility API | mobile-friendly run status/artifacts/report query APIs validated | planned |
-| V2-M14 | 2026-03-15 | real business autopilot acceptance | stock-sentiment requirement -> generate -> execute -> acceptance -> report full loop passed | planned |
-| V2-M15 | 2026-03-16 | SDD requirement loop baseline | main-brain `sdd` mode runs `intent -> spec -> design -> tasks -> implement -> verify -> accept`; SDD agent outputs structured spec; clarification-first no-guess gate active | planned |
-
-Completed milestones are archived in:
-- `docs/PLAN_V2_COMPLETED_MILESTONES.md`
+| V3-M1 | Week 1 | overlap de-dup baseline | overlap audit published; duplicated execution scope marked delegated | done |
+| V3-M2 | Week 2 | adapter-first integration | OpenCode/OhMy adapters callable from control-plane with unified result schema | done |
+| V3-M3 | Week 3 | clarification-first + no-guess | ambiguous requirements enter `clarifying`; unresolved blocks implement | done |
+| V3-M4 | Week 4 | SDD runtime loop | `intent -> spec -> design -> tasks -> implement -> verify -> accept` runnable with artifact gates | done |
+| V3-M5 | Week 5 | acceptance gate hardening | done requires evidence completeness and required checks | done |
+| V3-M6 | Week 6 | remote visibility API | mobile/API can query timeline, artifacts, and final report | done |
 
 ## Current Sprint (Ordered)
 
 | ID | Task | Owner | Depends | Status |
 | --- | --- | --- | --- | --- |
-| V2-T82 | implement dual SDD runtime (main-brain `sdd` mode + SDD agent) with stage gates and required artifacts per stage | chief-architect | V2-T81 | doing |
-| V2-T83 | implement proactive clarification no-guess flow (ambiguity detection + ask-first gate + blocked policy when unresolved) | chief-architect | V2-T82 | planned |
-
-Completed task groups are archived in:
-- `docs/PLAN_V2_COMPLETED_TASKS.md`
+| V3-T17 | milestone closeout M2 adapter-first integration gate (single adapter dual strategy + routing contract) | chief-architect | V3-T16 | done |
+| V3-T18 | milestone closeout M3 clarification-first gate (ambiguous input -> clarifying, unresolved blocks implement) | chief-architect | V3-T17 | done |
+| V3-T19 | milestone closeout M4 SDD stage chain gate (ordered stage transitions + artifact block) | chief-architect | V3-T18 | done |
+| V3-T20 | milestone closeout M5 acceptance evidence gate (`accepted` only with complete evidence) | chief-architect | V3-T19 | done |
+| V3-T21 | milestone closeout M6 visibility API gate + end-to-end (`main-orchestrate`, `check_all main`) | chief-architect | V3-T20 | done |
+| V3-T16 | remove unused imports/method-local vars across `control_center`, `scripts`, `tests` and keep lint clean baseline (`F401/F841`) | chief-architect | V3-T15 | done |
+| V3-T09 | audit feature overlap with OpenCode/OhMyOpenCode and classify keep/remove/delegate boundaries | chief-architect | V3-T08 | done |
+| V3-T10 | replan V3 milestones based on overlap audit (integration-first roadmap) | chief-architect | V3-T09 | done |
+| V3-T11 | hard cut V3 main path: remove V2 execution entries (`v2-*`, `subproject-*`) and keep control-plane only flow | chief-architect | V3-T10 | done |
+| V3-T12 | implement single `opencode` adapter with `strategy=native|ohmy` and role routing policy as single source of truth | chief-architect | V3-T11 | done |
+| V3-T13 | implement requirement clarification gate + SDD stage artifact gate (`intent->spec->design->tasks->implement->verify->accept`) | chief-architect | V3-T12 | done |
+| V3-T14 | expose `/v3/runs/{id}/timeline|artifacts|report` and enforce acceptance evidence gate (`accepted` only when complete) | chief-architect | V3-T13 | done |
+| V3-T15 | cleanup legacy scripts and residual V2 artifacts across repository folders | chief-architect | V3-T14 | done |
+| V3-T03 | remove V3-unrelated legacy files (V2 docs/reports/derived subprojects) and keep V3-only baseline | chief-architect | V3-T02 | done |
+| V3-T07 | standardize role profile directories (`.agents/roles`) and keep backward-compatible loading from `action_layer/agents` | chief-architect | V3-T03 | done |
+| V3-T08 | add custom extension structure (`.agents/skills/.agents/policies/.agents/mcp`) and publish routing/context isolation policy | chief-architect | V3-T07 | done |
 
 ## Run Commands
 
-- `bash scripts/stationctl.sh v2-run stock-sentiment`
+- `bash scripts/stationctl.sh main-orchestrate`
 - `bash scripts/stationctl.sh plan-autopilot`
-- `bash scripts/check_all.sh v2`
 - `bash scripts/check_all.sh main`
 
-## V3 Planning Entry
+## V3 References
 
-- `docs/V3_PROJECT_PLAN.md` (control-plane + external executor architecture)
+- `docs/V3_PROJECT_PLAN.md`
+- `docs/V3_ENGINEERING_LAYOUT.md`
+- `docs/V3_OVERLAP_AUDIT.md`
 
 ## Task Log (Recent)
 
+- 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` completed (`done`) (evidence: `main-orchestrate` success, `check_all main` success, run=`chk_1d6fbdb972dc`)
+- 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` resumed (`doing`) (unblock retry started)
+- 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` blocked (`blocked`) (attempt=2, reason=control center not reachable at `127.0.0.1:8000` for `main-orchestrate` and remote `check_all main`; local fallback `check_all main --local` passed)
+- 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T21-M6-E2E-CLOSEOUT` blocked (`doing`) (attempt=1, reason=`main_orchestrate.sh` empty array expansion with `set -u` -> `normalized_args[@]: unbound variable`)
+- 2026-03-13 `DOC-2026-03-13-V3-T20-M5-CLOSEOUT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T19-M4-CLOSEOUT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T18-M3-CLOSEOUT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T17-M2-CLOSEOUT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T17-M2-CLOSEOUT` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T16-UNUSED-CLEANUP` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T16-UNUSED-CLEANUP` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T15-REPO-CLEANUP` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T15-REPO-CLEANUP` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T14-VISIBILITY-API` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T13-GATE-CHAIN` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T12-SINGLE-ADAPTER` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T11-HARDCUT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T11-HARDCUT-START` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T10-REPLAN` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T10-REPLAN` started (`doing`)
+- 2026-03-13 `DOC-2026-03-13-V3-T09-OVERLAP-AUDIT` completed (`done`)
+- 2026-03-13 `DOC-2026-03-13-V3-T09-OVERLAP-AUDIT` started (`doing`)
+- 2026-03-12 `DOC-2026-03-12-V3-T08-EXTENSION-STRUCTURE` completed (`done`)
+- 2026-03-12 `DOC-2026-03-12-V3-T08-EXTENSION-STRUCTURE` started (`doing`)
+- 2026-03-12 `DOC-2026-03-12-V3-T07-ROLE-DIR-STANDARD` completed (`done`)
+- 2026-03-12 `DOC-2026-03-12-V3-T03-CLEANUP` completed (`done`)
+- 2026-03-12 `DOC-2026-03-12-V3-T03-CLEANUP` started (`doing`)
+- 2026-03-12 `DOC-2026-03-12-V3-T07-ROLE-DIR-STANDARD` started (`doing`)
+- 2026-03-12 `DOC-2026-03-12-V3-T02-EXECUTOR-SCAFFOLD` completed (`done`)
+- 2026-03-12 `DOC-2026-03-12-V3-T01-DIRECTORY-PLANNING` completed (`done`)
 - 2026-03-12 `DOC-2026-03-12-V3-PLANNING` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V3-PLANNING` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T82` blocked (`doing`) (blocked: attempt=1, reason=next_action_pending:review_results, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t82/latest.json)
-- 2026-03-12 `DOC-2026-03-12-V2-T84` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T84` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T83` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T83` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T82` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T82` blocked (`doing`) (blocked: attempt=1, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t82/latest.json)
-- 2026-03-12 `DOC-2026-03-12-V2-T82` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-PLAN-SDD-CLEANUP-AND-ADD` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-PLAN-SDD-CLEANUP-AND-ADD` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-STANDARD-AGENTS-FILE` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-STANDARD-AGENTS-FILE` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T78` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T78` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T77` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T77` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T76` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T76` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T75` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T75` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T74` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T74` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T73` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T73` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T72` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T72` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T71` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T71` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T70` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T70` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T69` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T69` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T68` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T68` blocked (`doing`) (blocked: attempt=2, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t68/latest.json)
-- 2026-03-12 `DOC-2026-03-12-V2-T68` blocked (`doing`) (blocked: attempt=1, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t68/latest.json)
-- 2026-03-12 `DOC-2026-03-12-V2-T68` started (`doing`)
-- 2026-03-12 `DOC-2026-03-12-V2-T67` completed (`done`)
-- 2026-03-12 `DOC-2026-03-12-V2-T67` doing (fix: `orchestrate request failed: action layer unavailable: ReadTimeout`; increase timeout + client strategy)
-- 2026-03-12 `DOC-2026-03-12-V2-T67` blocked (`doing`) (blocked: attempt=1, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t67/latest.json)
-- 2026-03-11 `DOC-2026-03-11-V2-T67` blocked (`doing`) (blocked: attempt=2, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t67/latest.json)
-- 2026-03-11 `DOC-2026-03-11-V2-T67` blocked (`doing`) (blocked: attempt=1, check /Users/andyxu/Documents/project/wherecode/docs/ops_reports/plan_autopilot/v2-t67/latest.json)
-- 2026-03-11 `DOC-2026-03-11-V2-T67` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T81-STRICT-SKILL` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T81-STRICT-SKILL` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T80-SLASH-SKILL-ENTRY` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T80-SLASH-SKILL-ENTRY` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-REACT-STANDARD-DEFINITION` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-REACT-STANDARD-DEFINITION` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-STANDARD-AGENT-REACT-ALIGNMENT` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-STANDARD-AGENT-REACT-ALIGNMENT` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-PLAN-ARCHIVE-CURRENT-SPRINT` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-PLAN-ARCHIVE-CURRENT-SPRINT` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T63-WORKFLOW-MODE` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T63-WORKFLOW-MODE` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T64-WORKFLOW-NEXT-COMMAND` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T64-WORKFLOW-NEXT-COMMAND` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T65-DELIVERY-TEST-PACKAGE` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T65-DELIVERY-TEST-PACKAGE` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T66-BENCHMARK-FUNCTION-GAP` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T66-BENCHMARK-FUNCTION-GAP` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-MILESTONE-PLAN` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-MILESTONE-PLAN` completed (`done`)
-- 2026-03-11 `DOC-2026-03-11-V2-T79-PLAN-AUTOPILOT` started (`doing`)
-- 2026-03-11 `DOC-2026-03-11-V2-T79-PLAN-AUTOPILOT` completed (`done`)

@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-03-13T13:40:23.845354+00:00",
+  "report_path": "/Users/andyxu/Documents/project/wherecode/docs/ops_reports/20260313T134023Z-mb3-dry-run-seed.json",
+  "captured_at": "2026-03-13T13:40:23.845070+00:00",
+  "control_url": "http://127.0.0.1:8000",
+  "project_id": "proj_b6b8db3e3299",
+  "task_id": "task_28947c60e29c",
+  "command_id": "cmd_9e881ad59571",
+  "terminal_status": "success",
+  "workflow_run_id": "wfr_0f56111f5f7c",
+  "orchestration_status": "executed",
+  "workflow_next_action": "wait_or_unblock_workitems",
+  "primary_recovery_action": "wait_or_unblock_workitems",
+  "latest_found": true,
+  "latest_orchestration_status": "executed",
+  "latest_next_action": "wait_or_unblock_workitems",
+  "command_text": "/orchestrate build programmer-focused automation system with requirement decomposition, module execution, documentation sync, and acceptance checks --module-hints=requirements,decomposition,implementation,documentation,testing,release --max-modules=6 --strategy=balanced --execute=true --force-redecompose=false --confirmed-by=owner"
+}

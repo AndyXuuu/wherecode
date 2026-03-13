@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-03-13T13:42:01.488494+00:00",
+  "run_id": "chk_1d6fbdb972dc",
+  "scope": "main",
+  "status": "success",
+  "requested_by": "check-all",
+  "started_at": "2026-03-13T13:42:00.597342+00:00",
+  "finished_at": "2026-03-13T13:42:01.488340+00:00",
+  "exit_code": 0,
+  "log_path": "/Users/andyxu/Documents/project/wherecode/.wherecode/check_runs/chk_1d6fbdb972dc.log",
+  "command_text": "bash /Users/andyxu/Documents/project/wherecode/scripts/check_all_local.sh main",
+  "message": "check run passed",
+  "last_output": "[1/2] backend quick checks\n[1/1] backend quick checks\n........................................                                 [100%]\n40 passed in 0.40s\n[2/2] main-project orchestrate entry dry-run\n[dry-run] control_url=http://127.0.0.1:8000\n[dry-run] project_name=main-orchestrate-20260313134201\n[dry-run] task_title=main project orchestration task\n[dry-run] command_text=/orchestrate build programmer-focused automation system with requirement decomposition, module execution, documentation sync, and acceptance checks --module-hints=requirements,decomposition,implementation,documentation,testing,release --max-modules=6 --strategy=balanced --execute=true --force-redecompose=false --confirmed-by=owner\n[dry-run] requested_by=main-orchestrate\nchecks passed (scope=main)"
+}

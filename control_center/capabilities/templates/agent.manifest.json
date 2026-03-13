@@ -6,7 +6,7 @@
   "status": "draft",
   "entry": {
     "kind": "agent_profile",
-    "path": "action_layer/agents/example/AGENTS.md"
+    "path": ".agents/roles/example/AGENTS.md"
   },
   "runtime": {
     "engine": "action-layer",

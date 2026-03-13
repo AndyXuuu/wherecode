@@ -16,7 +16,7 @@ Usage:
   bash scripts/check_all.sh [scope] [options]
 
 Scopes:
-  quick|dev|release|ops|evolve|main|v2|all|backend|backend-quick|backend-full|llm-check|frontend|projects
+  quick|dev|release|ops|main|all|backend|backend-quick|backend-full|llm-check|frontend|projects
 
 Options:
   --async                     create check run and return immediately
@@ -29,7 +29,7 @@ Options:
   -h, --help
 
 Examples:
-  bash scripts/check_all.sh v2
+  bash scripts/check_all.sh quick
   bash scripts/check_all.sh release --async
   bash scripts/check_all.sh main --control-url http://127.0.0.1:8000
 EOF_USAGE

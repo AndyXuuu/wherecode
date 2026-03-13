@@ -5,13 +5,17 @@ from collections.abc import Awaitable, Callable
 from fastapi import HTTPException
 
 from control_center.models import (
+    ArtifactType,
     DecomposeBootstrapAdvanceLoopRequest,
     DecomposeBootstrapAdvanceLoopResponse,
     ExecuteWorkflowRunRequest,
     ExecuteWorkflowRunResponse,
     InterruptWorkflowRunRequest,
     InterruptWorkflowRunResponse,
+    RequirementStatus,
+    SDDStage,
     WorkflowRun,
+    WorkflowRunStatus,
 )
 from control_center.services.workflow_engine import WorkflowEngine
 from control_center.services.workflow_scheduler import WorkflowScheduler
@@ -80,6 +84,33 @@ class WorkflowExecutionRuntimeService:
                     detail = f"{detail}: {last_step.reason}"
             raise HTTPException(status_code=409, detail=detail)
 
+        if run.requirement_status != RequirementStatus.CONFIRMED:
+            run.blocked_reason = "requirement_not_confirmed"
+            run.next_action_hint = "awaiting_clarification"
+            scheduler.persist_run(run.id)
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "requirement is not confirmed; "
+                    "clarification is required before implement stage"
+                ),
+            )
+
+        missing_stages = self._missing_pre_implement_stages(run)
+        if missing_stages:
+            run.requirement_status = RequirementStatus.BLOCKED
+            run.blocked_reason = f"missing_sdd_artifacts:{','.join(missing_stages)}"
+            run.next_action_hint = "provide_missing_sdd_artifacts"
+            scheduler.persist_run(run.id)
+            raise HTTPException(
+                status_code=409,
+                detail=f"missing required SDD artifacts before implement: {', '.join(missing_stages)}",
+            )
+        run.current_stage = SDDStage.IMPLEMENT
+        run.next_action_hint = "execute_workflow_run"
+        run.blocked_reason = None
+        scheduler.persist_run(run.id)
+
         try:
             execution_result = await self._workflow_engine_provider().execute_until_blocked(
                 run_id=run_id,
@@ -88,12 +119,16 @@ class WorkflowExecutionRuntimeService:
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-        if auto_advance_result is None:
-            return execution_result
-        return self._merge_auto_advance_execution_result(
-            execution_result=execution_result,
-            auto_advance_result=auto_advance_result,
+        merged_result = (
+            execution_result
+            if auto_advance_result is None
+            else self._merge_auto_advance_execution_result(
+                execution_result=execution_result,
+                auto_advance_result=auto_advance_result,
+            )
         )
+        self._update_stage_and_acceptance_after_execute(scheduler, run_id)
+        return merged_result
 
     async def interrupt_workflow_run(
         self,
@@ -124,6 +159,62 @@ class WorkflowExecutionRuntimeService:
             skipped_workitem_ids=skipped_workitem_ids,
             reason=payload.reason,
         )
+
+    @staticmethod
+    def _missing_pre_implement_stages(run: WorkflowRun) -> list[str]:
+        stage_artifacts = run.metadata.get("sdd_stage_artifacts")
+        if not isinstance(stage_artifacts, dict):
+            return ["intent", "spec", "design", "tasks"]
+        missing: list[str] = []
+        for stage in ("intent", "spec", "design", "tasks"):
+            artifact_id = stage_artifacts.get(stage)
+            if not isinstance(artifact_id, str) or not artifact_id.strip():
+                missing.append(stage)
+        return missing
+
+    @staticmethod
+    def _has_acceptance_evidence(scheduler: WorkflowScheduler, run_id: str) -> bool:
+        artifacts = scheduler.list_artifacts(run_id)
+        artifact_types = {artifact.artifact_type for artifact in artifacts}
+        required = {
+            ArtifactType.ACCEPTANCE_REPORT,
+            ArtifactType.RELEASE_NOTE,
+            ArtifactType.ROLLBACK_PLAN,
+        }
+        return required.issubset(artifact_types)
+
+    @classmethod
+    def _update_stage_and_acceptance_after_execute(
+        cls,
+        scheduler: WorkflowScheduler,
+        run_id: str,
+    ) -> None:
+        run = scheduler.get_run(run_id)
+        evidence_complete = cls._has_acceptance_evidence(scheduler, run_id)
+        run.metadata["acceptance_evidence_complete"] = evidence_complete
+        if run.status == WorkflowRunStatus.SUCCEEDED and evidence_complete:
+            run.current_stage = SDDStage.ACCEPT
+            run.accepted = True
+            run.next_action_hint = "none"
+            run.blocked_reason = None
+            run.requirement_status = RequirementStatus.CONFIRMED
+        elif run.status == WorkflowRunStatus.SUCCEEDED and not evidence_complete:
+            run.status = WorkflowRunStatus.BLOCKED
+            run.current_stage = SDDStage.VERIFY
+            run.accepted = False
+            run.blocked_reason = "acceptance_evidence_incomplete"
+            run.next_action_hint = "complete_acceptance_evidence"
+            run.requirement_status = RequirementStatus.BLOCKED
+        else:
+            run.current_stage = SDDStage.IMPLEMENT
+            run.accepted = False
+            if run.status == WorkflowRunStatus.BLOCKED:
+                run.next_action_hint = "resolve_workitem_blocks"
+            elif run.status == WorkflowRunStatus.FAILED:
+                run.next_action_hint = "repair_failed_workitems"
+            elif run.status == WorkflowRunStatus.WAITING_APPROVAL:
+                run.next_action_hint = "approve_waiting_workitems"
+        scheduler.persist_run(run.id)
 
     @staticmethod
     def _merge_auto_advance_execution_result(

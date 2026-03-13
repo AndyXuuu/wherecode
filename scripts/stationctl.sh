@@ -31,15 +31,9 @@ Commands:
   main-orchestrate [control_url] [main-options]
   plan-autopilot [autopilot-options]
   orchestrate-policy [control_url]
-  v2-run [subproject_key] [v2-options]
-  v2-replay [subproject_key] [replay-options]
-  v2-report [subproject_key] [report-options]
-  subproject-generate [subproject_key] [--requirements <text>] [generate-options]
-  subproject-evolve [subproject_key] [stamp]
-  subproject-full-cycle [subproject_key] [--requirements <text>] [full-cycle-options]
   action-llm-check [action_layer_url] [role] [module_key] [text]
   readme-phase-sync [--dry-run] [--strict]
-  check [quick|dev|release|ops|evolve|main|v2]
+  check [quick|dev|release|ops|main]
   help
 
 Examples:
@@ -62,27 +56,13 @@ Examples:
   bash scripts/stationctl.sh plan-autopilot --max-tasks 3
   bash scripts/stationctl.sh plan-autopilot --max-retries 0 --retry-interval 10
   bash scripts/stationctl.sh orchestrate-policy
-  bash scripts/stationctl.sh v2-run stock-sentiment
-  bash scripts/stationctl.sh v2-replay stock-sentiment
-  bash scripts/stationctl.sh v2-replay --source-report docs/v2_reports/20260310T154715Z-stock-sentiment-v2-run.json --mode plan
-  bash scripts/stationctl.sh v2-report stock-sentiment
-  bash scripts/stationctl.sh v2-report stock-sentiment --compact
-  bash scripts/stationctl.sh v2-report --report-id 20260310T163704Z-stock-sentiment-v2-run
-  bash scripts/stationctl.sh v2-report --run-id wfr_20260310_example
-  bash scripts/stationctl.sh v2-report stock-sentiment --api --control-url http://127.0.0.1:8000
-  bash scripts/stationctl.sh v2-report --report docs/v2_reports/20260310T154715Z-stock-sentiment-v2-run.json
-  bash scripts/stationctl.sh subproject-generate stock-sentiment --requirements "build stock sentiment pipeline"
-  bash scripts/stationctl.sh subproject-evolve stock-sentiment
-  bash scripts/stationctl.sh subproject-full-cycle stock-sentiment --requirements "build stock sentiment pipeline"
   bash scripts/stationctl.sh action-llm-check http://127.0.0.1:8100
   bash scripts/stationctl.sh readme-phase-sync --strict
   bash scripts/stationctl.sh check
   bash scripts/stationctl.sh check quick
   bash scripts/stationctl.sh check release
   bash scripts/stationctl.sh check ops
-  bash scripts/stationctl.sh check evolve
   bash scripts/stationctl.sh check main
-  bash scripts/stationctl.sh check v2
 EOF
 }
 
@@ -499,42 +479,6 @@ PY
   rm -f "${body_file}"
 }
 
-run_v2() {
-  if [[ "${DRY_RUN}" -eq 1 ]]; then
-    bash "${ROOT_DIR}/scripts/v2_run.sh" "$@" --mode plan
-    return 0
-  fi
-  bash "${ROOT_DIR}/scripts/v2_run.sh" "$@"
-}
-
-run_v2_replay() {
-  if [[ "${DRY_RUN}" -eq 1 ]]; then
-    bash "${ROOT_DIR}/scripts/v2_replay.sh" "$@" --dry-run
-    return 0
-  fi
-  bash "${ROOT_DIR}/scripts/v2_replay.sh" "$@"
-}
-
-run_v2_report() {
-  if [[ "${DRY_RUN}" -eq 1 ]]; then
-    bash "${ROOT_DIR}/scripts/v2_report_summary.sh" "$@" --dry-run
-    return 0
-  fi
-  bash "${ROOT_DIR}/scripts/v2_report_summary.sh" "$@"
-}
-
-run_subproject_evolve() {
-  bash "${ROOT_DIR}/scripts/go6_subproject_autoevolve.sh" "$@"
-}
-
-run_subproject_generate() {
-  bash "${ROOT_DIR}/scripts/go7_subproject_generate.sh" "$@"
-}
-
-run_subproject_full_cycle() {
-  bash "${ROOT_DIR}/scripts/go8_subproject_full_cycle.sh" "$@"
-}
-
 run_action_llm_check() {
   if [[ "${DRY_RUN}" -eq 1 ]]; then
     echo "[dry-run] bash ${ROOT_DIR}/scripts/action_layer_llm_check.sh $*"
@@ -550,11 +494,11 @@ run_readme_phase_sync() {
 run_check() {
   local scope="${1:-quick}"
   case "${scope}" in
-    quick|dev|release|ops|evolve|main|v2)
+    quick|dev|release|ops|main)
       ;;
     *)
       echo "unknown check scope: ${scope}"
-      echo "allowed: quick|dev|release|ops|evolve|main|v2"
+      echo "allowed: quick|dev|release|ops|main"
       return 1
       ;;
   esac
@@ -633,36 +577,6 @@ main() {
 
   if [[ "${command}" == "orchestrate-policy" ]]; then
     run_orchestrate_policy "$@"
-    return
-  fi
-
-  if [[ "${command}" == "v2-run" ]]; then
-    run_v2 "$@"
-    return
-  fi
-
-  if [[ "${command}" == "v2-replay" ]]; then
-    run_v2_replay "$@"
-    return
-  fi
-
-  if [[ "${command}" == "v2-report" ]]; then
-    run_v2_report "$@"
-    return
-  fi
-
-  if [[ "${command}" == "subproject-evolve" ]]; then
-    run_subproject_evolve "$@"
-    return
-  fi
-
-  if [[ "${command}" == "subproject-generate" ]]; then
-    run_subproject_generate "$@"
-    return
-  fi
-
-  if [[ "${command}" == "subproject-full-cycle" ]]; then
-    run_subproject_full_cycle "$@"
     return
   fi
 

@@ -32,6 +32,7 @@ class ControlCenterBootstrapConfig:
     sqlite_path: str
     max_module_reflows: int
     release_approval_required: bool
+    role_routing_policy_file: str
     metrics_alert_policy_file: str
     metrics_alert_audit_file: str
     metrics_rollback_approval_file: str
@@ -181,6 +182,10 @@ def load_control_center_bootstrap_config(
         release_approval_required=_parse_bool(
             env_get("WHERECODE_RELEASE_APPROVAL_REQUIRED", "false")
         ),
+        role_routing_policy_file=env_get(
+            "WHERECODE_ROLE_ROUTING_POLICY_FILE",
+            ".agents/policies/role_routing.v3.json",
+        ).strip(),
         metrics_alert_policy_file=env_get(
             "WHERECODE_METRICS_ALERT_POLICY_FILE",
             "control_center/metrics_alert_policy.json",

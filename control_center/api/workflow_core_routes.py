@@ -15,6 +15,10 @@ from control_center.models import (
     Artifact,
     GateCheck,
     WorkflowRun,
+    WorkflowRunArtifactsResponse,
+    WorkflowRunReportResponse,
+    WorkflowRunTimelineEvent,
+    WorkflowRunTimelineResponse,
     WorkItem,
 )
 from control_center.services import WorkflowEngine, WorkflowScheduler
@@ -49,6 +53,20 @@ def create_workflow_core_router(
         return workflow_engine
 
     router = APIRouter()
+
+    def _run_gate_context(run: WorkflowRun) -> dict[str, object]:
+        return {
+            "current_stage": run.current_stage,
+            "requirement_status": run.requirement_status,
+            "clarification_rounds": run.clarification_rounds,
+            "assumption_used": run.assumption_used,
+            "blocked_reason": run.blocked_reason,
+            "next_action_hint": run.next_action_hint,
+            "accepted": run.accepted,
+            "acceptance_evidence_complete": bool(
+                run.metadata.get("acceptance_evidence_complete", False)
+            ),
+        }
 
     @router.post(
         "/v3/workflows/runs",
@@ -140,6 +158,132 @@ def create_workflow_core_router(
             return _scheduler().list_artifacts(run_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @router.get(
+        "/v3/runs/{run_id}/timeline",
+        response_model=WorkflowRunTimelineResponse,
+    )
+    async def get_run_timeline(run_id: str) -> WorkflowRunTimelineResponse:
+        try:
+            scheduler = _scheduler()
+            run = scheduler.get_run(run_id)
+            workitems = sorted(
+                scheduler.list_workitems(run_id),
+                key=lambda item: item.created_at,
+            )
+            gates = sorted(
+                scheduler.list_gate_checks(run_id),
+                key=lambda gate: gate.created_at,
+            )
+            artifacts = sorted(
+                scheduler.list_artifacts(run_id),
+                key=lambda artifact: artifact.created_at,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+        events: list[WorkflowRunTimelineEvent] = [
+            WorkflowRunTimelineEvent(
+                ts=run.created_at,
+                source="workflow_run",
+                stage=str(run.current_stage.value),
+                status=str(run.status.value),
+                message="run created",
+            )
+        ]
+        for workitem in workitems:
+            events.append(
+                WorkflowRunTimelineEvent(
+                    ts=workitem.created_at,
+                    source="workitem",
+                    stage=workitem.role,
+                    status=workitem.status.value,
+                    message=f"{workitem.role} ({workitem.module_key or 'global'})",
+                )
+            )
+        for gate in gates:
+            events.append(
+                WorkflowRunTimelineEvent(
+                    ts=gate.created_at,
+                    source="gate",
+                    stage=gate.gate_type.value,
+                    status=gate.status.value,
+                    message=gate.summary or gate.gate_type.value,
+                )
+            )
+        for artifact in artifacts:
+            events.append(
+                WorkflowRunTimelineEvent(
+                    ts=artifact.created_at,
+                    source="artifact",
+                    stage=artifact.artifact_type.value,
+                    status="created",
+                    message=artifact.title,
+                )
+            )
+        events = sorted(events, key=lambda event: event.ts)
+        return WorkflowRunTimelineResponse(
+            run_id=run.id,
+            run_status=run.status,
+            events=events,
+            **_run_gate_context(run),
+        )
+
+    @router.get(
+        "/v3/runs/{run_id}/artifacts",
+        response_model=WorkflowRunArtifactsResponse,
+    )
+    async def get_run_artifacts_view(run_id: str) -> WorkflowRunArtifactsResponse:
+        try:
+            scheduler = _scheduler()
+            run = scheduler.get_run(run_id)
+            artifacts = scheduler.list_artifacts(run_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return WorkflowRunArtifactsResponse(
+            run_id=run.id,
+            run_status=run.status,
+            artifacts=[item.model_dump(mode="json") for item in artifacts],
+            **_run_gate_context(run),
+        )
+
+    @router.get(
+        "/v3/runs/{run_id}/report",
+        response_model=WorkflowRunReportResponse,
+    )
+    async def get_run_report(run_id: str) -> WorkflowRunReportResponse:
+        try:
+            scheduler = _scheduler()
+            run = scheduler.get_run(run_id)
+            workitems = scheduler.list_workitems(run_id)
+            gates = scheduler.list_gate_checks(run_id)
+            artifacts = scheduler.list_artifacts(run_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+        workitem_counts: dict[str, int] = {}
+        for item in workitems:
+            key = item.status.value
+            workitem_counts[key] = workitem_counts.get(key, 0) + 1
+
+        gate_counts: dict[str, int] = {}
+        for gate in gates:
+            key = gate.status.value
+            gate_counts[key] = gate_counts.get(key, 0) + 1
+
+        artifact_counts: dict[str, int] = {}
+        for artifact in artifacts:
+            key = artifact.artifact_type.value
+            artifact_counts[key] = artifact_counts.get(key, 0) + 1
+
+        return WorkflowRunReportResponse(
+            run_id=run.id,
+            run_status=run.status,
+            workitem_status_counts=workitem_counts,
+            gate_status_counts=gate_counts,
+            artifact_type_counts=artifact_counts,
+            **_run_gate_context(run),
+        )
 
     @router.post("/v3/workflows/runs/{run_id}/tick", response_model=list[WorkItem])
     async def tick_workflow_run(run_id: str) -> list[WorkItem]:

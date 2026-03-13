@@ -7,6 +7,7 @@ from datetime import datetime
 
 from action_layer.services import AgentRegistry
 
+from control_center.executors import ExecutorService
 from control_center.models import ActionExecuteRequest, ActionExecuteResponse
 from control_center.services.agent_router import AgentRouter
 from control_center.services.agent_rules_registry import AgentRulesRegistryService
@@ -119,9 +120,15 @@ def build_control_center_runtime(
             scopes=("subproject", "main"),
         )
     )
+    executor_service = ExecutorService(
+        role_routing_policy_file=bootstrap_config.role_routing_policy_file,
+        action_executor=action_layer_execute_handler,
+        default_timeout_seconds=int(bootstrap_config.action_layer_timeout_seconds),
+    )
     workflow_engine = WorkflowEngine(
         scheduler=workflow_scheduler,
         action_executor=command_dispatch_service.execute_workitem,
+        executor_service=executor_service,
         agent_registry=workflow_agent_registry,
         max_module_reflows=bootstrap_config.max_module_reflows,
         release_requires_approval=bootstrap_config.release_approval_required,
@@ -189,6 +196,9 @@ def build_control_center_runtime(
         optional_text_handler=workflow_decompose_helpers_service.optional_text,
         normalize_text_list_handler=lambda value: normalize_text_list(value),
         list_workitems_handler=lambda run_id: resolved_workflow_scheduler_provider().list_workitems(
+            run_id
+        ),
+        list_artifacts_handler=lambda run_id: resolved_workflow_scheduler_provider().list_artifacts(
             run_id
         ),
     )

@@ -12,6 +12,8 @@ from control_center.services.gatekeeper import Gatekeeper
 from control_center.services.metrics_authorization import MetricsAuthorizationService
 from control_center.services.metrics_alert_policy_store import (
     MetricsAlertPolicyStore,
+)
+from control_center.services.metrics_alert_policy_store_errors import (
     PolicyRollbackApprovalError,
     PolicyRollbackConflictError,
 )

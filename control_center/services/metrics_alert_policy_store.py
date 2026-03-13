@@ -4,10 +4,6 @@ import json
 from pathlib import Path
 
 from control_center.models.hierarchy import new_id, now_utc
-from control_center.services.metrics_alert_policy_store_errors import (
-    PolicyRollbackApprovalError,
-    PolicyRollbackConflictError,
-)
 from control_center.services.metrics_alert_policy_store_mutations import (
     approve_rollback_approval as approve_rollback_approval_impl,
     consume_rollback_approval as consume_rollback_approval_impl,
@@ -45,12 +41,7 @@ from control_center.services.metrics_alert_policy_store_verify import (
     serialize_verify_policy_registry,
 )
 from control_center.services.metrics_alert_policy_store_policy import (
-    build_rollback_approval_stats,
-    compute_rollback_approval_purge_audit_gc_result,
-    compute_rollback_approval_purge_result,
     deserialize_audit_timestamps,
-    filter_rollback_approval_purge_audits,
-    filter_rollback_approvals_by_status,
     find_rollback_by_request_id,
     normalize_policy,
 )

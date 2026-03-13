@@ -55,6 +55,7 @@ bash action_layer/run.sh
 - `ACTION_LAYER_LLM_ROUTE_BY_MODULE_PREFIX_JSON`（可选，按模块前缀路由 target）
 - `ACTION_LAYER_AGENT_RULES_REGISTRY_FILE`（默认 `control_center/capabilities/agent_rules_registry.json`，Action Layer 角色映射注册表）
 - `ACTION_LAYER_AGENT_RULES_SCOPES`（默认 `subproject,main`，注册表 scope 读取优先级）
+- `ACTION_LAYER_AGENT_PROFILES_ROOT`（默认 `.agents/roles:action_layer/agents`，按顺序查找角色 profile）
 - `ACTION_LAYER_LLM_TARGETS_JSON`（可选，多 target 配置；设置后覆盖单 target 变量）
 - `ACTION_LAYER_USE_CODEX_CONFIG`（默认 `true`，自动读取用户本机 Codex 配置作为缺省值）
 - `ACTION_LAYER_CODEX_CONFIG_PATH`（可选，默认 `${CODEX_HOME:-$HOME/.codex}/config.toml`）
@@ -120,7 +121,8 @@ ACTION_LAYER_EXECUTION_MODE=mock
 
 角色 profile（v3）：
 
-- 路径：`action_layer/agents/<role>/AGENTS.md`（兼容回退：`agent.md`）
+- 规范路径：`.agents/roles/<role>/AGENTS.md`
+- 兼容回退：`action_layer/agents/<role>/AGENTS.md`（仍支持 `agent.md`）
 - 约束：SubAgent 仅允许读取本角色 profile
 
 角色映射来源（v3）：

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from control_center.models import (
+    Artifact,
     DecomposeBootstrapAggregateStatusResponse,
     WorkflowRun,
     WorkflowRunRoutingDecision,
@@ -27,6 +28,7 @@ class WorkflowDecomposeSupportService:
         optional_text_handler: Callable[[object], str | None],
         normalize_text_list_handler: Callable[[object], list[str]],
         list_workitems_handler: Callable[[str], list[WorkItem]],
+        list_artifacts_handler: Callable[[str], list[Artifact]],
     ) -> None:
         self._select_decomposition_for_preview_handler = (
             select_decomposition_for_preview_handler
@@ -39,6 +41,7 @@ class WorkflowDecomposeSupportService:
         self._optional_text_handler = optional_text_handler
         self._normalize_text_list_handler = normalize_text_list_handler
         self._list_workitems_handler = list_workitems_handler
+        self._list_artifacts_handler = list_artifacts_handler
 
     @staticmethod
     def _build_workitem_status_counts(workitems: list[WorkItem]) -> dict[str, int]:
@@ -75,6 +78,7 @@ class WorkflowDecomposeSupportService:
         preview_stale: bool,
         workitem_total: int,
         workitem_status_counts: dict[str, int],
+        acceptance_evidence_complete: bool,
     ) -> str:
         if workitem_total > 0:
             ready_count = workitem_status_counts.get("ready", 0)
@@ -89,7 +93,9 @@ class WorkflowDecomposeSupportService:
             )
             if unfinished_count > 0:
                 return "wait_or_unblock_workitems"
-            return "review_results"
+            if acceptance_evidence_complete:
+                return "accepted"
+            return "complete_acceptance_evidence"
 
         if not has_decomposition:
             return "trigger_decompose_bootstrap"
@@ -145,6 +151,13 @@ class WorkflowDecomposeSupportService:
             workitems
         )
         workitem_total = len(workitems)
+        artifacts = self._list_artifacts_handler(run_id)
+        artifact_types = {artifact.artifact_type.value for artifact in artifacts}
+        acceptance_evidence_complete = {
+            "acceptance_report",
+            "release_note",
+            "rollback_plan",
+        }.issubset(artifact_types)
         unfinished_count = (
             workitem_status_counts.get("pending", 0)
             + workitem_status_counts.get("ready", 0)
@@ -161,10 +174,19 @@ class WorkflowDecomposeSupportService:
             preview_stale=preview_stale,
             workitem_total=workitem_total,
             workitem_status_counts=workitem_status_counts,
+            acceptance_evidence_complete=acceptance_evidence_complete,
         )
         return DecomposeBootstrapAggregateStatusResponse(
             run_id=run_id,
             run_status=run.status,
+            requirement_status=run.requirement_status,
+            clarification_rounds=run.clarification_rounds,
+            assumption_used=run.assumption_used,
+            current_stage=run.current_stage,
+            next_action_hint=run.next_action_hint,
+            blocked_reason=run.blocked_reason,
+            accepted=run.accepted,
+            acceptance_evidence_complete=acceptance_evidence_complete,
             decomposition_source=source,
             has_decomposition=has_decomposition,
             has_pending_confirmation=has_pending_confirmation,

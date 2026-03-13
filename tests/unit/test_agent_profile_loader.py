@@ -88,9 +88,21 @@ def test_missing_profile_returns_not_found_and_audit(tmp_path: Path) -> None:
     assert events[-1].reason == "profile_file_not_found"
 
 
+def test_loader_falls_back_to_secondary_root(tmp_path: Path) -> None:
+    primary_root = tmp_path / "roles"
+    legacy_root = tmp_path / "legacy-agents"
+    legacy_profile = _write_profile(legacy_root, "module-dev", "legacy rules")
+
+    loader = AgentProfileLoader(str(primary_root), fallback_roots=(str(legacy_root),))
+    profile = loader.load("module-dev")
+
+    assert profile.path == str(legacy_profile.resolve())
+    assert profile.content == "legacy rules"
+
+
 def test_default_registry_roles_have_profiles_in_repo() -> None:
     repo_root = Path(__file__).resolve().parents[2]
-    profiles_root = repo_root / "action_layer" / "agents"
+    profiles_root = repo_root / ".agents" / "roles"
     loader = AgentProfileLoader(str(profiles_root))
     registry = AgentRegistry()
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -49,9 +50,45 @@ class AgentProfileLoader:
     _STANDARD_PROFILE_FILE = "AGENTS.md"
     _LEGACY_PROFILE_FILE = "agent.md"
 
-    def __init__(self, profiles_root: str = "action_layer/agents") -> None:
-        self._profiles_root = Path(profiles_root).resolve()
+    def __init__(
+        self,
+        profiles_root: str = ".agents/roles",
+        fallback_roots: tuple[str, ...] | None = ("action_layer/agents",),
+    ) -> None:
+        self._profiles_roots = self._normalize_roots(
+            profiles_root=profiles_root,
+            fallback_roots=fallback_roots,
+        )
         self._audit_events: list[AgentProfileAuditEvent] = []
+
+    @staticmethod
+    def _split_roots(value: str) -> list[str]:
+        normalized = value.replace(",", os.pathsep)
+        return [part.strip() for part in normalized.split(os.pathsep) if part.strip()]
+
+    def _normalize_roots(
+        self,
+        *,
+        profiles_root: str,
+        fallback_roots: tuple[str, ...] | None,
+    ) -> tuple[Path, ...]:
+        roots: list[Path] = []
+        seen: set[str] = set()
+        tokens: list[str] = self._split_roots(profiles_root)
+        if fallback_roots:
+            for fallback in fallback_roots:
+                tokens.extend(self._split_roots(fallback))
+        if not tokens:
+            tokens = [".agents/roles", "action_layer/agents"]
+
+        for token in tokens:
+            resolved = Path(token).resolve()
+            key = str(resolved)
+            if key in seen:
+                continue
+            roots.append(resolved)
+            seen.add(key)
+        return tuple(roots)
 
     @staticmethod
     def _normalize_role(role: str) -> str:
@@ -63,11 +100,12 @@ class AgentProfileLoader:
         return normalized
 
     def _allowed_profile_paths(self, role: str) -> tuple[Path, ...]:
-        role_root = (self._profiles_root / role).resolve()
-        return (
-            (role_root / self._STANDARD_PROFILE_FILE).resolve(),
-            (role_root / self._LEGACY_PROFILE_FILE).resolve(),
-        )
+        candidates: list[Path] = []
+        for root in self._profiles_roots:
+            role_root = (root / role).resolve()
+            candidates.append((role_root / self._STANDARD_PROFILE_FILE).resolve())
+            candidates.append((role_root / self._LEGACY_PROFILE_FILE).resolve())
+        return tuple(candidates)
 
     def _default_profile_path(self, role: str) -> Path:
         for candidate in self._allowed_profile_paths(role):
@@ -75,16 +113,30 @@ class AgentProfileLoader:
                 return candidate
         return self._allowed_profile_paths(role)[0]
 
-    def _resolve_requested_path(self, role: str, requested_path: str | None) -> Path:
+    def _resolve_requested_path(
+        self,
+        role: str,
+        requested_path: str | None,
+        allowed_paths: tuple[Path, ...],
+    ) -> Path:
         if requested_path is None:
             return self._default_profile_path(role)
 
         requested = Path(requested_path)
-        if not requested.is_absolute():
-            requested = (self._profiles_root / requested).resolve()
-        else:
+        if requested.is_absolute():
             requested = requested.resolve()
-        return requested
+            return requested
+
+        for root in self._profiles_roots:
+            candidate = (root / requested).resolve()
+            if candidate in allowed_paths and candidate.is_file():
+                return candidate
+        for root in self._profiles_roots:
+            candidate = (root / requested).resolve()
+            if candidate in allowed_paths:
+                return candidate
+        primary_root = self._profiles_roots[0]
+        return (primary_root / requested).resolve()
 
     def _record_event(
         self,
@@ -128,7 +180,9 @@ class AgentProfileLoader:
         allowed_paths = self._allowed_profile_paths(normalized_role)
         default_allowed = self._default_profile_path(normalized_role)
         requested = requested_path if requested_path is not None else str(default_allowed)
-        resolved = self._resolve_requested_path(normalized_role, requested_path)
+        resolved = self._resolve_requested_path(
+            normalized_role, requested_path, allowed_paths
+        )
 
         if resolved not in allowed_paths:
             self._record_event(

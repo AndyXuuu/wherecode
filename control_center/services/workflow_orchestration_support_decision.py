@@ -185,6 +185,18 @@ def build_orchestrate_decision_report_impl(
             0.6,
             "workitems are not ready yet",
         ),
+        "complete_acceptance_evidence": (
+            "complete_acceptance_evidence",
+            16,
+            0.92,
+            "acceptance evidence is required before final acceptance",
+        ),
+        "accepted": (
+            "none",
+            100,
+            1.0,
+            "workflow already accepted",
+        ),
         "trigger_decompose_bootstrap": (
             "retry_with_decompose_payload",
             10,

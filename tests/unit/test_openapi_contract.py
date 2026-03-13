@@ -38,10 +38,12 @@ def test_openapi_contains_expected_core_paths() -> None:
         "/agent-rules": {"get"},
         "/agent-rules/reload": {"post"},
         "/config/command-orchestrate-policy": {"get"},
-        "/reports/v2/summary": {"get"},
         "/context/memory/items": {"get", "put", "delete"},
         "/context/memory/resolve": {"get"},
         "/context/memory/namespaces/{scope}/items": {"get"},
+        "/v3/runs/{run_id}/timeline": {"get"},
+        "/v3/runs/{run_id}/artifacts": {"get"},
+        "/v3/runs/{run_id}/report": {"get"},
         "/v3/workflows/runs": {"post"},
         "/v3/workflows/runs/{run_id}": {"get"},
         "/v3/workflows/runs/{run_id}/workitems": {"get", "post"},
@@ -94,24 +96,6 @@ def test_openapi_command_acceptance_response_contract() -> None:
     schema = spec["components"]["schemas"]["CommandAcceptedResponse"]
     required_fields = set(schema["required"])
     assert {"command_id", "task_id", "project_id", "status", "poll_url"}.issubset(required_fields)
-
-
-def test_openapi_v2_report_summary_query_params_contract() -> None:
-    spec = client.get("/openapi.json").json()
-    get_spec = spec["paths"]["/reports/v2/summary"]["get"]
-    names = {item["name"] for item in get_spec.get("parameters", [])}
-    assert {
-        "subproject",
-        "run_id",
-        "report_id",
-        "report_path",
-        "latest_path",
-        "compact",
-        "max_actions",
-        "min_score",
-        "action_type",
-    }.issubset(names)
-
 
 def test_openapi_validation_schema_contract() -> None:
     spec = client.get("/openapi.json").json()
@@ -205,34 +189,16 @@ def test_openapi_validation_schema_contract() -> None:
     assert "generated_at" in verify_policy_registry_export["properties"]
     assert "source" in verify_policy_registry_export["properties"]
 
-    v2_report_summary = schemas["V2ReportSummaryResponse"]
-    assert "report_id" in v2_report_summary["properties"]
-    assert "failure_taxonomy" in v2_report_summary["properties"]
-    assert "compact" in v2_report_summary["properties"]
-    assert "prioritized_actions" in v2_report_summary["properties"]
-    assert "primary_action" in v2_report_summary["properties"]
-    assert "retry_hints" in v2_report_summary["properties"]
-    assert "next_commands" in v2_report_summary["properties"]
+    v3_timeline = schemas["WorkflowRunTimelineResponse"]
+    assert "current_stage" in v3_timeline["properties"]
+    assert "blocked_reason" in v3_timeline["properties"]
+    assert "next_action_hint" in v3_timeline["properties"]
 
-    v2_report_compact = schemas["V2ReportCompactSummary"]
-    assert "status_line" in v2_report_compact["properties"]
-    assert "action_required" in v2_report_compact["properties"]
-    assert "alert_priority" in v2_report_compact["properties"]
-    assert "decision" in v2_report_compact["properties"]
-    assert "risk_level" in v2_report_compact["properties"]
-    assert "primary_action_id" in v2_report_compact["properties"]
-
-    v2_report_action = schemas["V2ReportActionSuggestion"]
-    assert "priority" in v2_report_action["properties"]
-    assert "action_id" in v2_report_action["properties"]
-    assert "action_type" in v2_report_action["properties"]
-    assert "command" in v2_report_action["properties"]
-    assert "reason" in v2_report_action["properties"]
-    assert "score" in v2_report_action["properties"]
-    assert "runbook_ref" in v2_report_action["properties"]
-    assert "can_auto_execute" in v2_report_action["properties"]
-    assert "requires_confirmation" in v2_report_action["properties"]
-    assert "estimated_cost" in v2_report_action["properties"]
+    v3_report = schemas["WorkflowRunReportResponse"]
+    assert "requirement_status" in v3_report["properties"]
+    assert "clarification_rounds" in v3_report["properties"]
+    assert "assumption_used" in v3_report["properties"]
+    assert "accepted" in v3_report["properties"]
 
     rollback_metrics_alert_policy_request = schemas["RollbackMetricsAlertPolicyRequest"]
     assert "audit_id" in rollback_metrics_alert_policy_request["required"]

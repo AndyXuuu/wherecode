@@ -535,49 +535,39 @@ def test_command_orchestrate_policy_config_contract() -> None:
     }
 
 
-def test_v2_report_summary_contract() -> None:
-    response = client.get("/reports/v2/summary", params={"subproject": "stock-sentiment"})
+def test_v3_run_report_contract() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_contract_report", "requested_by": "owner"},
+    ).json()
+    run_id = run["id"]
+    bootstrap = client.post(
+        f"/v3/workflows/runs/{run_id}/bootstrap",
+        json={"modules": ["auth"]},
+    )
+    assert bootstrap.status_code == 200
+    execute = client.post(
+        f"/v3/workflows/runs/{run_id}/execute",
+        json={"max_loops": 30},
+    )
+    assert execute.status_code == 200
+
+    response = client.get(f"/v3/runs/{run_id}/report")
     assert response.status_code == 200
     payload = response.json()
-    assert "source_input" in payload
-    assert "report_path" in payload
-    assert "report_id" in payload
-    assert "subproject_key" in payload
-    assert "mode" in payload
-    assert "final_status" in payload
-    assert "failure_taxonomy" in payload
-    assert "compact" in payload
-    assert "prioritized_actions" in payload
-    assert "primary_action" in payload
-    assert "retry_hints" in payload
-    assert "next_commands" in payload
-    taxonomy = payload["failure_taxonomy"]
-    assert {"code", "stage", "severity", "reason"}.issubset(taxonomy.keys())
-    compact = payload["compact"]
-    assert {
-        "status_line",
-        "action_required",
-        "alert_priority",
-        "decision",
-        "risk_level",
-        "primary_action_id",
-    }.issubset(compact.keys())
-    assert isinstance(payload["retry_hints"], list)
-    assert isinstance(payload["next_commands"], list)
-    assert isinstance(payload["prioritized_actions"], list)
-    if payload["prioritized_actions"]:
-        action = payload["prioritized_actions"][0]
-        assert {
-            "action_id",
-            "action_type",
-            "command",
-            "reason",
-            "score",
-            "runbook_ref",
-            "can_auto_execute",
-            "requires_confirmation",
-            "estimated_cost",
-        }.issubset(action.keys())
+    assert payload["run_id"] == run_id
+    assert "run_status" in payload
+    assert "current_stage" in payload
+    assert "requirement_status" in payload
+    assert "clarification_rounds" in payload
+    assert "assumption_used" in payload
+    assert "blocked_reason" in payload
+    assert "next_action_hint" in payload
+    assert "accepted" in payload
+    assert "acceptance_evidence_complete" in payload
+    assert isinstance(payload["workitem_status_counts"], dict)
+    assert isinstance(payload["gate_status_counts"], dict)
+    assert isinstance(payload["artifact_type_counts"], dict)
 
 
 def test_get_and_update_agent_routing_contract() -> None:

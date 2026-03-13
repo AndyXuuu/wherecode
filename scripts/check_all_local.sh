@@ -13,9 +13,7 @@ Scopes:
   dev        alias of quick
   release    backend full + command_center + project checks
   ops        go5 ops checkpoint (default profile quick)
-  evolve     go6 subproject auto-evolve (default project stock-sentiment)
   main       main-project orchestrate entry dry-run
-  v2         v2 requirement-driven pipeline dry-run
   all        alias of release (legacy)
   backend    backend full tests only
   backend-quick backend quick checks only
@@ -66,18 +64,6 @@ run_backend_full_checks() {
   bash "${ROOT_DIR}/scripts/check_backend.sh" full
 }
 
-run_capability_contract_checks() {
-  python3 "${ROOT_DIR}/scripts/capability_contract_check.py" \
-    --manifest "${ROOT_DIR}/control_center/capabilities/templates/agent.manifest.json" \
-    --manifest "${ROOT_DIR}/control_center/capabilities/templates/mcp.manifest.json" \
-    --manifest "${ROOT_DIR}/control_center/capabilities/templates/skill.manifest.json"
-}
-
-run_dev_routing_matrix_check() {
-  python3 "${ROOT_DIR}/scripts/dev_routing_matrix_check.py" \
-    --matrix "${ROOT_DIR}/control_center/capabilities/dev_routing_matrix.json"
-}
-
 SCOPE="${1:-quick}"
 case "${SCOPE}" in
   quick|dev)
@@ -97,29 +83,11 @@ case "${SCOPE}" in
     echo "[ops] go5 ops checkpoint (profile=${local_profile})"
     bash "${ROOT_DIR}/scripts/go5_ops_checkpoint.sh" "${local_profile}"
     ;;
-  evolve)
-    subproject_key="${CHECK_ALL_EVOLVE_SUBPROJECT:-stock-sentiment}"
-    echo "[evolve] go6 subproject auto-evolve (subproject=${subproject_key})"
-    bash "${ROOT_DIR}/scripts/go6_subproject_autoevolve.sh" "${subproject_key}"
-    ;;
   main)
     echo "[1/2] backend quick checks"
     run_quick_checks
     echo "[2/2] main-project orchestrate entry dry-run"
     bash "${ROOT_DIR}/scripts/main_orchestrate.sh" --dry-run
-    ;;
-  v2)
-    subproject_key="${CHECK_ALL_V2_SUBPROJECT:-stock-sentiment}"
-    echo "[1/5] backend quick checks"
-    run_quick_checks
-    echo "[2/5] capability contract checks"
-    run_capability_contract_checks
-    echo "[3/5] developer routing matrix checks"
-    run_dev_routing_matrix_check
-    echo "[4/5] v2 requirement-driven pipeline dry-run (subproject=${subproject_key})"
-    bash "${ROOT_DIR}/scripts/v2_run.sh" "${subproject_key}" --mode plan
-    echo "[5/5] v2 report/status gate checks"
-    bash "${ROOT_DIR}/scripts/v2_gate.sh" --subproject "${subproject_key}"
     ;;
   backend)
     echo "[backend] full tests"

@@ -19,6 +19,23 @@ class WorkflowRunStatus(str, Enum):
     CANCELED = "canceled"
 
 
+class RequirementStatus(str, Enum):
+    DRAFT = "draft"
+    CLARIFYING = "clarifying"
+    CONFIRMED = "confirmed"
+    BLOCKED = "blocked"
+
+
+class SDDStage(str, Enum):
+    INTENT = "intent"
+    SPEC = "spec"
+    DESIGN = "design"
+    TASKS = "tasks"
+    IMPLEMENT = "implement"
+    VERIFY = "verify"
+    ACCEPT = "accept"
+
+
 class WorkItemStatus(str, Enum):
     PENDING = "pending"
     READY = "ready"
@@ -105,6 +122,13 @@ class WorkflowRun(V3BaseEntity):
     task_id: str | None = None
     template_id: str | None = None
     status: WorkflowRunStatus = WorkflowRunStatus.PLANNING
+    requirement_status: RequirementStatus = RequirementStatus.DRAFT
+    clarification_rounds: int = Field(default=0, ge=0)
+    assumption_used: bool = False
+    current_stage: SDDStage = SDDStage.INTENT
+    next_action_hint: str | None = None
+    blocked_reason: str | None = None
+    accepted: bool = False
     requested_by: str | None = None
     summary: str | None = None
 

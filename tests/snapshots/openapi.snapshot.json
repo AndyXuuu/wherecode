@@ -1605,6 +1605,32 @@
       },
       "DecomposeBootstrapAggregateStatusResponse": {
         "properties": {
+          "acceptance_evidence_complete": {
+            "default": false,
+            "title": "Acceptance Evidence Complete",
+            "type": "boolean"
+          },
+          "accepted": {
+            "default": false,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "assumption_used": {
+            "default": false,
+            "title": "Assumption Used",
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
           "bootstrap_finished": {
             "default": false,
             "title": "Bootstrap Finished",
@@ -1614,6 +1640,11 @@
             "default": false,
             "title": "Bootstrap Started",
             "type": "boolean"
+          },
+          "clarification_rounds": {
+            "default": 0,
+            "title": "Clarification Rounds",
+            "type": "integer"
           },
           "confirmation_status": {
             "anyOf": [
@@ -1625,6 +1656,10 @@
               }
             ],
             "title": "Confirmation Status"
+          },
+          "current_stage": {
+            "$ref": "#/components/schemas/SDDStage",
+            "default": "intent"
           },
           "decomposition_source": {
             "default": "none",
@@ -1671,6 +1706,17 @@
             ],
             "title": "Next Action"
           },
+          "next_action_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Hint"
+          },
           "preview_fingerprint": {
             "anyOf": [
               {
@@ -1702,6 +1748,10 @@
             "default": false,
             "title": "Preview Stale",
             "type": "boolean"
+          },
+          "requirement_status": {
+            "$ref": "#/components/schemas/RequirementStatus",
+            "default": "draft"
           },
           "run_id": {
             "title": "Run Id",
@@ -3643,6 +3693,16 @@
         "title": "PurgeRollbackApprovalsResponse",
         "type": "object"
       },
+      "RequirementStatus": {
+        "enum": [
+          "draft",
+          "clarifying",
+          "confirmed",
+          "blocked"
+        ],
+        "title": "RequirementStatus",
+        "type": "string"
+      },
       "ResolveDiscussionRequest": {
         "properties": {
           "decision": {
@@ -4001,6 +4061,19 @@
         "title": "RoutingRuleInfo",
         "type": "object"
       },
+      "SDDStage": {
+        "enum": [
+          "intent",
+          "spec",
+          "design",
+          "tasks",
+          "implement",
+          "verify",
+          "accept"
+        ],
+        "title": "SDDStage",
+        "type": "string"
+      },
       "Task": {
         "properties": {
           "assignee_agent": {
@@ -4208,223 +4281,6 @@
         ],
         "title": "TaskStatus",
         "type": "string"
-      },
-      "V2ReportActionSuggestion": {
-        "properties": {
-          "action_id": {
-            "default": "",
-            "title": "Action Id",
-            "type": "string"
-          },
-          "action_type": {
-            "default": "",
-            "title": "Action Type",
-            "type": "string"
-          },
-          "can_auto_execute": {
-            "default": false,
-            "title": "Can Auto Execute",
-            "type": "boolean"
-          },
-          "command": {
-            "default": "",
-            "title": "Command",
-            "type": "string"
-          },
-          "estimated_cost": {
-            "default": "",
-            "title": "Estimated Cost",
-            "type": "string"
-          },
-          "priority": {
-            "default": 1,
-            "maximum": 10.0,
-            "minimum": 1.0,
-            "title": "Priority",
-            "type": "integer"
-          },
-          "reason": {
-            "default": "",
-            "title": "Reason",
-            "type": "string"
-          },
-          "requires_confirmation": {
-            "default": true,
-            "title": "Requires Confirmation",
-            "type": "boolean"
-          },
-          "runbook_ref": {
-            "default": "",
-            "title": "Runbook Ref",
-            "type": "string"
-          },
-          "score": {
-            "default": 0,
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Score",
-            "type": "integer"
-          }
-        },
-        "title": "V2ReportActionSuggestion",
-        "type": "object"
-      },
-      "V2ReportCompactSummary": {
-        "properties": {
-          "action_required": {
-            "default": false,
-            "title": "Action Required",
-            "type": "boolean"
-          },
-          "alert_priority": {
-            "default": "",
-            "title": "Alert Priority",
-            "type": "string"
-          },
-          "decision": {
-            "default": "",
-            "title": "Decision",
-            "type": "string"
-          },
-          "primary_action_id": {
-            "default": "",
-            "title": "Primary Action Id",
-            "type": "string"
-          },
-          "risk_level": {
-            "default": "",
-            "title": "Risk Level",
-            "type": "string"
-          },
-          "status_line": {
-            "default": "",
-            "title": "Status Line",
-            "type": "string"
-          },
-          "top_next_command": {
-            "default": "",
-            "title": "Top Next Command",
-            "type": "string"
-          },
-          "top_retry_hint": {
-            "default": "",
-            "title": "Top Retry Hint",
-            "type": "string"
-          }
-        },
-        "title": "V2ReportCompactSummary",
-        "type": "object"
-      },
-      "V2ReportFailureTaxonomy": {
-        "properties": {
-          "code": {
-            "default": "",
-            "title": "Code",
-            "type": "string"
-          },
-          "reason": {
-            "default": "",
-            "title": "Reason",
-            "type": "string"
-          },
-          "severity": {
-            "default": "",
-            "title": "Severity",
-            "type": "string"
-          },
-          "stage": {
-            "default": "",
-            "title": "Stage",
-            "type": "string"
-          }
-        },
-        "title": "V2ReportFailureTaxonomy",
-        "type": "object"
-      },
-      "V2ReportSummaryResponse": {
-        "properties": {
-          "captured_at": {
-            "default": "",
-            "title": "Captured At",
-            "type": "string"
-          },
-          "compact": {
-            "$ref": "#/components/schemas/V2ReportCompactSummary"
-          },
-          "failure_taxonomy": {
-            "$ref": "#/components/schemas/V2ReportFailureTaxonomy"
-          },
-          "final_status": {
-            "default": "",
-            "title": "Final Status",
-            "type": "string"
-          },
-          "latest_pointer": {
-            "default": "",
-            "title": "Latest Pointer",
-            "type": "string"
-          },
-          "mode": {
-            "default": "",
-            "title": "Mode",
-            "type": "string"
-          },
-          "next_commands": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Next Commands",
-            "type": "array"
-          },
-          "primary_action": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/V2ReportActionSuggestion"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "prioritized_actions": {
-            "items": {
-              "$ref": "#/components/schemas/V2ReportActionSuggestion"
-            },
-            "title": "Prioritized Actions",
-            "type": "array"
-          },
-          "report_id": {
-            "default": "",
-            "title": "Report Id",
-            "type": "string"
-          },
-          "report_path": {
-            "title": "Report Path",
-            "type": "string"
-          },
-          "retry_hints": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Retry Hints",
-            "type": "array"
-          },
-          "source_input": {
-            "title": "Source Input",
-            "type": "string"
-          },
-          "subproject_key": {
-            "default": "",
-            "title": "Subproject Key",
-            "type": "string"
-          }
-        },
-        "required": [
-          "source_input",
-          "report_path"
-        ],
-        "title": "V2ReportSummaryResponse",
-        "type": "object"
       },
       "ValidationError": {
         "properties": {
@@ -4904,10 +4760,41 @@
       },
       "WorkflowRun": {
         "properties": {
+          "accepted": {
+            "default": false,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "assumption_used": {
+            "default": false,
+            "title": "Assumption Used",
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
+          "clarification_rounds": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Clarification Rounds",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "current_stage": {
+            "$ref": "#/components/schemas/SDDStage",
+            "default": "intent"
           },
           "id": {
             "title": "Id",
@@ -4917,6 +4804,17 @@
             "additionalProperties": true,
             "title": "Metadata",
             "type": "object"
+          },
+          "next_action_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Hint"
           },
           "project_id": {
             "minLength": 1,
@@ -4933,6 +4831,10 @@
               }
             ],
             "title": "Requested By"
+          },
+          "requirement_status": {
+            "$ref": "#/components/schemas/RequirementStatus",
+            "default": "draft"
           },
           "status": {
             "$ref": "#/components/schemas/WorkflowRunStatus",
@@ -4981,6 +4883,71 @@
           "project_id"
         ],
         "title": "WorkflowRun",
+        "type": "object"
+      },
+      "WorkflowRunArtifactsResponse": {
+        "properties": {
+          "acceptance_evidence_complete": {
+            "default": false,
+            "title": "Acceptance Evidence Complete",
+            "type": "boolean"
+          },
+          "accepted": {
+            "default": false,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "artifacts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
+          "current_stage": {
+            "$ref": "#/components/schemas/SDDStage",
+            "default": "intent"
+          },
+          "next_action_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Hint"
+          },
+          "requirement_status": {
+            "$ref": "#/components/schemas/RequirementStatus",
+            "default": "draft"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_status"
+        ],
+        "title": "WorkflowRunArtifactsResponse",
         "type": "object"
       },
       "WorkflowRunOrchestrateDecisionMachineReport": {
@@ -6129,6 +6096,94 @@
         "title": "WorkflowRunOrchestrateTelemetrySnapshot",
         "type": "object"
       },
+      "WorkflowRunReportResponse": {
+        "properties": {
+          "acceptance_evidence_complete": {
+            "default": false,
+            "title": "Acceptance Evidence Complete",
+            "type": "boolean"
+          },
+          "accepted": {
+            "default": false,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "artifact_type_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Artifact Type Counts",
+            "type": "object"
+          },
+          "assumption_used": {
+            "default": false,
+            "title": "Assumption Used",
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
+          "clarification_rounds": {
+            "default": 0,
+            "title": "Clarification Rounds",
+            "type": "integer"
+          },
+          "current_stage": {
+            "$ref": "#/components/schemas/SDDStage",
+            "default": "intent"
+          },
+          "gate_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Gate Status Counts",
+            "type": "object"
+          },
+          "next_action_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Hint"
+          },
+          "requirement_status": {
+            "$ref": "#/components/schemas/RequirementStatus",
+            "default": "draft"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "workitem_status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Workitem Status Counts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_status"
+        ],
+        "title": "WorkflowRunReportResponse",
+        "type": "object"
+      },
       "WorkflowRunRoutingDecision": {
         "properties": {
           "capability_id": {
@@ -6273,6 +6328,104 @@
         ],
         "title": "WorkflowRunStatus",
         "type": "string"
+      },
+      "WorkflowRunTimelineEvent": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "ts": {
+            "format": "date-time",
+            "title": "Ts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ts",
+          "source",
+          "stage",
+          "status",
+          "message"
+        ],
+        "title": "WorkflowRunTimelineEvent",
+        "type": "object"
+      },
+      "WorkflowRunTimelineResponse": {
+        "properties": {
+          "assumption_used": {
+            "default": false,
+            "title": "Assumption Used",
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
+          "clarification_rounds": {
+            "default": 0,
+            "title": "Clarification Rounds",
+            "type": "integer"
+          },
+          "current_stage": {
+            "$ref": "#/components/schemas/SDDStage",
+            "default": "intent"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRunTimelineEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "next_action_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action Hint"
+          },
+          "requirement_status": {
+            "$ref": "#/components/schemas/RequirementStatus",
+            "default": "draft"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "run_status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_status"
+        ],
+        "title": "WorkflowRunTimelineResponse",
+        "type": "object"
       }
     }
   },
@@ -8047,156 +8200,6 @@
         "summary": "Create Task"
       }
     },
-    "/reports/v2/summary": {
-      "get": {
-        "operationId": "get_v2_report_summary_reports_v2_summary_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "subproject",
-            "required": false,
-            "schema": {
-              "default": "stock-sentiment",
-              "title": "Subproject",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "run_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Run Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "report_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Report Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "report_path",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Report Path"
-            }
-          },
-          {
-            "in": "query",
-            "name": "latest_path",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Latest Path"
-            }
-          },
-          {
-            "in": "query",
-            "name": "compact",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Compact",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "max_actions",
-            "required": false,
-            "schema": {
-              "default": 3,
-              "title": "Max Actions",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "min_score",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "title": "Min Score",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "action_type",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Action Type"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ReportSummaryResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get V2 Report Summary"
-      }
-    },
     "/tasks/{task_id}": {
       "get": {
         "operationId": "get_task_tasks__task_id__get",
@@ -8324,6 +8327,123 @@
           }
         },
         "summary": "Create Command"
+      }
+    },
+    "/v3/runs/{run_id}/artifacts": {
+      "get": {
+        "operationId": "get_run_artifacts_view_v3_runs__run_id__artifacts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunArtifactsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run Artifacts View"
+      }
+    },
+    "/v3/runs/{run_id}/report": {
+      "get": {
+        "operationId": "get_run_report_v3_runs__run_id__report_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run Report"
+      }
+    },
+    "/v3/runs/{run_id}/timeline": {
+      "get": {
+        "operationId": "get_run_timeline_v3_runs__run_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunTimelineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run Timeline"
       }
     },
     "/v3/workflows/runs": {

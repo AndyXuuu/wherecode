@@ -9,7 +9,7 @@ from action_layer.services.runtime_execution import ActionRuntimeExecutionServic
 def _build_service() -> ActionRuntimeExecutionService:
     return ActionRuntimeExecutionService(
         registry=AgentRegistry(),
-        profile_loader=AgentProfileLoader("action_layer/agents"),
+        profile_loader=AgentProfileLoader(".agents/roles"),
         llm_config=None,
         llm_executor=None,
         llm_init_error="llm not configured",

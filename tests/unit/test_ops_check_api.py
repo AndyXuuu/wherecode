@@ -15,7 +15,7 @@ def test_ops_check_scopes_contains_core_scope() -> None:
     payload = response.json()
     assert "scopes" in payload
     assert "quick" in payload["scopes"]
-    assert "v2" in payload["scopes"]
+    assert "main" in payload["scopes"]
 
 
 def test_ops_check_run_create_and_latest() -> None:

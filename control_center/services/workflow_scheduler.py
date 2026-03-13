@@ -175,6 +175,8 @@ class WorkflowScheduler:
             summary=summary,
             status=WorkflowRunStatus.RUNNING,
         )
+        run.metadata.setdefault("sdd_stage_artifacts", {})
+        run.next_action_hint = "start_intent_stage"
         self._runs[run.id] = run
         self._persist_run(run)
         return run
@@ -294,6 +296,31 @@ class WorkflowScheduler:
         self._artifacts[artifact.id] = artifact
         self._run_artifacts[item.workflow_run_id].append(artifact.id)
         self._workitem_artifacts[workitem_id].append(artifact.id)
+        self._persist_artifact(artifact)
+        return artifact
+
+    def create_run_artifact(
+        self,
+        run_id: str,
+        *,
+        artifact_type: ArtifactType,
+        title: str,
+        uri_or_path: str,
+        created_by: str,
+        checksum: str | None = None,
+    ) -> Artifact:
+        _ = self.get_run(run_id)
+        artifact = Artifact(
+            owner_type=ArtifactOwnerType.WORKFLOW_RUN,
+            owner_id=run_id,
+            artifact_type=artifact_type,
+            title=title,
+            uri_or_path=uri_or_path,
+            created_by=created_by,
+            checksum=checksum,
+        )
+        self._artifacts[artifact.id] = artifact
+        self._run_artifacts[run_id].append(artifact.id)
         self._persist_artifact(artifact)
         return artifact
 

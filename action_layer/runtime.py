@@ -35,7 +35,10 @@ class ActionLayerHandler(BaseHTTPRequestHandler):
         )
     )
     profile_loader = AgentProfileLoader(
-        os.getenv("ACTION_LAYER_AGENT_PROFILES_ROOT", "action_layer/agents")
+        os.getenv(
+            "ACTION_LAYER_AGENT_PROFILES_ROOT",
+            ".agents/roles:action_layer/agents",
+        )
     )
     try:
         llm_config = LLMRoutingConfig.from_env()

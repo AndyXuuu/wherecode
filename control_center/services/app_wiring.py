@@ -21,7 +21,6 @@ from control_center.api import (
     create_metrics_router,
     create_ops_check_router,
     create_runtime_config_router,
-    create_v2_report_router,
     create_workflow_core_router,
     create_workflow_execution_router,
     create_workflow_orchestration_router,
@@ -58,7 +57,7 @@ def build_ops_check_runtime(
         report_dir=Path(
             env_get(
                 "WHERECODE_CHECK_REPORT_DIR",
-                str(root_dir / "docs" / "v2_reports" / "check_runs"),
+                str(root_dir / "docs" / "v3_reports" / "check_runs"),
             )
         ),
     )
@@ -154,7 +153,6 @@ def include_control_center_routers(
             ),
         )
     )
-    app.include_router(create_v2_report_router())
     app.include_router(
         create_agent_rules_router(
             agent_rules_registry_provider=agent_rules_registry_provider,

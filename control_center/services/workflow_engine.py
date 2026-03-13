@@ -6,12 +6,17 @@ from typing import Awaitable, Callable
 
 from action_layer.services import AgentRegistry, UnknownAgentRoleError
 
+from control_center.executors.contracts import ExecutionStatus
+from control_center.executors.service import ExecutorService
 from control_center.models import (
     ActionExecuteRequest,
     ActionExecuteResponse,
+    ArtifactType,
     DiscussionStatus,
     DiscussionPrompt,
     ExecuteWorkflowRunResponse,
+    RequirementStatus,
+    SDDStage,
     WorkItem,
     WorkItemStatus,
     WorkflowRunStatus,
@@ -55,6 +60,7 @@ class WorkflowEngine:
         self,
         scheduler: WorkflowScheduler,
         action_executor: ActionExecutor,
+        executor_service: ExecutorService | None = None,
         agent_registry: AgentRegistry | None = None,
         gatekeeper: Gatekeeper | None = None,
         max_module_reflows: int = 1,
@@ -62,6 +68,7 @@ class WorkflowEngine:
     ) -> None:
         self._scheduler = scheduler
         self._action_executor = action_executor
+        self._executor_service = executor_service
         self._agent_registry = agent_registry or AgentRegistry()
         self._gatekeeper = gatekeeper or Gatekeeper()
         self._max_module_reflows = max_module_reflows
@@ -127,6 +134,26 @@ class WorkflowEngine:
         run.metadata["module_terminal_workitems"] = module_terminal_id_map
         run.metadata["module_terminal_workitem_ids"] = module_terminal_ids_map
         run.metadata["reflow_attempts"] = {}
+        run.requirement_status = RequirementStatus.CONFIRMED
+        run.current_stage = SDDStage.TASKS
+        run.blocked_reason = None
+        run.next_action_hint = "execute_workflow_run"
+        stage_artifacts = run.metadata.get("sdd_stage_artifacts")
+        if not isinstance(stage_artifacts, dict):
+            stage_artifacts = {}
+        for stage in ("intent", "spec", "design", "tasks"):
+            artifact_id = stage_artifacts.get(stage)
+            if isinstance(artifact_id, str) and artifact_id.strip():
+                continue
+            artifact = self._scheduler.create_run_artifact(
+                run_id=run.id,
+                artifact_type=ArtifactType.PLAN,
+                title=f"SDD {stage}",
+                uri_or_path=f"artifacts/{run.id}/sdd/{stage}.md",
+                created_by="chief-architect",
+            )
+            stage_artifacts[stage] = artifact.id
+        run.metadata["sdd_stage_artifacts"] = stage_artifacts
         self._scheduler.persist_run(run.id)
         return BootstrapResult(workitems=created)
 
@@ -248,6 +275,40 @@ class WorkflowEngine:
         )
 
     async def _execute_one_workitem(self, workitem: WorkItem) -> str:
+        run = self._scheduler.get_run(workitem.workflow_run_id)
+        if self._executor_service is not None:
+            result = await self._executor_service.execute_workitem(
+                run=run,
+                workitem=workitem,
+                text=self._build_execution_text(workitem),
+            )
+            workitem.metadata["executor"] = "opencode"
+            workitem.metadata["executor_strategy"] = self._executor_service.resolve_strategy(
+                workitem.role
+            ).value
+            workitem.metadata["trace_id"] = result.trace_id
+            workitem.metadata["execution_summary"] = result.summary
+            workitem.metadata["execution_raw_ref"] = result.raw_ref
+            if result.status == ExecutionStatus.NEEDS_DISCUSSION:
+                discussion = self._scheduler.mark_needs_discussion(
+                    workitem.id,
+                    question=(result.summary or "need clarification"),
+                    options=[],
+                    recommendation=None,
+                    impact=None,
+                    fingerprint=f"exec:{result.trace_id}",
+                )
+                if discussion.status == DiscussionStatus.OPEN:
+                    return "needs_discussion"
+                return "failed"
+            if result.status == ExecutionStatus.SUCCESS:
+                return "success"
+            if result.error is not None:
+                workitem.metadata["execution_error"] = result.error.message
+                workitem.metadata["execution_error_code"] = result.error.code
+                workitem.metadata["execution_error_retryable"] = result.error.retryable
+            return "failed"
+
         role = workitem.role
         routed_executor = str(workitem.metadata.get("task_routing_executor", "")).strip()
         if routed_executor:
@@ -259,7 +320,6 @@ class WorkflowEngine:
                 workitem.metadata["execution_error"] = str(exc)
                 return "failed"
 
-        run = self._scheduler.get_run(workitem.workflow_run_id)
         request = ActionExecuteRequest(
             text=self._build_execution_text(workitem),
             agent=mapped_agent,

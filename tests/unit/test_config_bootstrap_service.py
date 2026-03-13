@@ -24,6 +24,7 @@ def test_config_bootstrap_defaults() -> None:
         config.agent_rules_registry_file
         == "control_center/capabilities/agent_rules_registry.json"
     )
+    assert config.role_routing_policy_file == ".agents/policies/role_routing.v3.json"
     assert config.state_backend == "memory"
     assert config.sqlite_path == ".wherecode/state.db"
 

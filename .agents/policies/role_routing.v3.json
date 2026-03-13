@@ -1,0 +1,56 @@
+{
+  "version": "v3",
+  "updated_at": "2026-03-12T00:00:00Z",
+  "default_executor": "opencode",
+  "default_strategy": "native",
+  "roles": {
+    "chief-architect": {
+      "executor": "opencode",
+      "strategy": "native",
+      "agent": "chief-architect",
+      "model": "reasoning-high"
+    },
+    "module-dev": {
+      "executor": "opencode",
+      "strategy": "native",
+      "agent": "module-dev",
+      "model": "coding-balanced"
+    },
+    "doc-manager": {
+      "executor": "opencode",
+      "strategy": "ohmy",
+      "category": "docs",
+      "model": "text-precision"
+    },
+    "qa-test": {
+      "executor": "opencode",
+      "strategy": "ohmy",
+      "category": "qa",
+      "model": "test-analysis"
+    },
+    "security-review": {
+      "executor": "opencode",
+      "strategy": "native",
+      "agent": "security-review",
+      "model": "risk-analysis"
+    },
+    "integration-test": {
+      "executor": "opencode",
+      "strategy": "ohmy",
+      "category": "integration",
+      "model": "integration-debug"
+    },
+    "acceptance": {
+      "executor": "opencode",
+      "strategy": "native",
+      "agent": "acceptance",
+      "model": "acceptance-gate"
+    },
+    "release-manager": {
+      "executor": "opencode",
+      "strategy": "native",
+      "agent": "release-manager",
+      "model": "release-control"
+    }
+  }
+}

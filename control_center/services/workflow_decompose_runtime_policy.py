@@ -13,6 +13,8 @@ from control_center.models import (
     DecomposeBootstrapAggregateStatusResponse,
     DecomposeBootstrapWorkflowRequest,
     DecomposeBootstrapWorkflowResponse,
+    RequirementStatus,
+    SDDStage,
     WorkflowRun,
 )
 
@@ -119,6 +121,10 @@ def apply_pending_confirmation_metadata(
     run.metadata["chief_decomposition"] = decomposition_record
     run.metadata["pending_decomposition"] = decomposition_record
     run.metadata.pop("decompose_bootstrap_preview", None)
+    run.requirement_status = RequirementStatus.CONFIRMED
+    run.current_stage = SDDStage.TASKS
+    run.blocked_reason = None
+    run.next_action_hint = "confirm_decomposition"
     return confirmation_token
 
 
@@ -137,6 +143,10 @@ def apply_auto_approved_confirmation_metadata(
     run.metadata["chief_decomposition"] = decomposition_record
     run.metadata.pop("pending_decomposition", None)
     run.metadata.pop("decompose_bootstrap_preview", None)
+    run.requirement_status = RequirementStatus.CONFIRMED
+    run.current_stage = SDDStage.TASKS
+    run.blocked_reason = None
+    run.next_action_hint = "execute_workflow_run"
 
 
 def build_decompose_pending_response(
@@ -216,6 +226,9 @@ def apply_confirmation_rejected_metadata(
     confirmation["status"] = "rejected"
     run.metadata["pending_decomposition"] = pending
     run.metadata["chief_decomposition"] = pending
+    run.requirement_status = RequirementStatus.BLOCKED
+    run.blocked_reason = "decomposition_rejected"
+    run.next_action_hint = "revise_decomposition_and_reconfirm"
 
 
 def apply_confirmation_approved_metadata(
@@ -227,6 +240,10 @@ def apply_confirmation_approved_metadata(
     confirmation["status"] = "approved"
     run.metadata["chief_decomposition"] = pending
     run.metadata.pop("pending_decomposition", None)
+    run.requirement_status = RequirementStatus.CONFIRMED
+    run.current_stage = SDDStage.TASKS
+    run.blocked_reason = None
+    run.next_action_hint = "execute_workflow_run"
 
 
 def build_confirmation_response(

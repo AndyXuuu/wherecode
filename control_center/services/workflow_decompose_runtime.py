@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from control_center.models import (
     ActionExecuteRequest,
     ActionExecuteResponse,
+    ArtifactType,
     ConfirmDecomposeBootstrapWorkflowRequest,
     ConfirmDecomposeBootstrapWorkflowResponse,
     DecomposeBootstrapAdvanceLoopRequest,
@@ -19,7 +20,8 @@ from control_center.models import (
     DecomposeBootstrapPreviewResponse,
     DecomposeBootstrapWorkflowRequest,
     DecomposeBootstrapWorkflowResponse,
-    ExecuteWorkflowRunResponse,
+    RequirementStatus,
+    SDDStage,
     WorkflowRun,
     WorkflowRunRoutingDecisionsResponse,
 )
@@ -52,6 +54,17 @@ from control_center.services.workflow_scheduler import WorkflowScheduler
 
 
 class WorkflowDecomposeRuntimeService:
+    AMBIGUOUS_REQUIREMENT_HINTS = (
+        "tbd",
+        "todo",
+        "later",
+        "以后再说",
+        "待定",
+        "再看",
+        "先这样",
+        "暂不明确",
+    )
+
     def __init__(
         self,
         *,
@@ -195,6 +208,23 @@ class WorkflowDecomposeRuntimeService:
                 status_code=409,
                 detail="pending decomposition confirmation exists",
             )
+        if self._is_ambiguous_requirements(payload.requirements):
+            run.requirement_status = RequirementStatus.CLARIFYING
+            run.clarification_rounds += 1
+            run.blocked_reason = "requirement_ambiguity_detected"
+            run.next_action_hint = "awaiting_clarification"
+            run.current_stage = SDDStage.INTENT
+            run.metadata["clarification_questions"] = self._build_clarification_questions()
+            scheduler.persist_run(run_id)
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "awaiting_clarification",
+                    "requirement_status": "clarifying",
+                    "questions": self._build_clarification_questions(),
+                    "next_action_hint": "awaiting_clarification",
+                },
+            )
 
         requested_by = payload.requested_by or run.requested_by or "control-center"
         action_request = build_chief_action_request(
@@ -275,6 +305,7 @@ class WorkflowDecomposeRuntimeService:
         )
 
         now_iso = self._now_utc_handler().isoformat()
+        self._ensure_sdd_stage_artifacts(scheduler, run_id)
         decomposition_record = build_decomposition_record(
             payload=payload,
             modules=modules,
@@ -337,6 +368,42 @@ class WorkflowDecomposeRuntimeService:
             chief_metadata=chief_metadata,
             workitems=bootstrap.workitems,
         )
+
+    @classmethod
+    def _is_ambiguous_requirements(cls, requirements: str) -> bool:
+        normalized = requirements.strip().lower()
+        if len(normalized) < 8:
+            return True
+        return any(token in normalized for token in cls.AMBIGUOUS_REQUIREMENT_HINTS)
+
+    @staticmethod
+    def _build_clarification_questions() -> list[str]:
+        return [
+            "What is the explicit acceptance criteria for this run?",
+            "What are the required modules (or module boundaries)?",
+            "What output/report format is required at the end?",
+        ]
+
+    @staticmethod
+    def _ensure_sdd_stage_artifacts(scheduler: WorkflowScheduler, run_id: str) -> None:
+        run = scheduler.get_run(run_id)
+        stage_artifacts = run.metadata.get("sdd_stage_artifacts")
+        if not isinstance(stage_artifacts, dict):
+            stage_artifacts = {}
+        required = ("intent", "spec", "design", "tasks")
+        for stage in required:
+            existing_id = stage_artifacts.get(stage)
+            if isinstance(existing_id, str) and existing_id.strip():
+                continue
+            artifact = scheduler.create_run_artifact(
+                run_id=run_id,
+                artifact_type=ArtifactType.PLAN,
+                title=f"SDD {stage}",
+                uri_or_path=f"artifacts/{run_id}/sdd/{stage}.md",
+                created_by="chief-architect",
+            )
+            stage_artifacts[stage] = artifact.id
+        run.metadata["sdd_stage_artifacts"] = stage_artifacts
 
     async def get_decompose_bootstrap_pending(
         self,

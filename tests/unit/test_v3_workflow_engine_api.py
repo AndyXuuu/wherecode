@@ -81,6 +81,66 @@ def test_v3_workflow_engine_execute_failure_path() -> None:
     assert payload["failed_count"] >= 1
 
 
+def test_v3_workflow_execute_requires_confirmed_requirement() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_req_gate", "requested_by": "andy"},
+    ).json()
+    run_id = run["id"]
+
+    response = client.post(
+        f"/v3/workflows/runs/{run_id}/execute",
+        json={"max_loops": 5},
+    )
+    assert response.status_code == 409
+    assert "requirement is not confirmed" in response.json()["detail"]
+
+
+def test_v3_run_visibility_api_contract() -> None:
+    run = client.post(
+        "/v3/workflows/runs",
+        json={"project_id": "proj_visibility_api", "requested_by": "andy"},
+    ).json()
+    run_id = run["id"]
+
+    bootstrap = client.post(
+        f"/v3/workflows/runs/{run_id}/bootstrap",
+        json={"modules": ["auth"]},
+    )
+    assert bootstrap.status_code == 200
+
+    execute = client.post(
+        f"/v3/workflows/runs/{run_id}/execute",
+        json={"max_loops": 30},
+    )
+    assert execute.status_code == 200
+
+    timeline = client.get(f"/v3/runs/{run_id}/timeline")
+    assert timeline.status_code == 200
+    timeline_payload = timeline.json()
+    assert timeline_payload["run_id"] == run_id
+    assert "current_stage" in timeline_payload
+    assert "requirement_status" in timeline_payload
+    assert "blocked_reason" in timeline_payload
+    assert "next_action_hint" in timeline_payload
+    assert isinstance(timeline_payload["events"], list)
+
+    artifacts = client.get(f"/v3/runs/{run_id}/artifacts")
+    assert artifacts.status_code == 200
+    artifacts_payload = artifacts.json()
+    assert artifacts_payload["run_id"] == run_id
+    assert "acceptance_evidence_complete" in artifacts_payload
+    assert isinstance(artifacts_payload["artifacts"], list)
+
+    report = client.get(f"/v3/runs/{run_id}/report")
+    assert report.status_code == 200
+    report_payload = report.json()
+    assert report_payload["run_id"] == run_id
+    assert "workitem_status_counts" in report_payload
+    assert "gate_status_counts" in report_payload
+    assert "artifact_type_counts" in report_payload
+
+
 def test_v3_workflow_engine_rejects_duplicate_bootstrap() -> None:
     run = client.post(
         "/v3/workflows/runs",

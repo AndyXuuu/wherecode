@@ -70,4 +70,4 @@ def test_build_ops_check_runtime_uses_root_relative_defaults() -> None:
     )
     assert runtime._script_path == Path("/tmp/wherecode/scripts/check_all_local.sh")
     assert runtime._log_dir == Path("/tmp/wherecode/.wherecode/check_runs")
-    assert runtime._report_dir == Path("/tmp/wherecode/docs/v2_reports/check_runs")
+    assert runtime._report_dir == Path("/tmp/wherecode/docs/v3_reports/check_runs")

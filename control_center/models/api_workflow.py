@@ -5,7 +5,12 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from control_center.models.v3_workflow import WorkflowRunStatus, WorkItem
+from control_center.models.v3_workflow import (
+    RequirementStatus,
+    SDDStage,
+    WorkflowRunStatus,
+    WorkItem,
+)
 
 
 class CreateWorkflowRunRequest(BaseModel):
@@ -105,6 +110,14 @@ class DecomposeBootstrapPendingWorkflowResponse(BaseModel):
 class DecomposeBootstrapAggregateStatusResponse(BaseModel):
     run_id: str
     run_status: WorkflowRunStatus
+    requirement_status: RequirementStatus = RequirementStatus.DRAFT
+    clarification_rounds: int = 0
+    assumption_used: bool = False
+    current_stage: SDDStage = SDDStage.INTENT
+    next_action_hint: str | None = None
+    blocked_reason: str | None = None
+    accepted: bool = False
+    acceptance_evidence_complete: bool = False
     decomposition_source: str = "none"
     has_decomposition: bool = False
     has_pending_confirmation: bool = False
@@ -121,6 +134,54 @@ class DecomposeBootstrapAggregateStatusResponse(BaseModel):
     bootstrap_started: bool = False
     bootstrap_finished: bool = False
     next_action: str | None = None
+
+
+class WorkflowRunTimelineEvent(BaseModel):
+    ts: datetime
+    source: str
+    stage: str
+    status: str
+    message: str
+
+
+class WorkflowRunTimelineResponse(BaseModel):
+    run_id: str
+    run_status: WorkflowRunStatus
+    current_stage: SDDStage = SDDStage.INTENT
+    requirement_status: RequirementStatus = RequirementStatus.DRAFT
+    clarification_rounds: int = 0
+    assumption_used: bool = False
+    blocked_reason: str | None = None
+    next_action_hint: str | None = None
+    events: list[WorkflowRunTimelineEvent] = Field(default_factory=list)
+
+
+class WorkflowRunArtifactsResponse(BaseModel):
+    run_id: str
+    run_status: WorkflowRunStatus
+    current_stage: SDDStage = SDDStage.INTENT
+    requirement_status: RequirementStatus = RequirementStatus.DRAFT
+    blocked_reason: str | None = None
+    next_action_hint: str | None = None
+    accepted: bool = False
+    acceptance_evidence_complete: bool = False
+    artifacts: list[dict[str, object]] = Field(default_factory=list)
+
+
+class WorkflowRunReportResponse(BaseModel):
+    run_id: str
+    run_status: WorkflowRunStatus
+    current_stage: SDDStage = SDDStage.INTENT
+    requirement_status: RequirementStatus = RequirementStatus.DRAFT
+    clarification_rounds: int = 0
+    assumption_used: bool = False
+    blocked_reason: str | None = None
+    next_action_hint: str | None = None
+    accepted: bool = False
+    acceptance_evidence_complete: bool = False
+    workitem_status_counts: dict[str, int] = Field(default_factory=dict)
+    gate_status_counts: dict[str, int] = Field(default_factory=dict)
+    artifact_type_counts: dict[str, int] = Field(default_factory=dict)
 
 
 class WorkflowRunRoutingDecision(BaseModel):

@@ -20,3 +20,7 @@ __pycache__/
 docs/ops_reports/*T*-tst2-soak-*.jsonl
 docs/ops_reports/*T*-tst2-soak-*.log
 docs/ops_reports/*T*-tst2-soak-*.md
+
+external/executors/*
+!external/executors/README.md
+!external/executors/.gitkeep

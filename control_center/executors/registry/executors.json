@@ -1,0 +1,14 @@
+{
+  "version": "v3",
+  "executors": [
+    {
+      "id": "opencode",
+      "enabled": true,
+      "adapter": "control_center.executors.adapters.opencode",
+      "workspace": "external/executors/opencode",
+      "update_channel": "upstream",
+      "tested_ref": null,
+      "notes": "Single adapter entrypoint; strategy routing handles native|ohmy."
+    }
+  ]
+}

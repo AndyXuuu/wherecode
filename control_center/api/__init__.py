@@ -8,7 +8,6 @@ from control_center.api.hierarchy_routes import create_hierarchy_router
 from control_center.api.metrics_routes import create_metrics_router
 from control_center.api.ops_check_routes import create_ops_check_router
 from control_center.api.runtime_config_routes import create_runtime_config_router
-from control_center.api.v2_report_routes import create_v2_report_router
 from control_center.api.workflow_core_routes import create_workflow_core_router
 from control_center.api.workflow_execution_routes import create_workflow_execution_router
 from control_center.api.workflow_orchestration_routes import (
@@ -24,7 +23,6 @@ __all__ = [
     "create_agent_routing_router",
     "create_metrics_router",
     "create_runtime_config_router",
-    "create_v2_report_router",
     "create_ops_check_router",
     "create_workflow_execution_router",
     "create_workflow_orchestration_router",
